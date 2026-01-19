@@ -1,6 +1,19 @@
 cmake_minimum_required(VERSION 3.19)
 project(ModelDepartmentTables LANGUAGES CXX)
 
+set(PROJECT_VERSION_MAJOR 0)
+set(PROJECT_VERSION_MINOR 0)
+set(PROJECT_VERSION_PATCH 1)
+set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_compile_definitions(
+    APP_VERSION=${CMAKE_PROJECT_VERSION}
+    APP_NAME=${CMAKE_PROJECT_NAME}
+)
+
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets LinguistTools)
 
 qt_standard_project_setup()
