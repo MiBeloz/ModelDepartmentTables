@@ -2,8 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QAbstractProxyModel>
 
-#include "ItemsModel.h"
+#include "NewItemWindow.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -19,8 +20,15 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+    void rec_onPB_addItemClicked();
+    void rec_handleNewItem(const ItemData& newItem);
+
 private:
     Ui::MainWindow *ui;
-    ItemsModel *m_itemsModel;
+    NewItemWindow *m_newItemWindow;
+    QAbstractProxyModel *m_itemsModel;
+
+    void init();
 };
 #endif // MAINWINDOW_H

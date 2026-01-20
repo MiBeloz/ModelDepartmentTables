@@ -9,7 +9,7 @@ class ItemsModel : public QSortFilterProxyModel {
 public:
     explicit ItemsModel(QObject *parent = nullptr);
 
-    ~ItemsModel();
+    virtual ~ItemsModel() {};
 
     QString dateFormat;
 

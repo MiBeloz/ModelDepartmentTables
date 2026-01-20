@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>NewItemWindow</class>
+ <widget class="QDialog" name="NewItemWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>640</width>
+    <height>340</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>640</width>
+    <height>340</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>640</width>
+    <height>340</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="8" column="1">
+    <widget class="QLineEdit" name="LE_modelMaterial"/>
+   </item>
+   <item row="6" column="1">
+    <widget class="QSpinBox" name="SPB_amount"/>
+   </item>
+   <item row="9" column="0">
+    <widget class="QLabel" name="L_machine">
+     <property name="text">
+      <string>Machine:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QDateEdit" name="DE_date"/>
+   </item>
+   <item row="2" column="1">
+    <widget class="QLineEdit" name="LE_title"/>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="L_title">
+     <property name="text">
+      <string>Title:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0">
+    <widget class="QLabel" name="L_modelMaterial">
+     <property name="text">
+      <string>Model Material:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QLineEdit" name="LE_executor"/>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="L_amount">
+     <property name="text">
+      <string>Amount:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="L_drawingNumber">
+     <property name="text">
+      <string>Drawing Number:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="L_castingMaterial">
+     <property name="text">
+      <string>Casting Material:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="1">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="12" column="1">
+    <widget class="QPushButton" name="PB_cancel">
+     <property name="text">
+      <string>Cancel</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1">
+    <widget class="QLineEdit" name="LE_castingMaterial"/>
+   </item>
+   <item row="9" column="1">
+    <widget class="QLineEdit" name="LE_machine"/>
+   </item>
+   <item row="10" column="0">
+    <widget class="QLabel" name="L_note">
+     <property name="text">
+      <string>Note:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="L_date">
+     <property name="text">
+      <string>Date:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="1">
+    <widget class="QLineEdit" name="LE_note"/>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLineEdit" name="LE_drawingNumber"/>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="L_executor">
+     <property name="text">
+      <string>Executor:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="0">
+    <widget class="QPushButton" name="PB_ok">
+     <property name="text">
+      <string>Ok</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="L_author">
+     <property name="text">
+      <string>Author Of The 3D-Model:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QLineEdit" name="LE_author"/>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -21,11 +21,12 @@ qt_standard_project_setup()
 qt_add_executable(ModelDepartmentTables
     WIN32 MACOSX_BUNDLE
     main.cpp
-    MainWindow.cpp
-    MainWindow.h
-    MainWindow.ui
     ItemsModel.h ItemsModel.cpp
     TableHeaders.h
+    MainWindow.h MainWindow.cpp MainWindow.ui
+    NewItemWindow.h NewItemWindow.cpp NewItemWindow.ui
+    ItemData.h
+
 )
 
 qt_add_translations(

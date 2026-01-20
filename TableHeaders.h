@@ -14,6 +14,7 @@ public:
             tr("# Drawing"),
             tr("Name"),
             tr("Executor"),
+            tr("Autor Of The 3D-Model"),
             tr("Amount"),
             tr("Casting Material"),
             tr("Model Material"),
