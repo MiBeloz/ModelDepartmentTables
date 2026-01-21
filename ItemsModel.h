@@ -11,8 +11,6 @@ public:
 
     virtual ~ItemsModel() {};
 
-    QString dateFormat;
-
 protected:
     bool lessThan(const QModelIndex &left, const QModelIndex &right) const override;
 

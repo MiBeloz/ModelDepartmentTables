@@ -20,7 +20,7 @@ void NewItemWindow::rec_onPB_okClicked() {
     drawing.title = ui->LE_title->text();
 
     Item item;
-    item.date = strToDate(ui->DE_date->text());
+    item.date = Item::strToDate(ui->DE_date->text());
     item.drawing = drawing;
     item.amount = ui->SPB_amount->value();
 
@@ -45,4 +45,8 @@ void NewItemWindow::rec_onPB_cancelClicked() {
 void NewItemWindow::init() {
     connect(ui->PB_ok, &QPushButton::clicked, this, &NewItemWindow::rec_onPB_okClicked);
     connect(ui->PB_cancel, &QPushButton::clicked, this, &NewItemWindow::rec_onPB_cancelClicked);
+
+    ui->DE_date->setDate(QDate::currentDate());
+    ui->DE_date->setDisplayFormat(Item::dateFormat);
+    ui->DE_date->setCalendarPopup(true);
 }

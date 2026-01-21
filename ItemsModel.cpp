@@ -2,6 +2,7 @@
 
 #include "ItemsModel.h"
 #include "TableHeaders.h"
+#include "ItemData.h"
 
 
 ItemsModel::ItemsModel(QObject *parent)
@@ -9,7 +10,6 @@ ItemsModel::ItemsModel(QObject *parent)
 {
     m_itemModel = new QStandardItemModel(this);
     m_itemModel->setHorizontalHeaderLabels(TableHeaders::itemsTableHeaders());
-    dateFormat = "dd.MM.yyyy";
     setSourceModel(m_itemModel);
 }
 
@@ -19,14 +19,8 @@ bool ItemsModel::lessThan(const QModelIndex &left, const QModelIndex &right) con
 
     QDate leftDate;
     QDate rightDate;
-    // if (dateFormat == DateFormat::MMyyyy) {
-    //     leftDate = QDate::fromString(leftData, "MM-yyyy");
-    //     rightDate = QDate::fromString(rightData, "MM-yyyy");
-    // }
-    // else {
-    leftDate = QDate::fromString(leftData, dateFormat);
-    rightDate = QDate::fromString(rightData, dateFormat);
-    //}
+    leftDate = QDate::fromString(leftData, Item::dateFormat);
+    rightDate = QDate::fromString(rightData, Item::dateFormat);
 
     if (!leftDate.isValid() || !rightDate.isValid()) {
         return QString::localeAwareCompare(leftData, rightData) < 0;

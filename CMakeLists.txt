@@ -26,6 +26,8 @@ qt_add_executable(ModelDepartmentTables
     MainWindow.h MainWindow.cpp MainWindow.ui
     NewItemWindow.h NewItemWindow.cpp NewItemWindow.ui
     ItemData.h
+    CacheLocker.hpp
+    StorageCache.hpp
 
 )
 
