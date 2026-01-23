@@ -5,7 +5,7 @@
 #include <QAbstractProxyModel>
 
 #include "NewItemWindow.h"
-#include "StorageCache.hpp"
+#include "CacheManager.hpp"
 
 
 QT_BEGIN_NAMESPACE
@@ -30,7 +30,7 @@ private:
     NewItemWindow *m_newItemWindow;
     QAbstractProxyModel *m_itemsModel;
 
-    StorageCache cache;
+    CacheManager cache;
 
     void init();
 };

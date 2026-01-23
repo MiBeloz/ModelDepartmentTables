@@ -18,6 +18,18 @@ struct Drawing {
     bool operator==(const Drawing& other) const {
         return number == other.number && title == other.title;
     }
+
+    bool operator<(const Drawing& other) const {
+        if (number < other.number) {
+            return true;
+        } else {
+            if (title < other.title) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
 };
 
 inline uint qHash(const Drawing& drawing, uint seed = 0) {
@@ -28,6 +40,26 @@ struct Item {
     uint date = 0;
     Drawing drawing;
     uint amount = 0;
+
+    bool operator==(const Item& other) const {
+        return date == other.date && drawing == other.drawing && amount == other.amount;
+    }
+
+    bool operator<(const Item& other) const {
+        if (date < other.date) {
+            return true;
+        } else {
+            if (drawing < other.drawing) {
+                return true;
+            } else {
+                if (amount < other.amount) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+    }
 
     static inline QString dateFormat = "dd.MM.yyyy";
 
@@ -109,5 +141,60 @@ struct ItemData {
         return QString();
     }
 };
+
+inline QTextStream& operator<<(QTextStream& out, const Drawing& drawing) {
+    out << "[Name: " << drawing.number << ", Title: " << drawing.title << "]";
+    return out;
+}
+
+inline QTextStream& operator<<(QTextStream& out, const Item& obj) {
+    out << "[Date: " << obj.date << ", Drawing: " << obj.drawing << ", Amount: " << obj.amount << "]";
+    return out;
+}
+
+inline QTextStream& operator<<(QTextStream& out, const ItemID& obj) {
+    out << "[DateID: " << obj.date_id << ",\t DrawingID: " << obj.drawing_id << ",\t AmountID: " << obj.amount_id << "]";
+    return out;
+}
+
+inline QDataStream &operator<<(QDataStream &out, const Drawing &data) {
+    out << data.number;
+    out << data.title;
+    return out;
+}
+
+inline QDataStream &operator<<(QDataStream &out, const Item &data) {
+    out << data.date;
+    out << data.drawing;
+    out << data.amount;
+    return out;
+}
+
+inline QDataStream &operator<<(QDataStream &out, const ItemID &data) {
+    out << data.date_id;
+    out << data.drawing_id;
+    out << data.amount_id;
+    return out;
+}
+
+inline QDataStream &operator>>(QDataStream &in, Drawing &data) {
+    in >> data.number;
+    in >> data.title;
+    return in;
+}
+
+inline QDataStream &operator>>(QDataStream &in, Item &data) {
+    in >> data.date;
+    in >> data.drawing;
+    in >> data.amount;
+    return in;
+}
+
+inline QDataStream &operator>>(QDataStream &in, ItemID &data) {
+    in >> data.date_id;
+    in >> data.drawing_id;
+    in >> data.amount_id;
+    return in;
+}
 
 #endif // ITEMDATA_H

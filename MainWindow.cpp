@@ -32,54 +32,141 @@ void MainWindow::rec_handleNewItem(const ItemData &newItem) {
 
 
 
-    auto dateCache = cache.getTypedCache<uint, uint>(0);
-    dateCache->insert(dateCache->size(), Item::strToDate(newItem.at(0)));
+    auto dateCache = cache.getTypedCache<uint>(0);
+    dateCache->insert(Item::strToDate(newItem.at(0)));
 
-    auto drawingCache = cache.getTypedCache<uint, Drawing>(1);
-    drawingCache->insert(drawingCache->size(), newItem.item.drawing);
+    auto drawingCache = cache.getTypedCache<Drawing>(1);
+    drawingCache->insert(newItem.item.drawing);
 
-    auto executorCache = cache.getTypedCache<uint, QString>(2);
-    executorCache->insert(executorCache->size(), newItem.at(3));
+    auto executorCache = cache.getTypedCache<QString>(2);
+    executorCache->insert(newItem.at(3));
 
-    auto authorCache = cache.getTypedCache<uint, QString>(3);
-    authorCache->insert(authorCache->size(), newItem.at(4));
+    auto authorCache = cache.getTypedCache<QString>(3);
+    authorCache->insert(newItem.at(4));
 
-    auto amountCache = cache.getTypedCache<uint, uint>(4);
-    amountCache->insert(amountCache->size(), newItem.at(5).toUInt());
+    auto amountCache = cache.getTypedCache<uint>(4);
+    amountCache->insert(newItem.at(5).toUInt());
 
-    auto castingCache = cache.getTypedCache<uint, QString>(5);
-    castingCache->insert(castingCache->size(), newItem.at(6));
+    auto castingCache = cache.getTypedCache<QString>(5);
+    castingCache->insert(newItem.at(6));
 
-    auto materialCache = cache.getTypedCache<uint, QString>(6);
-    materialCache->insert(materialCache->size(), newItem.at(7));
+    auto materialCache = cache.getTypedCache<QString>(6);
+    materialCache->insert(newItem.at(7));
 
-    auto machineCache = cache.getTypedCache<uint, QString>(7);
-    machineCache->insert(machineCache->size(), newItem.at(8));
+    auto machineCache = cache.getTypedCache<QString>(7);
+    machineCache->insert(newItem.at(8));
 
-    auto noteCache = cache.getTypedCache<uint, QString>(8);
-    noteCache->insert(noteCache->size(), newItem.at(9));
+    auto noteCache = cache.getTypedCache<QString>(8);
+    noteCache->insert(newItem.at(9));
 
-    auto itemCache = cache.getTypedCache<uint, Item>(9);
-    itemCache->insert(itemCache->size(), newItem.item);
+    auto itemCache = cache.getTypedCache<Item>(9);
+    itemCache->insert(newItem.item);
 
 
-    auto itemExecutor = cache.getTypedCache<uint, QString>(10);
-    itemExecutor->insert(0, 0);
+    qsizetype i = itemCache->getIdsByData(newItem.item).first();
+    qsizetype j = executorCache->getIdsByData(newItem.executors.first()).first();
+    auto itemExecutor = cache.getTypedCache<uint>(10);
+    itemExecutor->insert(i, j);
 
-    auto itemAuthor = cache.getTypedCache<uint, QString>(11);
-    itemAuthor->insert(0, 0);
+    auto itemAuthor = cache.getTypedCache<uint>(11);
+    itemAuthor->insert(itemCache->getIdsByData(newItem.item).first(), amountCache->getIdsByData(newItem.item.amount).first());
 
-    auto itemCastingMaterial = cache.getTypedCache<uint, QString>(12);
-    itemCastingMaterial->insert(0, 0);
+    auto itemCastingMaterial = cache.getTypedCache<uint>(12);
+    itemCastingMaterial->insert(itemCache->getIdsByData(newItem.item).first(), castingCache->getIdsByData(newItem.castingMaterials.first()).first());
 
-    auto itemModelMaterial = cache.getTypedCache<uint, QString>(13);
-    itemModelMaterial->insert(0, 0);
+    auto itemModelMaterial = cache.getTypedCache<uint>(13);
+    itemModelMaterial->insert(itemCache->getIdsByData(newItem.item).first(), materialCache->getIdsByData(newItem.modelMaterials.first()).first());
 
-    auto itemMachine = cache.getTypedCache<uint, QString>(14);
-    itemMachine->insert(0, 0);
+    auto itemMachine = cache.getTypedCache<uint>(14);
+    itemMachine->insert(itemCache->getIdsByData(newItem.item).first(), machineCache->getIdsByData(newItem.machines.first()).first());
 
-    auto itemNote = cache.getTypedCache<uint, QString>(15);
-    itemNote->insert(0, 0);
+    auto itemNote = cache.getTypedCache<uint>(15);
+    itemNote->insert(itemCache->getIdsByData(newItem.item).first(), noteCache->getIdsByData(newItem.notes.first()).first());
+
+
+
+    dateCache->writeToFile(           "workDates.txt");
+    drawingCache->writeToFile(            "drawings.txt");
+    executorCache->writeToFile(           "executors.txt");
+    amountCache->writeToFile(             "amounts.txt");
+    castingCache->writeToFile(    "castingMaterials.txt");
+    materialCache->writeToFile(      "modelMaterials.txt");
+    machineCache->writeToFile(            "machines.txt");
+    noteCache->writeToFile(               "notes.txt");
+    itemCache->writeToFile(               "items.txt");
+    itemExecutor->writeToFile(       "itemExecutors.txt");
+    itemCastingMaterial->writeToFile("itemCastingMaterials.txt");
+    itemModelMaterial->writeToFile(  "itemModelMaterials.txt");
+    itemMachine->writeToFile(        "itemMachines.txt");
+    itemNote->writeToFile(           "itemNotes.txt");
+
+
+    dateCache->clear();
+    drawingCache->clear();
+    executorCache->clear();
+    amountCache->clear();
+    castingCache->clear();
+    materialCache->clear();
+    machineCache->clear();
+    noteCache->clear();
+    itemCache->clear();
+    itemExecutor->clear();
+    itemCastingMaterial->clear();
+    itemModelMaterial->clear();
+    itemMachine->clear();
+    itemNote->clear();
+
+
+    dateCache->readFromFile(           "workDates.txt");
+    drawingCache->readFromFile(            "drawings.txt");
+    executorCache->readFromFile(           "executors.txt");
+    amountCache->readFromFile(             "amounts.txt");
+    castingCache->readFromFile(    "castingMaterials.txt");
+    materialCache->readFromFile(      "modelMaterials.txt");
+    machineCache->readFromFile(            "machines.txt");
+    noteCache->readFromFile(               "notes.txt");
+    itemCache->readFromFile(               "items.txt");
+    itemExecutor->readFromFile(       "itemExecutors.txt");
+    itemCastingMaterial->readFromFile("itemCastingMaterials.txt");
+    itemModelMaterial->readFromFile(  "itemModelMaterials.txt");
+    itemMachine->readFromFile(        "itemMachines.txt");
+    itemNote->readFromFile(           "itemNotes.txt");
+
+
+
+    model->insertRow(0);
+
+    QModelIndex newIndex0 = model->index(0, 0);
+    model->setData(newIndex0, Item::dateToStr(dateCache->get(0).first()));
+
+    QModelIndex newIndex1 = model->index(0, 1);
+    model->setData(newIndex1, drawingCache->get(0).first().number);
+
+    QModelIndex newIndex2 = model->index(0, 2);
+    model->setData(newIndex2, drawingCache->get(0).first().title);
+
+    QModelIndex newIndex3 = model->index(0, 3);
+    model->setData(newIndex3, executorCache->get(0).first());
+
+    QModelIndex newIndex4 = model->index(0, 4);
+    model->setData(newIndex4, "!!!!!");
+
+    QModelIndex newIndex5 = model->index(0, 5);
+    model->setData(newIndex5, amountCache->get(0).first());
+
+    QModelIndex newIndex6 = model->index(0, 6);
+    model->setData(newIndex6, castingCache->get(0).first());
+
+    QModelIndex newIndex7 = model->index(0, 7);
+    model->setData(newIndex7, materialCache->get(0).first());
+
+    QModelIndex newIndex8 = model->index(0, 8);
+    model->setData(newIndex8, machineCache->get(0).first());
+
+    QModelIndex newIndex9 = model->index(0, 9);
+    model->setData(newIndex9, noteCache->get(0).first());
+
+    ui->TV_items->resizeColumnsToContents();
 }
 
 void MainWindow::init() {

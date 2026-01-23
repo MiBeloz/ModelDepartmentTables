@@ -1,5 +1,5 @@
-#ifndef STORAGECACHE_HPP
-#define STORAGECACHE_HPP
+#ifndef CACHEMANAGER_H
+#define CACHEMANAGER_H
 
 #include <QDir>
 
@@ -7,26 +7,26 @@
 #include "ItemData.h"
 
 
-class StorageCache {
+class CacheManager {
 public:
-    StorageCache() {
-        m_caches.append(std::make_shared<Cache<uint, uint>>("date", true));
-        m_caches.append(std::make_shared<Cache<uint, Drawing>>("drawing", true));
-        m_caches.append(std::make_shared<Cache<uint, QString>>("executor", true));
-        m_caches.append(std::make_shared<Cache<uint, QString>>("author", true));
-        m_caches.append(std::make_shared<Cache<uint, uint>>("amount", true));
-        m_caches.append(std::make_shared<Cache<uint, QString>>("castingMaterial", true));
-        m_caches.append(std::make_shared<Cache<uint, QString>>("modelMaterial", true));
-        m_caches.append(std::make_shared<Cache<uint, QString>>("machine", true));
-        m_caches.append(std::make_shared<Cache<uint, QString>>("note", true));
-        m_caches.append(std::make_shared<Cache<uint, Item>>("item", true));
+    CacheManager() {
+        m_caches.append(std::make_shared<ThreadSafeCache<uint>>("date", true));
+        m_caches.append(std::make_shared<ThreadSafeCache<Drawing>>("drawing", true));
+        m_caches.append(std::make_shared<ThreadSafeCache<QString>>("executor", true));
+        m_caches.append(std::make_shared<ThreadSafeCache<QString>>("author", true));
+        m_caches.append(std::make_shared<ThreadSafeCache<uint>>("amount", true));
+        m_caches.append(std::make_shared<ThreadSafeCache<QString>>("castingMaterial", true));
+        m_caches.append(std::make_shared<ThreadSafeCache<QString>>("modelMaterial", true));
+        m_caches.append(std::make_shared<ThreadSafeCache<QString>>("machine", true));
+        m_caches.append(std::make_shared<ThreadSafeCache<QString>>("note", true));
+        m_caches.append(std::make_shared<ThreadSafeCache<Item>>("item", true));
 
-        m_caches.append(std::make_shared<Cache<uint, QString>>("itemExecutor", false));
-        m_caches.append(std::make_shared<Cache<uint, QString>>("itemAuthor", false));
-        m_caches.append(std::make_shared<Cache<uint, QString>>("itemCastingMaterial", false));
-        m_caches.append(std::make_shared<Cache<uint, QString>>("itemModelMaterial", false));
-        m_caches.append(std::make_shared<Cache<uint, QString>>("itemMachine", false));
-        m_caches.append(std::make_shared<Cache<uint, QString>>("itemNote", false));
+        m_caches.append(std::make_shared<ThreadSafeCache<uint>>("itemExecutor", false));
+        m_caches.append(std::make_shared<ThreadSafeCache<uint>>("itemAuthor", false));
+        m_caches.append(std::make_shared<ThreadSafeCache<uint>>("itemCastingMaterial", false));
+        m_caches.append(std::make_shared<ThreadSafeCache<uint>>("itemModelMaterial", false));
+        m_caches.append(std::make_shared<ThreadSafeCache<uint>>("itemMachine", false));
+        m_caches.append(std::make_shared<ThreadSafeCache<uint>>("itemNote", false));
     }
 
     std::shared_ptr<AbstractCache> getCache(int index) const {
@@ -45,10 +45,10 @@ public:
         return nullptr;
     }
 
-    template<typename Key, typename Value>
-    std::shared_ptr<Cache<Key, Value>> getTypedCache(int index) const {
+    template<typename Data>
+    std::shared_ptr<ThreadSafeCache<Data>> getTypedCache(int index) const {
         if (index >= 0 && index < m_caches.size()) {
-            return std::dynamic_pointer_cast<Cache<Key, Value>>(m_caches[index]);
+            return std::dynamic_pointer_cast<ThreadSafeCache<Data>>(m_caches[index]);
         }
         return nullptr;
     }
@@ -98,4 +98,4 @@ private:
     QVector<std::shared_ptr<AbstractCache>> m_caches;
 };
 
-#endif // STORAGECACHE_HPP
+#endif // CACHEMANAGER_H
