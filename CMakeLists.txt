@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.19)
+﻿cmake_minimum_required(VERSION 3.19)
 project(ModelDepartmentTables LANGUAGES CXX)
 
 set(PROJECT_VERSION_MAJOR 0)
@@ -14,7 +14,7 @@ add_compile_definitions(
     APP_NAME=${CMAKE_PROJECT_NAME}
 )
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets LinguistTools)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets LinguistTools Sql Network)
 
 qt_standard_project_setup()
 
@@ -28,7 +28,11 @@ qt_add_executable(ModelDepartmentTables
     ItemData.h
     CacheLocker.hpp
     CacheManager.hpp
-
+    DatabaseManager.h DatabaseManager.cpp
+    SettingsWindow.h SettingsWindow.cpp SettingsWindow.ui
+    SettingsSaver.h SettingsSaver.cpp
+        Constants.h
+        SettingsGroup.h SettingsGroup.cpp
 )
 
 qt_add_translations(
@@ -40,6 +44,8 @@ target_link_libraries(ModelDepartmentTables
     PRIVATE
         Qt::Core
         Qt::Widgets
+        Qt::Sql
+        Qt::Network
 )
 
 include(GNUInstallDirs)

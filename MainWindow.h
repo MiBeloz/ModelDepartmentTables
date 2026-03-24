@@ -1,10 +1,12 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
 #include <QAbstractProxyModel>
 
 #include "NewItemWindow.h"
+#include "SettingsWindow.h"
+#include "DatabaseManager.h"
 #include "CacheManager.hpp"
 
 
@@ -22,15 +24,16 @@ public:
     ~MainWindow();
 
 private slots:
-    void rec_onPB_addItemClicked();
     void rec_handleNewItem(const ItemData& newItem);
 
 private:
     Ui::MainWindow *ui;
     NewItemWindow *m_newItemWindow;
+    SettingsWindow *m_settingsWindow;
     QAbstractProxyModel *m_itemsModel;
 
-    CacheManager cache;
+    DatabaseManager *m_dbManager;
+    CacheManager *m_cacheManager;
 
     void init();
 };

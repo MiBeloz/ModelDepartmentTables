@@ -1,4 +1,4 @@
-#ifndef CACHELOCKER_H
+﻿#ifndef CACHELOCKER_H
 #define CACHELOCKER_H
 
 #include <QReadWriteLock>
@@ -12,7 +12,7 @@ class AbstractCache {
 public:
     virtual ~AbstractCache() = default;
     virtual void clear() = 0;
-    virtual qsizetype size() const = 0;
+    virtual size_t size() const = 0;
     virtual QString name() const = 0;
 };
 
@@ -20,14 +20,14 @@ template<typename Data>
 class CacheStorage : public AbstractCache {
 public:
     using DataList = QList<Data>;
-    using IdList = QList<qsizetype>;
+    using IdList = QList<size_t>;
 
     CacheStorage(const QString& name, bool uniqueKeys = true)
         : m_name(name), m_uniqueKeys(uniqueKeys) {}
 
     ~CacheStorage() override = default;
 
-    bool insert(qsizetype id, const Data& data) {
+    bool insert(size_t id, const Data& data) {
         if (m_uniqueKeys) {
             if (m_uniqueCache.contains(id)) {
                 return false;
@@ -41,13 +41,19 @@ public:
         }
     }
 
-    qsizetype insert(const Data& data) {
-        qsizetype newId = generateId();
-        insert(newId, data);
-        return newId;
+    size_t insert(const Data& data) {
+        IdList ids = getIdsByData(data);
+        if (ids.isEmpty()) {
+            size_t newId = generateId();
+            insert(newId, data);
+            return newId;
+        }
+        else {
+            return ids.first();
+        }
     }
 
-    DataList get(qsizetype id) const {
+    DataList get(size_t id) const {
         if (m_uniqueKeys) {
             auto it = m_uniqueCache.find(id);
             if (it != m_uniqueCache.end()) {
@@ -61,7 +67,13 @@ public:
 
     IdList getIdsByData(const Data& data) const {
         if (m_uniqueKeys) {
-            return IdList{m_uniqueCache.key(data)};
+            size_t id = m_uniqueCache.key(data);
+            if (id == 0) {
+                return IdList();
+            }
+            else {
+                return IdList{id};
+            }
         } else {
             IdList idList;
             for (auto it = m_multiCache.begin(); it != m_multiCache.end(); ++it) {
@@ -73,15 +85,16 @@ public:
         }
     }
 
-    void remove(qsizetype id) {
+    void remove(size_t id) {
         if (m_uniqueKeys) {
             m_uniqueCache.remove(id);
         } else {
             m_multiCache.remove(id);
         }
+        m_idList.removeOne(id);
     }
 
-    bool contains(qsizetype id) const {
+    bool contains(size_t id) const {
         return m_uniqueKeys ? m_uniqueCache.contains(id) : m_multiCache.contains(id);
     }
 
@@ -95,9 +108,10 @@ public:
         } else {
             m_multiCache.clear();
         }
+        m_idList.clear();
     }
 
-    qsizetype size() const override {
+    size_t size() const override {
         return m_uniqueKeys ? m_uniqueCache.size() : m_multiCache.size();
     }
 
@@ -108,12 +122,19 @@ public:
 protected:
     QString m_name;
     bool m_uniqueKeys;
-    QHash<qsizetype, Data> m_uniqueCache;
-    QMultiHash<qsizetype, Data> m_multiCache;
+    QHash<size_t, Data> m_uniqueCache;
+    QMultiHash<size_t, Data> m_multiCache;
+    QList<size_t> m_idList;
 
-    qsizetype generateId() const {
-        static std::atomic<qsizetype> counter{0};
-        return counter.fetch_add(1, std::memory_order_relaxed);
+    size_t generateId() {
+        if (m_idList.isEmpty()) {
+            m_idList.append(0);
+            return 0;
+        }
+        else {
+            m_idList.append(m_idList.size());
+            return m_idList.back();
+        }
     }
 };
 
@@ -130,17 +151,17 @@ public:
 
     ~ThreadSafeCache() override = default;
 
-    bool insert(qsizetype id, const Data& data) {
+    bool insert(size_t id, const Data& data) {
         QWriteLocker writeLocker(&m_lock);
         return Storage::insert(id, data);
     }
 
-    qsizetype insert(const Data& data) {
+    size_t insert(const Data& data) {
         QWriteLocker locker(&m_lock);
         return Storage::insert(data);
     }
 
-    DataList get(qsizetype id) const {
+    DataList get(size_t id) const {
         QReadLocker readLocker(&m_lock);
         return Storage::get(id);
     }
@@ -150,12 +171,12 @@ public:
         return Storage::getIdsByData(data);
     }
 
-    void remove(qsizetype id) {
+    void remove(size_t id) {
         QWriteLocker writeLocker(&m_lock);
         Storage::remove(id);
     }
 
-    bool contains(qsizetype id) const {
+    bool contains(size_t id) const {
         QReadLocker readLocker(&m_lock);
         return Storage::contains(id);
     }
@@ -170,7 +191,7 @@ public:
         Storage::clear();
     }
 
-    qsizetype size() const override {
+    size_t size() const override {
         QReadLocker readLocker(&m_lock);
         return Storage::size();
     }
@@ -237,7 +258,7 @@ public:
 
             QWriteLocker writeLocker(&m_lock);
             while (!in.atEnd()) {
-                qsizetype key;
+                size_t key;
                 Data value;
                 in >> key >> value;
                 if (Storage::m_uniqueKeys) {

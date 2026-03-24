@@ -1,4 +1,4 @@
-#ifndef ITEMDATA_H
+﻿#ifndef ITEMDATA_H
 #define ITEMDATA_H
 
 #include <QStringList>
@@ -37,9 +37,9 @@ inline uint qHash(const Drawing& drawing, uint seed = 0) {
 }
 
 struct Item {
-    uint date = 0;
+    size_t date = 0;
     Drawing drawing;
-    uint amount = 0;
+    size_t amount = 0;
 
     bool operator==(const Item& other) const {
         return date == other.date && drawing == other.drawing && amount == other.amount;
@@ -80,9 +80,9 @@ struct Item {
 };
 
 struct ItemID {
-    uint date_id = 0;
-    uint drawing_id = 0;
-    uint amount_id = 0;
+    size_t date_id = 0;
+    size_t drawing_id = 0;
+    size_t amount_id = 0;
 
     bool operator==(const ItemID& other) const {
         return date_id == other.date_id && drawing_id == other.drawing_id && amount_id == other.amount_id;

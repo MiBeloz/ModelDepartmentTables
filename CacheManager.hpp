@@ -1,32 +1,53 @@
-#ifndef CACHEMANAGER_H
+﻿#ifndef CACHEMANAGER_H
 #define CACHEMANAGER_H
 
-#include <QDir>
+#include <QObject>
 
 #include "CacheLocker.hpp"
 #include "ItemData.h"
 
 
-class CacheManager {
+class CacheManager : public QObject {
+    Q_OBJECT
+
 public:
-    CacheManager() {
-        m_caches.append(std::make_shared<ThreadSafeCache<uint>>("date", true));
+    enum Column {
+        cDate,
+        cDrawing,
+        cExecutor,
+        cAuthor,
+        cAmount,
+        cCastingMaterial,
+        cModelMaterial,
+        cMachine,
+        cNote,
+        cItemFromIDs,
+        cItemExecutor,
+        cItemAuthor,
+        cItemCastingMaterial,
+        cItemModelMaterial,
+        cItemMachine,
+        cItemNote
+    };
+
+    CacheManager(QObject *parent = nullptr) : QObject(parent) {
+        m_caches.append(std::make_shared<ThreadSafeCache<size_t>>("date", true));
         m_caches.append(std::make_shared<ThreadSafeCache<Drawing>>("drawing", true));
         m_caches.append(std::make_shared<ThreadSafeCache<QString>>("executor", true));
         m_caches.append(std::make_shared<ThreadSafeCache<QString>>("author", true));
-        m_caches.append(std::make_shared<ThreadSafeCache<uint>>("amount", true));
+        m_caches.append(std::make_shared<ThreadSafeCache<size_t>>("amount", true));
         m_caches.append(std::make_shared<ThreadSafeCache<QString>>("castingMaterial", true));
         m_caches.append(std::make_shared<ThreadSafeCache<QString>>("modelMaterial", true));
         m_caches.append(std::make_shared<ThreadSafeCache<QString>>("machine", true));
         m_caches.append(std::make_shared<ThreadSafeCache<QString>>("note", true));
-        m_caches.append(std::make_shared<ThreadSafeCache<Item>>("item", true));
+        m_caches.append(std::make_shared<ThreadSafeCache<ItemID>>("itemFromIDs", true));
 
-        m_caches.append(std::make_shared<ThreadSafeCache<uint>>("itemExecutor", false));
-        m_caches.append(std::make_shared<ThreadSafeCache<uint>>("itemAuthor", false));
-        m_caches.append(std::make_shared<ThreadSafeCache<uint>>("itemCastingMaterial", false));
-        m_caches.append(std::make_shared<ThreadSafeCache<uint>>("itemModelMaterial", false));
-        m_caches.append(std::make_shared<ThreadSafeCache<uint>>("itemMachine", false));
-        m_caches.append(std::make_shared<ThreadSafeCache<uint>>("itemNote", false));
+        m_caches.append(std::make_shared<ThreadSafeCache<size_t>>("itemExecutor", false));
+        m_caches.append(std::make_shared<ThreadSafeCache<size_t>>("itemAuthor", false));
+        m_caches.append(std::make_shared<ThreadSafeCache<size_t>>("itemCastingMaterial", false));
+        m_caches.append(std::make_shared<ThreadSafeCache<size_t>>("itemModelMaterial", false));
+        m_caches.append(std::make_shared<ThreadSafeCache<size_t>>("itemMachine", false));
+        m_caches.append(std::make_shared<ThreadSafeCache<size_t>>("itemNote", false));
     }
 
     std::shared_ptr<AbstractCache> getCache(int index) const {
@@ -55,7 +76,7 @@ public:
 
     // QList<WorkItem> Cache::getWorkItems() const {
     //     QList<WorkItem> workItems;
-    //     for (qsizetype i = 0; i < m_item_cache.size(); ++i) {
+    //     for (size_t i = 0; i < m_item_cache.size(); ++i) {
     //         uint date = m_workDate_cache.getValue(m_item_cache.getValue(i).date_id);
     //         Drawing drawing = m_drawing_cache.getValue(m_item_cache.getValue(i).drawing_id);
     //         uint amount = m_amount_cache.getValue(m_item_cache.getValue(i).amount_id);
@@ -66,33 +87,34 @@ public:
     //             executors << m_executor_cache.getValue(executor_id);
     //         }
 
-    //     QStringList castingMaterials;
-    //     QList<int> castingMaterials_id = m_itemCastingMaterial_cache.values(it.value());
-    //     for (const auto& castingMaterial_id : std::as_const(castingMaterials_id)) {
-    //         castingMaterials << m_castingMaterial_cache.key(castingMaterial_id);
-    //     }
+    //         QStringList castingMaterials;
+    //         QList<int> castingMaterials_id = m_itemCastingMaterial_cache.values(it.value());
+    //         for (const auto& castingMaterial_id : std::as_const(castingMaterials_id)) {
+    //             castingMaterials << m_castingMaterial_cache.key(castingMaterial_id);
+    //         }
 
-    //     QStringList modelMaterials;
-    //     QList<int> modelMaterials_id = m_itemModelMaterial_cache.values(it.value());
-    //     for (const auto& modelMaterial_id : std::as_const(modelMaterials_id)) {
-    //         modelMaterials << m_modelMaterial_cache.key(modelMaterial_id);
-    //     }
+    //         QStringList modelMaterials;
+    //         QList<int> modelMaterials_id = m_itemModelMaterial_cache.values(it.value());
+    //         for (const auto& modelMaterial_id : std::as_const(modelMaterials_id)) {
+    //             modelMaterials << m_modelMaterial_cache.key(modelMaterial_id);
+    //         }
 
-    //     QStringList machines;
-    //     QList<int> machines_id = m_itemMachine_cache.values(it.value());
-    //     for (const auto& machine_id : std::as_const(machines_id)) {
-    //         machines << m_machine_cache.key(machine_id);
-    //     }
+    //         QStringList machines;
+    //         QList<int> machines_id = m_itemMachine_cache.values(it.value());
+    //         for (const auto& machine_id : std::as_const(machines_id)) {
+    //             machines << m_machine_cache.key(machine_id);
+    //         }
 
-    //     QStringList notes;
-    //     QList<int> notes_id = m_itemNote_cache.values(it.value());
-    //     for (const auto& note_id : std::as_const(notes_id)) {
-    //         notes << m_note_cache.key(note_id);
-    //     }
+    //         QStringList notes;
+    //         QList<int> notes_id = m_itemNote_cache.values(it.value());
+    //         for (const auto& note_id : std::as_const(notes_id)) {
+    //             notes << m_note_cache.key(note_id);
+    //         }
 
-    //     workItems.append(WorkItem { Item { date, drawing, amount }, executors, castingMaterials, modelMaterials, machines, notes });
-    //}
-    //return workItems;
+    //         workItems.append(WorkItem { Item { date, drawing, amount }, executors, castingMaterials, modelMaterials, machines, notes });
+    //     }
+    //     return workItems;
+    // }
 
 private:
     QVector<std::shared_ptr<AbstractCache>> m_caches;
