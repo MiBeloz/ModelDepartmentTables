@@ -14,7 +14,7 @@ add_compile_definitions(
     APP_NAME=${CMAKE_PROJECT_NAME}
 )
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets LinguistTools Sql Network)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets LinguistTools Sql Network)
 
 qt_standard_project_setup()
 
@@ -31,8 +31,8 @@ qt_add_executable(ModelDepartmentTables
     DatabaseManager.h DatabaseManager.cpp
     SettingsWindow.h SettingsWindow.cpp SettingsWindow.ui
     SettingsSaver.h SettingsSaver.cpp
-        Constants.h
-        SettingsGroup.h SettingsGroup.cpp
+    Constants.h
+    SettingsGroup.h SettingsGroup.cpp
 )
 
 qt_add_translations(
@@ -43,6 +43,7 @@ qt_add_translations(
 target_link_libraries(ModelDepartmentTables
     PRIVATE
         Qt::Core
+        Qt::Gui
         Qt::Widgets
         Qt::Sql
         Qt::Network

@@ -12,7 +12,7 @@ class SettingsSaver : public QObject {
 
 public:
     explicit SettingsSaver(const QString& filename, QObject *parent = nullptr);
-    virtual ~SettingsSaver() {};
+    virtual ~SettingsSaver() {}
 
     void readGroup(SettingsGroup& settingsGroup) const;
     void writeGroup(const SettingsGroup& settingsGroup) const;

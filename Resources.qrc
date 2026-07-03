@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>icon_eye.png</file>
+        <file>icon_hide.png</file>
+    </qresource>
+</RCC>

@@ -27,6 +27,24 @@ constexpr const char* DateFormat = "DateFormat";
 constexpr const char* DateFormatDefaultValue = "dd.MM.yyyy";
 }
 
+namespace ConnectionSettings {
+constexpr const char* GroupName = "ConnectionSettings";
+constexpr const char* Host = "Host";
+constexpr const char* HostDefaultValue = "127.0.0.1";
+constexpr const char* Port = "Port";
+constexpr const int   PortDefaultValue = 5432;
+constexpr const char* DatabaseName = "DatabaseName";
+constexpr const char* DatabaseNameDefaultValue = "mydb";
+constexpr const char* User = "User";
+constexpr const char* UserDefaultValue = "postgres";
+constexpr const char* Password = "Password";
+constexpr const char* PasswordDefaultValue = "rcmiha57";
+constexpr const char* SavePassword = "SavePassword";
+constexpr const bool  SavePasswordDefaultValue = true;
+constexpr const char* AutoConnect = "AutoConnect";
+constexpr const bool  AutoConnectDefaultValue = true;
+}
+
 }
 
 #endif // CONSTANTS_H

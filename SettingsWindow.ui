@@ -30,35 +30,35 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_4">
    <item>
-    <layout class="QGridLayout" name="gridLayout">
+    <layout class="QGridLayout" name="GridLayout">
      <item row="2" column="1">
-      <widget class="QPushButton" name="PB_cancel">
+      <widget class="QPushButton" name="PushButton_cancel">
        <property name="text">
         <string>Cancel</string>
        </property>
       </widget>
      </item>
      <item row="2" column="0">
-      <widget class="QPushButton" name="PB_save">
+      <widget class="QPushButton" name="PushButton_save">
        <property name="text">
         <string>Save</string>
        </property>
       </widget>
      </item>
      <item row="0" column="0" colspan="2">
-      <widget class="QTabWidget" name="tabWidget">
+      <widget class="QTabWidget" name="TabWidget">
        <property name="currentIndex">
         <number>1</number>
        </property>
-       <widget class="QWidget" name="TAB_applicationSettings">
+       <widget class="QWidget" name="Tab_applicationSettings">
         <attribute name="title">
          <string>Application Settings</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
-          <layout class="QGridLayout" name="gridLayout_3" columnstretch="0,0">
+          <layout class="QGridLayout" name="GridLayout_3" columnstretch="0,0">
            <item row="0" column="0">
-            <widget class="QGroupBox" name="GRBOX_language">
+            <widget class="QGroupBox" name="GroupBox_language">
              <property name="minimumSize">
               <size>
                <width>200</width>
@@ -70,13 +70,13 @@
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_2">
               <item>
-               <widget class="QComboBox" name="CBOX_language"/>
+               <widget class="QComboBox" name="ComboBox_language"/>
               </item>
              </layout>
             </widget>
            </item>
            <item row="0" column="1">
-            <spacer name="horizontalSpacer">
+            <spacer name="HorizontalSpacer">
              <property name="orientation">
               <enum>Qt::Orientation::Horizontal</enum>
              </property>
@@ -89,13 +89,13 @@
             </spacer>
            </item>
            <item row="1" column="0" colspan="2">
-            <widget class="QGroupBox" name="GRBOX_mainWindowSize">
+            <widget class="QGroupBox" name="GroupBox_mainWindowSize">
              <property name="title">
               <string>Main Window Size</string>
              </property>
              <layout class="QFormLayout" name="formLayout">
               <item row="0" column="0">
-               <widget class="QSpinBox" name="SPBOX_mainWindowWidth">
+               <widget class="QSpinBox" name="SpinBox_mainWindowWidth">
                 <property name="minimumSize">
                  <size>
                   <width>50</width>
@@ -114,14 +114,14 @@
                </widget>
               </item>
               <item row="0" column="1">
-               <widget class="QLabel" name="L_mainWindowWidth">
+               <widget class="QLabel" name="Label_mainWindowWidth">
                 <property name="text">
                  <string>Width</string>
                 </property>
                </widget>
               </item>
               <item row="1" column="0">
-               <widget class="QSpinBox" name="SPBOX_mainWindowHeight">
+               <widget class="QSpinBox" name="SpinBox_mainWindowHeight">
                 <property name="minimumSize">
                  <size>
                   <width>50</width>
@@ -140,14 +140,14 @@
                </widget>
               </item>
               <item row="1" column="1">
-               <widget class="QLabel" name="L_mainWindowHeight">
+               <widget class="QLabel" name="Label_mainWindowHeight">
                 <property name="text">
                  <string>Height</string>
                 </property>
                </widget>
               </item>
               <item row="2" column="0" colspan="2">
-               <widget class="QCheckBox" name="CHBOX_restoreMainWindow">
+               <widget class="QCheckBox" name="CheckBox_restoreMainWindow">
                 <property name="text">
                  <string>Restore Main Window</string>
                 </property>
@@ -157,19 +157,19 @@
             </widget>
            </item>
            <item row="2" column="0" rowspan="2" colspan="2">
-            <widget class="QGroupBox" name="GRBOX_formats">
+            <widget class="QGroupBox" name="GroupBox_formats">
              <property name="title">
               <string>Formats</string>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_3">
               <item>
-               <widget class="QGroupBox" name="GRBOX_dateFormat">
+               <widget class="QGroupBox" name="GroupBox_dateFormat">
                 <property name="title">
                  <string>Date Format</string>
                 </property>
                 <layout class="QFormLayout" name="formLayout_2">
                  <item row="1" column="0">
-                  <widget class="QLineEdit" name="LEDIT_dateFormat"/>
+                  <widget class="QLineEdit" name="LineEdit_dateFormat"/>
                  </item>
                 </layout>
                </widget>
@@ -180,7 +180,7 @@
           </layout>
          </item>
          <item>
-          <spacer name="verticalSpacer">
+          <spacer name="VerticalSpacer">
            <property name="orientation">
             <enum>Qt::Orientation::Vertical</enum>
            </property>
@@ -194,59 +194,56 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="TAB_connectionSettings">
+       <widget class="QWidget" name="Tab_connectionSettings">
         <attribute name="title">
          <string>Connection Settings</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_5">
          <item>
-          <layout class="QGridLayout" name="gridLayout_2">
+          <layout class="QGridLayout" name="GridLayout_2">
            <item row="0" column="1">
-            <widget class="QLineEdit" name="LE_host"/>
-           </item>
-           <item row="3" column="1">
-            <widget class="QLineEdit" name="LE_user"/>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="L_user">
-             <property name="text">
-              <string>User:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLineEdit" name="LE_dbName"/>
+            <widget class="QLineEdit" name="LineEdit_host"/>
            </item>
            <item row="2" column="0">
-            <widget class="QLabel" name="L_dbName">
+            <widget class="QLabel" name="Label_dbName">
              <property name="text">
               <string>Database Name:</string>
              </property>
             </widget>
            </item>
-           <item row="1" column="1">
-            <widget class="QSpinBox" name="SPB_port">
-             <property name="buttonSymbols">
-              <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <item row="4" column="0">
+            <widget class="QLabel" name="Label_password">
+             <property name="text">
+              <string>Password:</string>
              </property>
             </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QLabel" name="L_port">
+            <widget class="QLabel" name="Label_port">
              <property name="text">
               <string>Port:</string>
              </property>
             </widget>
            </item>
            <item row="0" column="0">
-            <widget class="QLabel" name="L_host">
+            <widget class="QLabel" name="Label_host">
              <property name="text">
               <string>Host:</string>
              </property>
             </widget>
            </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="Label_user">
+             <property name="text">
+              <string>User:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="LineEdit_dbName"/>
+           </item>
            <item row="2" column="2">
-            <spacer name="horizontalSpacer_2">
+            <spacer name="HorizontalSpacer_2">
              <property name="orientation">
               <enum>Qt::Orientation::Horizontal</enum>
              </property>
@@ -261,18 +258,11 @@
              </property>
             </spacer>
            </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="L_password">
-             <property name="text">
-              <string>Password:</string>
-             </property>
-            </widget>
+           <item row="3" column="1">
+            <widget class="QLineEdit" name="LineEdit_user"/>
            </item>
-           <item row="4" column="1">
-            <widget class="QLineEdit" name="LE_password"/>
-           </item>
-           <item row="5" column="0" colspan="2">
-            <widget class="QCheckBox" name="CHBOX_autoConnect">
+           <item row="6" column="0" colspan="2">
+            <widget class="QCheckBox" name="CheckBox_autoConnect">
              <property name="text">
               <string>Connect automatically when the program starts</string>
              </property>
@@ -281,10 +271,66 @@
              </property>
             </widget>
            </item>
+           <item row="4" column="1">
+            <widget class="QLineEdit" name="LineEdit_password">
+             <property name="echoMode">
+              <enum>QLineEdit::EchoMode::Password</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QSpinBox" name="SpinBox_port">
+             <property name="buttonSymbols">
+              <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+             </property>
+             <property name="maximum">
+              <number>65535</number>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0" colspan="2">
+            <widget class="QCheckBox" name="CheckBox_savePassword">
+             <property name="text">
+              <string>Save password</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="2">
+            <widget class="QPushButton" name="PushButton_showPassword">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>24</width>
+               <height>24</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>24</width>
+               <height>24</height>
+              </size>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>icon_eye.png</normaloff>icon_eye.png</iconset>
+             </property>
+            </widget>
+           </item>
           </layout>
          </item>
          <item>
-          <spacer name="verticalSpacer_2">
+          <spacer name="VerticalSpacer_2">
            <property name="orientation">
             <enum>Qt::Orientation::Vertical</enum>
            </property>

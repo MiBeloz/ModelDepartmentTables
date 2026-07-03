@@ -40,7 +40,7 @@ class SettingsWindow : public QDialog
 
 public:
     explicit SettingsWindow(QWidget *parent = nullptr);
-    ~SettingsWindow() {}
+    ~SettingsWindow();
 
 signals:
     void sig_resizeMainWindow(int width, int height);
@@ -49,14 +49,21 @@ public Q_SLOTS:
     void open() override;
 
 private:
-    std::unique_ptr<Ui::SettingsWindow> ui;
+    Ui::SettingsWindow *ui;
 
     QList<Language> m_languages;
     SettingsSaver *m_settingsSaver;
     SettingsGroup *m_appSettings;
+    SettingsGroup *m_connectionSettings;
 
     void init();
     void initLanguages();
+    void initAppSettings();
+    void initConnectionSettings();
+    void fillAppSettingsTab();
+    void fillConnectionSettingsTab();
+    void saveAppSettings();
+    void saveConnectionSettings();
 
 private slots:
     void rec_saveParameters();
