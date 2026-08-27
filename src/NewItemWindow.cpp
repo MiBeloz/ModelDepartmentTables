@@ -1,4 +1,4 @@
-#include "NewItemWindow.h"
+﻿#include "NewItemWindow.h"
 #include "ui_NewItemWindow.h"
 
 
@@ -16,8 +16,8 @@ NewItemWindow::~NewItemWindow() {
 
 void NewItemWindow::rec_onPB_okClicked() {
     Drawing drawing;
-    drawing.number = ui->LE_drawingNumber->text();
-    drawing.title = ui->LE_title->text();
+    drawing.m_number = ui->LE_drawingNumber->text();
+    drawing.m_title = ui->LE_title->text();
 
     Item item;
     item.date = Item::strToDate(ui->DE_date->text());

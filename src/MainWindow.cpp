@@ -258,10 +258,10 @@ void MainWindow::init() {
     model->setData(newIndex0, Item::dateToStr(dateCache->get(0).first()));
 
     QModelIndex newIndex1 = model->index(0, 1);
-    model->setData(newIndex1, drawingCache->get(0).first().number);
+    model->setData(newIndex1, drawingCache->get(0).first().m_number);
 
     QModelIndex newIndex2 = model->index(0, 2);
-    model->setData(newIndex2, drawingCache->get(0).first().title);
+    model->setData(newIndex2, drawingCache->get(0).first().m_title);
 
     QModelIndex newIndex3 = model->index(0, 3);
     model->setData(newIndex3, executorCache->get(0).first());

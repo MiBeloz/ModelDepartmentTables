@@ -1,6 +1,8 @@
 ﻿#ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+constexpr const int startDateExcel = 2415019;
+
 namespace mdt {
 
 #define STRINGIZE(x) #x

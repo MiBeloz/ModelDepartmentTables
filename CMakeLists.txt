@@ -18,35 +18,16 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets LinguistTools Sql Netw
 
 qt_standard_project_setup()
 
-qt_add_executable(ModelDepartmentTables
-    WIN32 MACOSX_BUNDLE
-    main.cpp
-    ItemsModel.h ItemsModel.cpp
-    TableHeaders.h
-    MainWindow.h MainWindow.cpp MainWindow.ui
-    NewItemWindow.h NewItemWindow.cpp NewItemWindow.ui
-    ItemData.h
-    CacheLocker.hpp
-    CacheManager.hpp
-    DatabaseManager.h DatabaseManager.cpp
-    SettingsWindow.h SettingsWindow.cpp SettingsWindow.ui
-    SettingsSaver.h SettingsSaver.cpp
-    Constants.h
-    SettingsGroup.h SettingsGroup.cpp
-)
+add_subdirectory(src)
+add_subdirectory(test)
+
+add_executable(ModelDepartmentTables WIN32 MACOSX_BUNDLE)
+target_sources(ModelDepartmentTables PRIVATE src/main.cpp)
+target_link_libraries(ModelDepartmentTables PRIVATE ModelDepartmentTables_lib)
 
 qt_add_translations(
     TARGETS ModelDepartmentTables
-    TS_FILES ModelDepartmentTables_ru_RU.ts
-)
-
-target_link_libraries(ModelDepartmentTables
-    PRIVATE
-        Qt::Core
-        Qt::Gui
-        Qt::Widgets
-        Qt::Sql
-        Qt::Network
+    TS_FILES translations/ModelDepartmentTables_ru_RU.ts
 )
 
 include(GNUInstallDirs)
