@@ -5,6 +5,7 @@
 #include <QQueue>
 #include <QDate>
 #include <QReadWriteLock>
+#include <memory>
 #include <QDebug>
 
 #include "Constants.h"
@@ -116,16 +117,18 @@ private:
     mutable QReadWriteLock m_lock;
 };
 
-struct Drawing {
-    Drawing() {}
-
+class Drawing {
+public:
     Drawing(const QString number, const QString &title)
         : m_number(number)
         , m_title(title) {}
 
-    Drawing(const Drawing& other) {
-        m_number = other.m_number;
-        m_title = other.m_title;
+    QString getNumber() const {
+        return m_number;
+    }
+
+    QString getTitle() const {
+        return m_title;
     }
 
     bool operator==(const Drawing& other) const {
@@ -133,29 +136,26 @@ struct Drawing {
     }
 
     bool operator<(const Drawing& other) const {
-        if (m_number < other.m_number) {
-            return true;
-        } else {
-            if (m_title < other.m_title) {
-                return true;
-            } else {
-                return false;
-            }
+        if (m_number != other.m_number) {
+            return m_number < other.m_number;
         }
+        return m_title < other.m_title;
     }
 
+private:
     QString m_number;
     QString m_title;
 };
 
-class DrawingList final {
+class DrawingsList final {
 public:
-    DrawingList() {}
+    DrawingsList() {}
 
-    qsizetype insert(const Drawing& drawing) {
+    qsizetype insert(const QString &number, const QString &title) {
         const QWriteLocker locker(&m_lock);
+        auto drawing = std::make_shared<Drawing>(number, title);
         for (auto [k, v] : m_drawings.asKeyValueRange()) {
-            if (v == drawing) {
+            if (*v == *drawing) {
                 return k;
             }
         }
@@ -173,11 +173,32 @@ public:
         return id;
     }
 
-    bool remove(const Drawing& drawing) {
+    qsizetype insert(const std::shared_ptr<Drawing> drawing) {
+        const QWriteLocker locker(&m_lock);
+        for (auto [k, v] : m_drawings.asKeyValueRange()) {
+            if (*v == *drawing) {
+                return k;
+            }
+        }
+
+        qsizetype id;
+        if (m_emptyIDs.isEmpty()) {
+            ++m_id;
+            id = m_id;
+        }
+        else {
+            id = m_emptyIDs.first();
+            m_emptyIDs.removeFirst();
+        }
+        m_drawings.insert(id, drawing);
+        return id;
+    }
+
+    bool remove(const std::shared_ptr<Drawing> drawing) {
         const QWriteLocker locker(&m_lock);
         qsizetype id = -1;
         for (auto [k, v] : m_drawings.asKeyValueRange()) {
-            if (v == drawing) {
+            if (*v == *drawing) {
                 id = k;
                 break;
             }
@@ -190,20 +211,19 @@ public:
         return false;
     }
 
-    qsizetype getID(const Drawing& drawing) const {
+    qsizetype getID(const std::shared_ptr<Drawing> drawing) const {
         const QReadLocker locker(&m_lock);
         for (auto [k, v] : m_drawings.asKeyValueRange()) {
-            if (v == drawing) {
+            if (*v == *drawing) {
                 return k;
             }
         }
         return 0;
     }
 
-    Drawing getDrawing(qsizetype id) const {
+    std::shared_ptr<Drawing> getDrawing(qsizetype id) const {
         const QReadLocker locker(&m_lock);
-        Drawing drawing = m_drawings.value(id, Drawing());
-        return drawing;
+        return m_drawings.value(id, nullptr);
     }
 
     qsizetype size() const {
@@ -212,23 +232,23 @@ public:
     }
 
 private:
-    QHash<qsizetype, Drawing> m_drawings;
+    QHash<qsizetype, std::shared_ptr<Drawing>> m_drawings;
     qsizetype m_id = 0;
     QQueue<qsizetype> m_emptyIDs;
     mutable QReadWriteLock m_lock;
 };
 
 inline uint qHash(const Drawing& drawing, uint seed = 0) {
-    return qHash(drawing.m_number, seed) ^ qHash(drawing.m_title, seed << 1);
+    return qHash(drawing.getNumber(), seed) ^ qHash(drawing.getTitle(), seed << 1);
 }
 
 struct Item {
     size_t date = 0;
-    Drawing drawing;
+    Drawing *drawing;
     size_t amount = 0;
 
     bool operator==(const Item& other) const {
-        return date == other.date && drawing == other.drawing && amount == other.amount;
+        return date == other.date && *drawing == *other.drawing && amount == other.amount;
     }
 
     bool operator<(const Item& other) const {
@@ -294,10 +314,10 @@ struct ItemData {
                 return Item::dateToStr(item.date);
             }
             case 1: {
-                return item.drawing.m_number;
+                return item.drawing->getNumber();
             }
             case 2: {
-                return item.drawing.m_title;
+                return item.drawing->getTitle();
             }
             case 3: {
                 return executors.join(',');
@@ -329,7 +349,7 @@ struct ItemData {
 };
 
 inline QTextStream& operator<<(QTextStream& out, const Drawing& drawing) {
-    out << "[Name: " << drawing.m_number << ", Title: " << drawing.m_title << "]";
+    out << "[Name: " << drawing.getNumber() << ", Title: " << drawing.getTitle() << "]";
     return out;
 }
 
@@ -343,15 +363,15 @@ inline QTextStream& operator<<(QTextStream& out, const ItemID& obj) {
     return out;
 }
 
-inline QDataStream &operator<<(QDataStream &out, const Drawing &data) {
-    out << data.m_number;
-    out << data.m_title;
+inline QDataStream &operator<<(QDataStream &out, const Drawing *data) {
+    out << data->getNumber();
+    out << data->getTitle();
     return out;
 }
 
 inline QDataStream &operator<<(QDataStream &out, const Item &data) {
     out << data.date;
-    out << data.drawing;
+    out << data.drawing->getNumber() << data.drawing->getTitle();
     out << data.amount;
     return out;
 }
@@ -363,9 +383,17 @@ inline QDataStream &operator<<(QDataStream &out, const ItemID &data) {
     return out;
 }
 
-inline QDataStream &operator>>(QDataStream &in, Drawing &data) {
-    in >> data.m_number;
-    in >> data.m_title;
+inline QDataStream &operator>>(QDataStream &in, Drawing *data) {
+    QString number;
+    QString title;
+
+    in >> number;
+    in >> title;
+
+    Drawing *drawing = new Drawing(number, title);
+    qSwap(data, drawing);
+    delete drawing;
+
     return in;
 }
 

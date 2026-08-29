@@ -36,7 +36,7 @@ void MainWindow::rec_handleNewItem(const ItemData &newItem) {
     auto id_date = dateCache->insert(newItem.item.date);
 
     auto drawingCache = m_cacheManager->getTypedCache<Drawing>(CacheManager::Column::cDrawing);
-    auto id_drawing = drawingCache->insert(newItem.item.drawing);
+    auto id_drawing = drawingCache->insert(*newItem.item.drawing);
 
     auto executorCache = m_cacheManager->getTypedCache<QString>(CacheManager::Column::cExecutor);
     QList<size_t> id_executors;
@@ -258,10 +258,10 @@ void MainWindow::init() {
     model->setData(newIndex0, Item::dateToStr(dateCache->get(0).first()));
 
     QModelIndex newIndex1 = model->index(0, 1);
-    model->setData(newIndex1, drawingCache->get(0).first().m_number);
+    model->setData(newIndex1, drawingCache->get(0).first().getNumber());
 
     QModelIndex newIndex2 = model->index(0, 2);
-    model->setData(newIndex2, drawingCache->get(0).first().m_title);
+    model->setData(newIndex2, drawingCache->get(0).first().getTitle());
 
     QModelIndex newIndex3 = model->index(0, 3);
     model->setData(newIndex3, executorCache->get(0).first());

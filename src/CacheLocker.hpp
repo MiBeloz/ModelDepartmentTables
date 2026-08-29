@@ -221,11 +221,11 @@ public:
             QReadLocker readLocker(&m_lock);
             if (Storage::m_uniqueKeys) {
                 for (auto it = Storage::m_uniqueCache.begin(); it != Storage::m_uniqueCache.end(); ++it) {
-                    out << it.key() << it.value();
+                    //out << it.key() << it.value();
                 }
             } else {
                 for (auto it = Storage::m_multiCache.begin(); it != Storage::m_multiCache.end(); ++it) {
-                    out << it.key() << it.value();
+                    //out << it.key() << it.value();
                 }
             }
             file.close();
@@ -259,12 +259,12 @@ public:
             QWriteLocker writeLocker(&m_lock);
             while (!in.atEnd()) {
                 size_t key;
-                Data value;
-                in >> key >> value;
+                //Data value;
+                //in >> key >> value;
                 if (Storage::m_uniqueKeys) {
-                    Storage::m_uniqueCache.insert(key, value);
+                    //Storage::m_uniqueCache.insert(key, value);
                 } else {
-                    Storage::m_multiCache.insert(key, value);
+                    //Storage::m_multiCache.insert(key, value);
                 }
             }
             file.close();

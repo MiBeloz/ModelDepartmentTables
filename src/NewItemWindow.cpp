@@ -15,9 +15,7 @@ NewItemWindow::~NewItemWindow() {
 }
 
 void NewItemWindow::rec_onPB_okClicked() {
-    Drawing drawing;
-    drawing.m_number = ui->LE_drawingNumber->text();
-    drawing.m_title = ui->LE_title->text();
+    Drawing *drawing = new Drawing(ui->LE_drawingNumber->text(), ui->LE_title->text());
 
     Item item;
     item.date = Item::strToDate(ui->DE_date->text());
