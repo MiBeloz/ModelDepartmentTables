@@ -270,7 +270,7 @@ void MainWindow::init() {
     model->setData(newIndex4, "!!!!!");
 
     QModelIndex newIndex5 = model->index(0, 5);
-    model->setData(newIndex5, amountCache->get(0).first());
+    //model->setData(newIndex5, amountCache->get(0).first());
 
     QModelIndex newIndex6 = model->index(0, 6);
     model->setData(newIndex6, castingMaterialCache->get(0).first());
