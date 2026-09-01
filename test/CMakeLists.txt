@@ -13,6 +13,8 @@ add_custom_target(check
 set(test_Files
     test_DatesList.cpp
     test_DrawingsList.cpp
+    test_CustomListInt.cpp
+    test_CustomListQString.cpp
 )
 
 foreach(test_File ${test_Files})

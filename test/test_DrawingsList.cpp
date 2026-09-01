@@ -4,7 +4,7 @@
 #include "ItemData.h"
 
 
-DrawingsList ld;
+DrawingsList drawings_list;
 auto d_IMN_111 = std::make_shared<Drawing>("ИМН-111", "Колесо рабочее");
 auto d_111_11 = std::make_shared<Drawing>("111-11", "Шкиф");
 auto d_1_234 = std::make_shared<Drawing>("1-234", "Башмак");
@@ -26,67 +26,67 @@ private slots:
 
 
     void testCreate() {
-        QCOMPARE(ld.size(), 0);
+        QCOMPARE(drawings_list.size(), 0);
     }
 
     void testInsert() {
-        QCOMPARE(ld.insert(d_IMN_111), 1);
-        QCOMPARE(ld.size(), 1);
+        QCOMPARE(drawings_list.insert(d_IMN_111), 1);
+        QCOMPARE(drawings_list.size(), 1);
 
-        QCOMPARE(ld.insert(d_111_11->getNumber(), d_111_11->getTitle()), 2);
-        QCOMPARE(ld.insert(d_1_234), 3);
-        QCOMPARE(ld.insert(d_IME_987), 4);
-        QCOMPARE(ld.size(), 4);
+        QCOMPARE(drawings_list.insert(d_111_11->getNumber(), d_111_11->getTitle()), 2);
+        QCOMPARE(drawings_list.insert(d_1_234), 3);
+        QCOMPARE(drawings_list.insert(d_IME_987), 4);
+        QCOMPARE(drawings_list.size(), 4);
 
-        QCOMPARE(ld.insert(d_1_234->getNumber(), d_1_234->getTitle()), 3);
-        QCOMPARE(ld.size(), 4);
+        QCOMPARE(drawings_list.insert(d_1_234->getNumber(), d_1_234->getTitle()), 3);
+        QCOMPARE(drawings_list.size(), 4);
 
-        QCOMPARE(ld.insert(d_987_789), 5);
-        QCOMPARE(ld.size(), 5);
+        QCOMPARE(drawings_list.insert(d_987_789), 5);
+        QCOMPARE(drawings_list.size(), 5);
     }
 
     void testRemove() {
-        QCOMPARE(ld.remove(d_IME_987), true);
-        QCOMPARE(ld.size(), 4);
+        QCOMPARE(drawings_list.remove(d_IME_987), true);
+        QCOMPARE(drawings_list.size(), 4);
 
-        QCOMPARE(ld.remove(d_IME_987), false);
-        QCOMPARE(ld.size(), 4);
+        QCOMPARE(drawings_list.remove(d_IME_987), false);
+        QCOMPARE(drawings_list.size(), 4);
 
-        QCOMPARE(ld.remove(d_1_234), true);
-        QCOMPARE(ld.size(), 3);
+        QCOMPARE(drawings_list.remove(d_1_234), true);
+        QCOMPARE(drawings_list.size(), 3);
     }
 
     void testInsertWithQueue() {
-        QCOMPARE(ld.insert(d_SZ_0101), 4);
-        QCOMPARE(ld.size(), 4);
+        QCOMPARE(drawings_list.insert(d_SZ_0101), 4);
+        QCOMPARE(drawings_list.size(), 4);
 
-        QCOMPARE(ld.insert(d_IME_123->getNumber(), d_IME_123->getTitle()), 3);
-        QCOMPARE(ld.size(), 5);
+        QCOMPARE(drawings_list.insert(d_IME_123->getNumber(), d_IME_123->getTitle()), 3);
+        QCOMPARE(drawings_list.size(), 5);
 
-        QCOMPARE(ld.insert(d_1_9876), 6);
-        QCOMPARE(ld.size(), 6);
+        QCOMPARE(drawings_list.insert(d_1_9876), 6);
+        QCOMPARE(drawings_list.size(), 6);
     }
 
     void testGetId() {
-        QCOMPARE(ld.getID(d_SZ_0101), 4);
-        QCOMPARE(ld.getID(d_111_11), 2);
-        QCOMPARE(ld.getID(d_IME_123), 3);
-        QCOMPARE(ld.getID(d_987_789), 5);
-        QCOMPARE(ld.getID(d_1_9876), 6);
-        QCOMPARE(ld.getID(d_IMN_111), 1);
+        QCOMPARE(drawings_list.getID(d_SZ_0101), 4);
+        QCOMPARE(drawings_list.getID(d_111_11), 2);
+        QCOMPARE(drawings_list.getID(d_IME_123), 3);
+        QCOMPARE(drawings_list.getID(d_987_789), 5);
+        QCOMPARE(drawings_list.getID(d_1_9876), 6);
+        QCOMPARE(drawings_list.getID(d_IMN_111), 1);
 
-        QCOMPARE(ld.getID(d_IME_987), 0);
+        QCOMPARE(drawings_list.getID(d_IME_987), 0);
     }
 
     void testGetDrawing() {
-        QCOMPARE(*ld.getDrawing(4), *d_SZ_0101);
-        QCOMPARE(*ld.getDrawing(2), *d_111_11);
-        QCOMPARE(*ld.getDrawing(3), *d_IME_123);
-        QCOMPARE(*ld.getDrawing(5), *d_987_789);
-        QCOMPARE(*ld.getDrawing(6), *d_1_9876);
-        QCOMPARE(*ld.getDrawing(1), *d_IMN_111);
+        QCOMPARE(*drawings_list.getDrawing(4), *d_SZ_0101);
+        QCOMPARE(*drawings_list.getDrawing(2), *d_111_11);
+        QCOMPARE(*drawings_list.getDrawing(3), *d_IME_123);
+        QCOMPARE(*drawings_list.getDrawing(5), *d_987_789);
+        QCOMPARE(*drawings_list.getDrawing(6), *d_1_9876);
+        QCOMPARE(*drawings_list.getDrawing(1), *d_IMN_111);
 
-        QCOMPARE(ld.getDrawing(7), nullptr);
+        QCOMPARE(drawings_list.getDrawing(7), nullptr);
     }
 };
 
