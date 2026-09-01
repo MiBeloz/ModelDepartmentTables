@@ -18,7 +18,7 @@ public:
         const QWriteLocker locker(&m_lock);
         qsizetype d = strToDate(date, format);
         if (d < 0) {
-            return d;
+            return 0;
         }
 
         if (auto id = m_dates.key(d, 0); id > 0) {
@@ -64,7 +64,7 @@ public:
         const QReadLocker locker(&m_lock);
         qsizetype d = strToDate(date, format);
         if (d < 0) {
-            return d;
+            return 0;
         }
 
         for (auto [k, v] : m_dates.asKeyValueRange()) {
@@ -99,14 +99,13 @@ public:
         m_id = 0;
     }
 
-private:
-    QString dateToStr(qsizetype date, const QString& format = "dd.MM.yyyy") const {
+    static QString dateToStr(qsizetype date, const QString& format = "dd.MM.yyyy") {
         QDate baseDate = QDate::fromJulianDay(startDateExcel);
         baseDate = baseDate.addDays(date);
         return baseDate.toString(format);
     }
 
-    qsizetype strToDate(const QString& date, const QString& format = "dd.MM.yyyy") const {
+    static qsizetype strToDate(const QString& date, const QString& format = "dd.MM.yyyy") {
         QDate baseDate = QDate::fromJulianDay(startDateExcel);
         QDate d = QDate::fromString(date, format);
         if (!d.isValid()) {
@@ -116,6 +115,7 @@ private:
         return d.toJulianDay() - baseDate.toJulianDay();
     }
 
+private:
     QHash<qsizetype, qsizetype> m_dates;
     qsizetype m_id = 0;
     QQueue<qsizetype> m_emptyIDs;
@@ -307,7 +307,7 @@ class IRepository {
 public:
     virtual ~IRepository() = default;
 
-    virtual qsizetype add(const T& value) = 0;
+    virtual std::optional<qsizetype> add(const T& value) = 0;
     virtual bool remove(const T& value) = 0;
     virtual std::optional<qsizetype> findId(const T& value) const = 0;
     virtual std::optional<T> findValue(qsizetype id) const = 0;
@@ -319,8 +319,12 @@ class StringRepository : public IRepository<QString> {
 public:
     StringRepository() = default;
 
-    qsizetype add(const QString& value) override {
-        return m_list.insert(value);
+    std::optional<qsizetype> add(const QString& value) override {
+        qsizetype id = m_list.insert(value);
+        if (id != 0) {
+            return id;
+        }
+        return std::nullopt;
     }
 
     bool remove(const QString& value) override {
@@ -343,9 +347,13 @@ public:
         return std::nullopt;
     }
 
-    qsizetype count() const override { return m_list.size(); }
+    qsizetype count() const override {
+        return m_list.size();
+    }
 
-    void clear() override { m_list.clear(); }
+    void clear() override {
+        m_list.clear();
+    }
 
 private:
     CustomList<QString> m_list;
@@ -355,16 +363,19 @@ class NumericRepository : public IRepository<int> {
 public:
     NumericRepository() = default;
 
-    qsizetype add(const int& value) override {
-        return m_list.insert(value);
+    std::optional<qsizetype> add(const int& value) override {
+        qsizetype id = m_list.insert(value);
+        if (id != 0) {
+            return id;
+        }
+        return std::nullopt;
     }
 
     bool remove(const int& value) override {
         return m_list.remove(value);
     }
 
-    std::optional<qsizetype> findId(
-        const int& value) const override {
+    std::optional<qsizetype> findId(const int& value) const override {
         qsizetype id = m_list.getID(value);
         if (id != 0) {
             return id;
@@ -392,39 +403,43 @@ private:
     CustomList<int> m_list;
 };
 
-class DateRepository {
+class DateRepository : public IRepository<QString> {
 public:
     DateRepository() = default;
 
-    qsizetype addDate(const QString& date, const QString& format = "dd.MM.yyyy") {
-        return m_dates.insert(date, format);
-    }
-
-    bool removeDate(const QString& date, const QString& format = "dd.MM.yyyy") {
-        return m_dates.remove(date, format);
-    }
-
-    std::optional<qsizetype> findDateId(const QString& date, const QString& format = "dd.MM.yyyy") const {
-        qsizetype id = m_dates.getID(date, format);
+    std::optional<qsizetype> add(const QString& date) override {
+        qsizetype id = m_dates.insert(date, m_format);
         if (id != 0) {
             return id;
         }
         return std::nullopt;
     }
 
-    std::optional<QString> findDate(qsizetype id, const QString& format = "dd.MM.yyyy") const {
-        QString date = m_dates.getDate(id, format);
+    bool remove(const QString& date) override {
+        return m_dates.remove(date, m_format);
+    }
+
+    std::optional<qsizetype> findId(const QString& date) const override {
+        qsizetype id = m_dates.getID(date, m_format);
+        if (id != 0) {
+            return id;
+        }
+        return std::nullopt;
+    }
+
+    std::optional<QString> findValue(qsizetype id) const override {
+        QString date = m_dates.getDate(id, m_format);
         if (!date.isEmpty()) {
             return date;
         }
         return std::nullopt;
     }
 
-    qsizetype count() const {
+    qsizetype count() const override {
         return m_dates.size();
     }
 
-    void clear() {
+    void clear() override {
         m_dates.clear();
     }
 
@@ -441,28 +456,36 @@ private:
     QString m_format = "dd.MM.yyyy";
 };
 
-class DrawingRepository {
+class DrawingRepository : public IRepository<std::shared_ptr<Drawing>> {
 public:
     DrawingRepository() = default;
 
-    qsizetype addDrawing(const QString& number, const QString& title) {
-        return m_drawings.insert(number, title);
+    std::optional<qsizetype> add(const std::shared_ptr<Drawing>& drawing) override {
+        qsizetype id = m_drawings.insert(drawing);
+        if (id != 0) {
+            return id;
+        }
+        return std::nullopt;
     }
 
-    qsizetype addDrawing(const std::shared_ptr<Drawing>& drawing) {
-        return m_drawings.insert(drawing);
+    std::optional<qsizetype> add(const QString& number, const QString& title) {
+        qsizetype id = m_drawings.insert(number, title);
+        if (id != 0) {
+            return id;
+        }
+        return std::nullopt;
     }
 
-    bool removeDrawing(const std::shared_ptr<Drawing>& drawing) {
+    bool remove(const std::shared_ptr<Drawing>& drawing) override {
         return m_drawings.remove(drawing);
     }
 
-    bool removeDrawing(const QString& number, const QString& title) {
+    bool remove(const QString& number, const QString& title) {
         auto drawing = std::make_shared<Drawing>(number, title);
         return m_drawings.remove(drawing);
     }
 
-    std::optional<qsizetype> findDrawingId(const std::shared_ptr<Drawing>& drawing) const {
+    std::optional<qsizetype> findId(const std::shared_ptr<Drawing>& drawing) const override {
         qsizetype id = m_drawings.getID(drawing);
         if (id != 0) {
             return id;
@@ -470,7 +493,7 @@ public:
         return std::nullopt;
     }
 
-    std::optional<std::shared_ptr<Drawing>> findDrawing(qsizetype id) const {
+    std::optional<std::shared_ptr<Drawing>> findValue(qsizetype id) const override {
         auto drawing = m_drawings.getDrawing(id);
         if (drawing) {
             return drawing;
@@ -478,36 +501,21 @@ public:
         return std::nullopt;
     }
 
-    qsizetype count() const {
+    qsizetype count() const override {
         return m_drawings.size();
+    }
+
+    void clear() override {
+        m_drawings.clear();
     }
 
 private:
     DrawingsList m_drawings;
 };
 
-class RepositoryFactory {
+class RepositoryService {
 public:
-    static std::unique_ptr<StringRepository> createStringRepository() {
-        return std::make_unique<StringRepository>();
-    }
-
-    static std::unique_ptr<NumericRepository> createNumericRepository() {
-        return std::make_unique<NumericRepository>();
-    }
-
-    static std::unique_ptr<DateRepository> createDateRepository() {
-        return std::make_unique<DateRepository>();
-    }
-
-    static std::unique_ptr<DrawingRepository> createDrawingRepository() {
-        return std::make_unique<DrawingRepository>();
-    }
-};
-
-class CatalogService {
-public:
-    CatalogService()
+    RepositoryService()
         : m_dateRepo(std::make_unique<DateRepository>())
         , m_drawingRepo(std::make_unique<DrawingRepository>())
         , m_executorRepo(std::make_unique<StringRepository>())
@@ -579,24 +587,6 @@ public:
     }
     const NumericRepository& amounts() const {
         return *m_amountRepo;
-    }
-
-    qsizetype insertDate(const QString& date) {
-        return m_dateRepo->addDate(date);
-    }
-
-    QString getDate(qsizetype id) const {
-        auto result = m_dateRepo->findDate(id);
-        return result.value_or(QString());
-    }
-
-    qsizetype insertDrawing(const QString& number, const QString& title) {
-        return m_drawingRepo->addDrawing(number, title);
-    }
-
-    std::shared_ptr<Drawing> getDrawing(qsizetype id) const {
-        auto result = m_drawingRepo->findDrawing(id);
-        return result.value_or(nullptr);
     }
 
 private:

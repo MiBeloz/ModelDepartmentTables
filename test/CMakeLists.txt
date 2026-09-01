@@ -15,6 +15,7 @@ set(test_Files
     test_DrawingsList.cpp
     test_CustomListInt.cpp
     test_CustomListQString.cpp
+    test_RepositoryService.cpp
 )
 
 foreach(test_File ${test_Files})

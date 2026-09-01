@@ -36,7 +36,7 @@ private slots:
         QCOMPARE(dates_list.insert("28.08.2019"), 5);
         QCOMPARE(dates_list.size(), 5);
 
-        QCOMPARE(dates_list.insert("55.08.2019"), -1);
+        QCOMPARE(dates_list.insert("55.08.2019"), 0);
     }
 
     void testRemove() {
@@ -72,7 +72,7 @@ private slots:
         QCOMPARE(dates_list.getID("25.08.2025"), 1);
 
         QCOMPARE(dates_list.getID("01.05.2017"), 0);
-        QCOMPARE(dates_list.getID("55.05.2017"), -1);
+        QCOMPARE(dates_list.getID("55.05.2017"), 0);
     }
 
     void testGetDate() {
