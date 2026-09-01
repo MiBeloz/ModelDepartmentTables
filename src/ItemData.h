@@ -158,11 +158,11 @@ public:
 
     qsizetype insert(const QString& number, const QString& title) {
         const QWriteLocker locker(&m_lock);
-        auto drawing = std::make_shared<Drawing>(number, title);
+        Drawing drawing(number, title);
         for (auto [k, v] : m_drawings.asKeyValueRange()) {
-            if (*v == *drawing) {
-                return k;
-            }
+          if (v == drawing) {
+            return k;
+          }
         }
 
         qsizetype id = 0;
@@ -178,41 +178,45 @@ public:
         return id;
     }
 
-    qsizetype insert(const std::shared_ptr<Drawing>& drawing) {
-        return insert(drawing->getNumber(), drawing->getTitle());
+    qsizetype insert(
+        const Drawing& drawing) {
+      return insert(drawing.getNumber(), drawing.getTitle());
     }
 
-    bool remove(const std::shared_ptr<Drawing>& drawing) {
-        const QWriteLocker locker(&m_lock);
-        qsizetype id = -1;
-        for (auto [k, v] : m_drawings.asKeyValueRange()) {
-            if (*v == *drawing) {
-                id = k;
-                break;
-            }
+    bool remove(
+        const Drawing& drawing) {
+      const QWriteLocker locker(&m_lock);
+      qsizetype id = -1;
+      for (auto [k, v] : m_drawings.asKeyValueRange()) {
+        if (v == drawing) {
+          id = k;
+          break;
         }
+      }
 
-        if (id != -1) {
-            m_drawings.remove(id);
-            m_emptyIDs.append(id);
-            return true;
-        }
-        return false;
+      if (id != -1) {
+        m_drawings.remove(id);
+        m_emptyIDs.append(id);
+        return true;
+      }
+      return false;
     }
 
-    qsizetype getID(const std::shared_ptr<Drawing>& drawing) const {
-        const QReadLocker locker(&m_lock);
-        for (auto [k, v] : m_drawings.asKeyValueRange()) {
-            if (*v == *drawing) {
-                return k;
-            }
+    qsizetype getID(
+        const Drawing& drawing) const {
+      const QReadLocker locker(&m_lock);
+      for (auto [k, v] : m_drawings.asKeyValueRange()) {
+        if (v == drawing) {
+          return k;
         }
-        return 0;
+      }
+      return 0;
     }
 
-    std::shared_ptr<Drawing> getDrawing(qsizetype id) const {
-        const QReadLocker locker(&m_lock);
-        return m_drawings.value(id, nullptr);
+    std::optional<Drawing> getDrawing(
+        qsizetype id) const {
+      const QReadLocker locker(&m_lock);
+      return std::optional<Drawing>(m_drawings.value(id, std::optional<Drawing>().value()));
     }
 
     qsizetype size() const {
@@ -228,10 +232,10 @@ public:
     }
 
 private:
-    QHash<qsizetype, std::shared_ptr<Drawing>> m_drawings;
-    qsizetype m_id = 0;
-    QQueue<qsizetype> m_emptyIDs;
-    mutable QReadWriteLock m_lock;
+  QHash<qsizetype, Drawing> m_drawings;
+  qsizetype m_id = 0;
+  QQueue<qsizetype> m_emptyIDs;
+  mutable QReadWriteLock m_lock;
 };
 
 inline uint qHash(const Drawing& drawing, uint seed = 0) {
@@ -456,16 +460,17 @@ private:
     QString m_format = "dd.MM.yyyy";
 };
 
-class DrawingRepository : public IRepository<std::shared_ptr<Drawing>> {
+class DrawingRepository : public IRepository<Drawing> {
 public:
     DrawingRepository() = default;
 
-    std::optional<qsizetype> add(const std::shared_ptr<Drawing>& drawing) override {
-        qsizetype id = m_drawings.insert(drawing);
-        if (id != 0) {
-            return id;
-        }
-        return std::nullopt;
+    std::optional<qsizetype> add(
+        const Drawing& drawing) override {
+      qsizetype id = m_drawings.insert(drawing);
+      if (id != 0) {
+        return id;
+      }
+      return std::nullopt;
     }
 
     std::optional<qsizetype> add(const QString& number, const QString& title) {
@@ -476,29 +481,32 @@ public:
         return std::nullopt;
     }
 
-    bool remove(const std::shared_ptr<Drawing>& drawing) override {
-        return m_drawings.remove(drawing);
+    bool remove(
+        const Drawing& drawing) override {
+      return m_drawings.remove(drawing);
     }
 
     bool remove(const QString& number, const QString& title) {
-        auto drawing = std::make_shared<Drawing>(number, title);
-        return m_drawings.remove(drawing);
+      Drawing drawing(number, title);
+      return m_drawings.remove(drawing);
     }
 
-    std::optional<qsizetype> findId(const std::shared_ptr<Drawing>& drawing) const override {
-        qsizetype id = m_drawings.getID(drawing);
-        if (id != 0) {
-            return id;
-        }
-        return std::nullopt;
+    std::optional<qsizetype> findId(
+        const Drawing& drawing) const override {
+      qsizetype id = m_drawings.getID(drawing);
+      if (id != 0) {
+        return id;
+      }
+      return std::nullopt;
     }
 
-    std::optional<std::shared_ptr<Drawing>> findValue(qsizetype id) const override {
-        auto drawing = m_drawings.getDrawing(id);
-        if (drawing) {
-            return drawing;
-        }
-        return std::nullopt;
+    std::optional<Drawing> findValue(
+        qsizetype id) const override {
+      auto drawing = m_drawings.getDrawing(id);
+      if (drawing) {
+        return drawing;
+      }
+      return std::nullopt;
     }
 
     qsizetype count() const override {
