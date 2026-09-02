@@ -10,81 +10,116 @@
 
 #include "Constants.h"
 
+class DatesList;
+
+class DatesListError final {
+public:
+    enum ErrorType {
+        NoError,
+        IdError,
+        DateError,
+        FormatError
+    };
+
+    DatesListError(ErrorType error = NoError)
+        : m_error(error) {}
+
+    ErrorType lastError() const {
+        return m_error;
+    }
+
+private:
+    ErrorType m_error;
+
+    void setError(ErrorType error) {
+        m_error = error;
+    }
+
+    friend DatesList;
+};
+
 class DatesList final {
 public:
     DatesList() {}
 
-    qsizetype insert(const QString& date, const QString& format = "dd.MM.yyyy") {
+    std::optional<qsizetype> insert(const QString& date, const QString& format = "dd.MM.yyyy") {
         const QWriteLocker locker(&m_lock);
-        qsizetype d = strToDate(date, format);
-        if (d < 0) {
-            return 0;
-        }
+        setError(DatesListError::NoError);
+        if (auto intDate = strToDate(date, format); intDate.has_value()) {
+            for (auto [k, v] : m_dates.asKeyValueRange()) {
+                if (v == intDate) {
+                    return k;
+                }
+            }
 
-        if (auto id = m_dates.key(d, 0); id > 0) {
+            qsizetype id = -1;
+            if (m_emptyIDs.isEmpty()) {
+                ++m_id;
+                id = m_id;
+            }
+            else {
+                id = m_emptyIDs.first();
+                m_emptyIDs.removeFirst();
+            }
+            m_dates.insert(id, intDate.value());
             return id;
         }
-
-        qsizetype id;
-        if (m_emptyIDs.isEmpty()) {
-            ++m_id;
-            id = m_id;
-        }
-        else {
-            id = m_emptyIDs.first();
-            m_emptyIDs.removeFirst();
-        }
-        m_dates.insert(id, d);
-        return id;
+        setError(DatesListError::FormatError);
+        return std::nullopt;
     }
 
     bool remove(const QString& date, const QString& format = "dd.MM.yyyy") {
         const QWriteLocker locker(&m_lock);
-        qsizetype d = strToDate(date, format);
-        if (d < 0) {
+        setError(DatesListError::NoError);
+        if (auto intDate = strToDate(date, format); intDate.has_value()) {
+            qsizetype id = -1;
+            for (auto [k, v] : m_dates.asKeyValueRange()) {
+                if (v == intDate) {
+                    id = k;
+                    break;
+                }
+            }
+            if (id != -1) {
+                m_dates.remove(id);
+                m_emptyIDs.append(id);
+                return true;
+            }
+            setError(DatesListError::DateError);
             return false;
         }
-
-        qsizetype id = -1;
-        for (auto [k, v] : m_dates.asKeyValueRange()) {
-            if (v == d) {
-                id = k;
-                break;
-            }
-        }
-        if (id != -1) {
-            m_dates.remove(id);
-            m_emptyIDs.append(id);
-            return true;
-        }
+        setError(DatesListError::FormatError);
         return false;
     }
 
-    qsizetype getID(const QString& date, const QString& format = "dd.MM.yyyy") const {
+    std::optional<qsizetype> getID(const QString& date, const QString& format = "dd.MM.yyyy") const {
         const QReadLocker locker(&m_lock);
-        qsizetype d = strToDate(date, format);
-        if (d < 0) {
-            return 0;
-        }
-
-        for (auto [k, v] : m_dates.asKeyValueRange()) {
-            if (v == d) {
-                return k;
+        setError(DatesListError::NoError);
+        if (auto intDate = strToDate(date, format); intDate.has_value()) {
+            for (auto [k, v] : m_dates.asKeyValueRange()) {
+                if (v == intDate) {
+                    return k;
+                }
             }
+            setError(DatesListError::DateError);
+            return std::nullopt;
         }
-        return 0;
+        setError(DatesListError::FormatError);
+        return std::nullopt;
     }
 
-    QString getDate(qsizetype id, const QString& format = "dd.MM.yyyy") const {
+    std::optional<QString> getDate(qsizetype id, const QString& format = "dd.MM.yyyy") const {
         const QReadLocker locker(&m_lock);
-        qsizetype d = m_dates.value(id, 0);
-
-        if (d == 0) {
-            return QString();
+        setError(DatesListError::NoError);
+        qsizetype date = m_dates.value(id, -1);
+        if (date != -1) {
+            if (auto result = dateToStr(date, format); result.has_value()) {
+                return result;
+            }
+            setError(DatesListError::FormatError);
+            return std::nullopt;
         }
-        else {
-            return dateToStr(d, format);
-        }
+        setError(DatesListError::IdError);
+        return std::nullopt;
     }
 
     qsizetype size() const {
@@ -94,25 +129,32 @@ public:
 
     void clear() {
         const QWriteLocker locker(&m_lock);
+        setError(DatesListError::NoError);
         m_dates.clear();
         m_emptyIDs.clear();
         m_id = 0;
     }
 
-    static QString dateToStr(qsizetype date, const QString& format = "dd.MM.yyyy") {
-        QDate baseDate = QDate::fromJulianDay(startDateExcel);
-        baseDate = baseDate.addDays(date);
-        return baseDate.toString(format);
+    DatesListError::ErrorType lastError() const {
+        return m_error.load(std::memory_order_acquire);
     }
 
-    static qsizetype strToDate(const QString& date, const QString& format = "dd.MM.yyyy") {
+    static std::optional<QString> dateToStr(qsizetype date, const QString& format = "dd.MM.yyyy") {
         QDate baseDate = QDate::fromJulianDay(startDateExcel);
-        QDate d = QDate::fromString(date, format);
-        if (!d.isValid()) {
-            //throw std::invalid_argument("Invalid date format: " + date.toStdString());
-            return -1;
+        baseDate = baseDate.addDays(date);
+        if (baseDate.isValid()) {
+            return baseDate.toString(format);
         }
-        return d.toJulianDay() - baseDate.toJulianDay();
+        return std::nullopt;
+    }
+
+    static std::optional<qsizetype> strToDate(const QString& date, const QString& format = "dd.MM.yyyy") {
+        QDate baseDate = QDate::fromJulianDay(startDateExcel);
+        QDate inputDate = QDate::fromString(date, format);
+        if (inputDate.isValid()) {
+            return inputDate.toJulianDay() - baseDate.toJulianDay();;
+        }
+        return std::nullopt;
     }
 
 private:
@@ -120,10 +162,15 @@ private:
     qsizetype m_id = 0;
     QQueue<qsizetype> m_emptyIDs;
     mutable QReadWriteLock m_lock;
+    mutable std::atomic<DatesListError::ErrorType> m_error{DatesListError::NoError};
+
+    void setError(DatesListError::ErrorType error) const {
+        m_error.store(error, std::memory_order_release);
+    }
 };
 
 class Drawing {
-public:
+public:    
     Drawing(const QString& number, const QString& title)
         : m_number(number)
         , m_title(title) {}
@@ -136,11 +183,11 @@ public:
         return m_title;
     }
 
-    bool operator ==(const Drawing& other) const {
-        return m_number == other.m_number;
+    bool operator==(const Drawing& other) const {
+        return m_number == other.m_number && m_title == other.m_title;
     }
 
-    bool operator <(const Drawing& other) const {
+    bool operator<(const Drawing& other) const {
         if (m_number != other.m_number) {
             return m_number < other.m_number;
         }
@@ -160,12 +207,12 @@ public:
         const QWriteLocker locker(&m_lock);
         Drawing drawing(number, title);
         for (auto [k, v] : m_drawings.asKeyValueRange()) {
-          if (v == drawing) {
-            return k;
-          }
+            if (v == drawing) {
+                return k;
+            }
         }
 
-        qsizetype id = 0;
+        qsizetype id = -1;
         if (m_emptyIDs.isEmpty()) {
             ++m_id;
             id = m_id;
@@ -178,45 +225,45 @@ public:
         return id;
     }
 
-    qsizetype insert(
-        const Drawing& drawing) {
-      return insert(drawing.getNumber(), drawing.getTitle());
+    qsizetype insert(const Drawing& drawing) {
+        return insert(drawing.getNumber(), drawing.getTitle());
     }
 
-    bool remove(
-        const Drawing& drawing) {
-      const QWriteLocker locker(&m_lock);
-      qsizetype id = -1;
-      for (auto [k, v] : m_drawings.asKeyValueRange()) {
-        if (v == drawing) {
-          id = k;
-          break;
+    bool remove(const Drawing& drawing) {
+        const QWriteLocker locker(&m_lock);
+        qsizetype id = -1;
+        for (auto [k, v] : m_drawings.asKeyValueRange()) {
+            if (v == drawing) {
+                id = k;
+                break;
+            }
         }
-      }
 
-      if (id != -1) {
-        m_drawings.remove(id);
-        m_emptyIDs.append(id);
-        return true;
-      }
-      return false;
-    }
-
-    qsizetype getID(
-        const Drawing& drawing) const {
-      const QReadLocker locker(&m_lock);
-      for (auto [k, v] : m_drawings.asKeyValueRange()) {
-        if (v == drawing) {
-          return k;
+        if (id != -1) {
+            m_drawings.remove(id);
+            m_emptyIDs.append(id);
+            return true;
         }
-      }
-      return 0;
+        return false;
     }
 
-    std::optional<Drawing> getDrawing(
-        qsizetype id) const {
-      const QReadLocker locker(&m_lock);
-      return std::optional<Drawing>(m_drawings.value(id, std::optional<Drawing>().value()));
+    std::optional<qsizetype> getID(const Drawing& drawing) const {
+        const QReadLocker locker(&m_lock);
+        for (auto [k, v] : m_drawings.asKeyValueRange()) {
+            if (v == drawing) {
+                return k;
+            }
+        }
+        return std::nullopt;
+    }
+
+    std::optional<Drawing> getDrawing(qsizetype id) const {
+        const QReadLocker locker(&m_lock);
+        auto it = m_drawings.find(id);
+        if (it != m_drawings.end()) {
+            return *it;
+        }
+        return std::nullopt;
     }
 
     qsizetype size() const {
@@ -232,10 +279,10 @@ public:
     }
 
 private:
-  QHash<qsizetype, Drawing> m_drawings;
-  qsizetype m_id = 0;
-  QQueue<qsizetype> m_emptyIDs;
-  mutable QReadWriteLock m_lock;
+    QHash<qsizetype, Drawing> m_drawings;
+    qsizetype m_id = 0;
+    QQueue<qsizetype> m_emptyIDs;
+    mutable QReadWriteLock m_lock;
 };
 
 inline uint qHash(const Drawing& drawing, uint seed = 0) {
@@ -249,11 +296,11 @@ public:
 
     qsizetype insert(const T& data) {
         const QWriteLocker locker(&m_lock);
-        if (auto id = m_customData.key(data, 0); id > 0) {
+        if (auto id = m_customData.key(data, -1); id != -1) {
             return id;
         }
 
-        qsizetype id;
+        qsizetype id = -1;
         if (m_emptyIDs.isEmpty()) {
             ++m_id;
             id = m_id;
@@ -269,7 +316,7 @@ public:
     bool remove(const T& data) {
         const QWriteLocker locker(&m_lock);
         qsizetype id;
-        if (id = m_customData.key(data, 0); id != 0) {
+        if (id = m_customData.key(data, -1); id != -1) {
             m_customData.remove(id);
             m_emptyIDs.append(id);
             return true;
@@ -277,14 +324,20 @@ public:
         return false;
     }
 
-    qsizetype getID(const T& data) const {
+    std::optional<qsizetype> getID(const T& data) const {
         const QReadLocker locker(&m_lock);
-        return m_customData.key(data, 0);
+        if (auto id = m_customData.key(data, -1); id != -1) {
+            return id;
+        }
+        return std::nullopt;
     }
 
-    T getValue(qsizetype id) const {
+    std::optional<T> getValue(qsizetype id) const {
         const QReadLocker locker(&m_lock);
-        return m_customData.value(id, T());
+        if (T value = m_customData.value(id, T()); value != T()) {
+            return value;
+        }
+        return std::nullopt;
     }
 
     qsizetype size() const {
@@ -325,7 +378,7 @@ public:
 
     std::optional<qsizetype> add(const QString& value) override {
         qsizetype id = m_list.insert(value);
-        if (id != 0) {
+        if (id > 0) {
             return id;
         }
         return std::nullopt;
@@ -336,16 +389,14 @@ public:
     }
 
     std::optional<qsizetype> findId(const QString& value) const override {
-        qsizetype id = m_list.getID(value);
-        if (id != 0) {
+        if (auto id = m_list.getID(value); id.has_value()) {
             return id;
         }
         return std::nullopt;
     }
 
     std::optional<QString> findValue(qsizetype id) const override {
-        QString value = m_list.getValue(id);
-        if (!value.isEmpty()) {
+        if (auto value = m_list.getValue(id); value.has_value()) {
             return value;
         }
         return std::nullopt;
@@ -369,7 +420,7 @@ public:
 
     std::optional<qsizetype> add(const int& value) override {
         qsizetype id = m_list.insert(value);
-        if (id != 0) {
+        if (id > 0) {
             return id;
         }
         return std::nullopt;
@@ -380,16 +431,14 @@ public:
     }
 
     std::optional<qsizetype> findId(const int& value) const override {
-        qsizetype id = m_list.getID(value);
-        if (id != 0) {
+        if (auto id = m_list.getID(value); id.has_value()) {
             return id;
         }
         return std::nullopt;
     }
 
     std::optional<int> findValue(qsizetype id) const override {
-        int value = m_list.getValue(id);
-        if (value != 0) {
+        if (auto value = m_list.getValue(id); value.has_value()) {
             return value;
         }
         return std::nullopt;
@@ -412,8 +461,7 @@ public:
     DateRepository() = default;
 
     std::optional<qsizetype> add(const QString& date) override {
-        qsizetype id = m_dates.insert(date, m_format);
-        if (id != 0) {
+        if (auto id = m_dates.insert(date, m_format); id.has_value()) {
             return id;
         }
         return std::nullopt;
@@ -424,16 +472,14 @@ public:
     }
 
     std::optional<qsizetype> findId(const QString& date) const override {
-        qsizetype id = m_dates.getID(date, m_format);
-        if (id != 0) {
+        if (auto id = m_dates.getID(date, m_format); id.has_value()) {
             return id;
         }
         return std::nullopt;
     }
 
     std::optional<QString> findValue(qsizetype id) const override {
-        QString date = m_dates.getDate(id, m_format);
-        if (!date.isEmpty()) {
+        if (auto date = m_dates.getDate(id, m_format); date.has_value()) {
             return date;
         }
         return std::nullopt;
@@ -455,6 +501,10 @@ public:
         return m_format;
     }
 
+    DatesListError::ErrorType lastError() const {
+        return m_dates.lastError();
+    }
+
 private:
     DatesList m_dates;
     QString m_format = "dd.MM.yyyy";
@@ -464,49 +514,43 @@ class DrawingRepository : public IRepository<Drawing> {
 public:
     DrawingRepository() = default;
 
-    std::optional<qsizetype> add(
-        const Drawing& drawing) override {
-      qsizetype id = m_drawings.insert(drawing);
-      if (id != 0) {
-        return id;
-      }
-      return std::nullopt;
-    }
-
-    std::optional<qsizetype> add(const QString& number, const QString& title) {
-        qsizetype id = m_drawings.insert(number, title);
-        if (id != 0) {
+    std::optional<qsizetype> add(const Drawing& drawing) override {
+        qsizetype id = m_drawings.insert(drawing);
+        if (id > 0) {
             return id;
         }
         return std::nullopt;
     }
 
-    bool remove(
-        const Drawing& drawing) override {
-      return m_drawings.remove(drawing);
+    std::optional<qsizetype> add(const QString& number, const QString& title) {
+        qsizetype id = m_drawings.insert(number, title);
+        if (id > 0) {
+            return id;
+        }
+        return std::nullopt;
+    }
+
+    bool remove(const Drawing& drawing) override {
+        return m_drawings.remove(drawing);
     }
 
     bool remove(const QString& number, const QString& title) {
-      Drawing drawing(number, title);
-      return m_drawings.remove(drawing);
+        Drawing drawing(number, title);
+        return m_drawings.remove(drawing);
     }
 
-    std::optional<qsizetype> findId(
-        const Drawing& drawing) const override {
-      qsizetype id = m_drawings.getID(drawing);
-      if (id != 0) {
-        return id;
-      }
-      return std::nullopt;
+    std::optional<qsizetype> findId(const Drawing& drawing) const override {
+        if (auto id = m_drawings.getID(drawing); id.has_value()) {
+            return id;
+        }
+        return std::nullopt;
     }
 
-    std::optional<Drawing> findValue(
-        qsizetype id) const override {
-      auto drawing = m_drawings.getDrawing(id);
-      if (drawing) {
-        return drawing;
-      }
-      return std::nullopt;
+    std::optional<Drawing> findValue(qsizetype id) const override {
+        if (auto drawing = m_drawings.getDrawing(id); drawing.has_value()) {
+            return drawing;
+        }
+        return std::nullopt;
     }
 
     qsizetype count() const override {

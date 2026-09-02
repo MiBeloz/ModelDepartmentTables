@@ -36,7 +36,9 @@ private slots:
         QCOMPARE(dates_list.insert("28.08.2019"), 5);
         QCOMPARE(dates_list.size(), 5);
 
-        QCOMPARE(dates_list.insert("55.08.2019"), 0);
+        QCOMPARE(dates_list.lastError(), DatesListError::NoError);
+        QCOMPARE(dates_list.insert("55.08.2019"), std::nullopt);
+        QCOMPARE(dates_list.lastError(), DatesListError::FormatError);
     }
 
     void testRemove() {
@@ -71,8 +73,10 @@ private slots:
         QCOMPARE(dates_list.getID("09.01.2019"), 6);
         QCOMPARE(dates_list.getID("25.08.2025"), 1);
 
-        QCOMPARE(dates_list.getID("01.05.2017"), 0);
-        QCOMPARE(dates_list.getID("55.05.2017"), 0);
+        QCOMPARE(dates_list.getID("01.05.2017"), std::nullopt);
+        QCOMPARE(dates_list.lastError(), DatesListError::DateError);
+        QCOMPARE(dates_list.getID("55.05.2017"), std::nullopt);
+        QCOMPARE(dates_list.lastError(), DatesListError::FormatError);
     }
 
     void testGetDate() {
@@ -83,7 +87,8 @@ private slots:
         QCOMPARE(dates_list.getDate(6), "09.01.2019");
         QCOMPARE(dates_list.getDate(1), "25.08.2025");
 
-        QCOMPARE(dates_list.getDate(7), "");
+        QCOMPARE(dates_list.getDate(7), std::nullopt);
+        QCOMPARE(dates_list.lastError(), DatesListError::IdError);
     }
 };
 

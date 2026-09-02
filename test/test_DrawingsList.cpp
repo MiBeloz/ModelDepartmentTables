@@ -75,16 +75,16 @@ private slots:
         QCOMPARE(drawings_list.getID(d_1_9876), 6);
         QCOMPARE(drawings_list.getID(d_IMN_111), 1);
 
-        QCOMPARE(drawings_list.getID(d_IME_987), 0);
+        QCOMPARE(drawings_list.getID(d_IME_987), std::nullopt);
     }
 
     void testGetDrawing() {
-      //QCOMPARE(drawings_list.getDrawing(4), d_SZ_0101);
-      //QCOMPARE(drawings_list.getDrawing(2), d_111_11);
-      //QCOMPARE(drawings_list.getDrawing(3), d_IME_123);
-      //QCOMPARE(drawings_list.getDrawing(5), d_987_789);
-      //QCOMPARE(drawings_list.getDrawing(6), d_1_9876);
-      //QCOMPARE(drawings_list.getDrawing(1), d_IMN_111);
+      QCOMPARE(drawings_list.getDrawing(4), d_SZ_0101);
+      QCOMPARE(drawings_list.getDrawing(2), d_111_11);
+      QCOMPARE(drawings_list.getDrawing(3), d_IME_123);
+      QCOMPARE(drawings_list.getDrawing(5), d_987_789);
+      QCOMPARE(drawings_list.getDrawing(6), d_1_9876);
+      QCOMPARE(drawings_list.getDrawing(1), d_IMN_111);
 
       QCOMPARE(drawings_list.getDrawing(7), std::nullopt);
     }

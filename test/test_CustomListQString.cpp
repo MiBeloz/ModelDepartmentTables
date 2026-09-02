@@ -67,7 +67,7 @@ private slots:
         QCOMPARE(custom_list.getID("6"), 6);
         QCOMPARE(custom_list.getID("7"), 1);
 
-        QCOMPARE(custom_list.getID("33"), 0);
+        QCOMPARE(custom_list.getID("33"), std::nullopt);
     }
 
     void testGetValue() {
@@ -78,7 +78,7 @@ private slots:
         QCOMPARE(custom_list.getValue(6), "6");
         QCOMPARE(custom_list.getValue(1), "7");
 
-        QCOMPARE(custom_list.getValue(7), QString());
+        QCOMPARE(custom_list.getValue(7), std::nullopt);
     }
 };
 
