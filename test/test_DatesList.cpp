@@ -1,13 +1,12 @@
 ﻿#include <QTest>
 #include <QObject>
 
-#include "ItemData.h"
+#include "DatesList.h"
 
 
 DatesList dates_list;
 
-class TestDatesList final : public QObject
-{
+class TestDatesList final : public QObject {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(TestDatesList)
 
@@ -15,8 +14,6 @@ public:
     TestDatesList() = default;
 
 private slots:
-
-
     void testCreate() {
         QCOMPARE(dates_list.size(), 0);
     }
