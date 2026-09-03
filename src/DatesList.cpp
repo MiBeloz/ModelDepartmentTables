@@ -27,8 +27,7 @@ std::optional<qsizetype> DatesList::insert(const QString &date) {
             ++m_id;
             id = m_id;
         } else {
-            id = m_emptyIDs.first();
-            m_emptyIDs.removeFirst();
+            id = m_emptyIDs.dequeue();
         }
         m_list.insert(id, intDate.value());
         return id;
