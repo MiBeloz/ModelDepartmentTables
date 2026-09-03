@@ -1,8 +1,7 @@
-﻿#include <QTest>
-#include <QObject>
+﻿#include <QObject>
+#include <QTest>
 
-#include "ItemData.h"
-
+#include "DrawingsList.h"
 
 DrawingsList drawings_list;
 auto d_IMN_111 = Drawing("ИМН-111", "Колесо рабочее");
@@ -14,8 +13,7 @@ auto d_SZ_0101 = Drawing("СЗ-0101", "Тарелка");
 auto d_IME_123 = Drawing("ИМЭ-123", "Блок");
 auto d_1_9876 = Drawing("1-9876", "Фланец");
 
-class TestDrawingsList final : public QObject
-{
+class TestDrawingsList final : public QObject {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(TestDrawingsList)
 
@@ -23,7 +21,6 @@ public:
     TestDrawingsList() = default;
 
 private slots:
-
 
     void testCreate() {
         QCOMPARE(drawings_list.size(), 0);
@@ -79,14 +76,14 @@ private slots:
     }
 
     void testGetDrawing() {
-      QCOMPARE(drawings_list.getDrawing(4), d_SZ_0101);
-      QCOMPARE(drawings_list.getDrawing(2), d_111_11);
-      QCOMPARE(drawings_list.getDrawing(3), d_IME_123);
-      QCOMPARE(drawings_list.getDrawing(5), d_987_789);
-      QCOMPARE(drawings_list.getDrawing(6), d_1_9876);
-      QCOMPARE(drawings_list.getDrawing(1), d_IMN_111);
+        QCOMPARE(drawings_list.getDrawing(4), d_SZ_0101);
+        QCOMPARE(drawings_list.getDrawing(2), d_111_11);
+        QCOMPARE(drawings_list.getDrawing(3), d_IME_123);
+        QCOMPARE(drawings_list.getDrawing(5), d_987_789);
+        QCOMPARE(drawings_list.getDrawing(6), d_1_9876);
+        QCOMPARE(drawings_list.getDrawing(1), d_IMN_111);
 
-      QCOMPARE(drawings_list.getDrawing(7), std::nullopt);
+        QCOMPARE(drawings_list.getDrawing(7), std::nullopt);
     }
 };
 

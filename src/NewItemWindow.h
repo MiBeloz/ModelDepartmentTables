@@ -1,17 +1,15 @@
-#ifndef NEWITEMWINDOW_H
+﻿#ifndef NEWITEMWINDOW_H
 #define NEWITEMWINDOW_H
 
 #include <QDialog>
 
 #include "ItemData.h"
 
-
 namespace Ui {
-class NewItemWindow;
+    class NewItemWindow;
 }
 
-class NewItemWindow : public QDialog
-{
+class NewItemWindow : public QDialog {
     Q_OBJECT
 
 public:
@@ -19,7 +17,7 @@ public:
     ~NewItemWindow();
 
 signals:
-    void sig_handleNewItem(const ItemData& newItem);
+    void sig_handleNewItem(const ItemData &newItem);
 
 private slots:
     void rec_onPB_okClicked();

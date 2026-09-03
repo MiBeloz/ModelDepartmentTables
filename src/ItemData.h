@@ -1,510 +1,24 @@
 ﻿#ifndef ITEMDATA_H
 #define ITEMDATA_H
 
+#include <QDate>
+#include <QDebug>
 #include <QHash>
 #include <QQueue>
-#include <QDate>
 #include <QReadWriteLock>
-#include <memory>
-#include <QDebug>
 
-#include "Constants.h"
-#include "DatesList.h"
-
-class Drawing {
-public:    
-    Drawing(const QString& number, const QString& title)
-        : m_number(number)
-        , m_title(title) {}
-
-    QString getNumber() const {
-        return m_number;
-    }
-
-    QString getTitle() const {
-        return m_title;
-    }
-
-    bool operator==(const Drawing& other) const {
-        return m_number == other.m_number && m_title == other.m_title;
-    }
-
-    bool operator<(const Drawing& other) const {
-        if (m_number != other.m_number) {
-            return m_number < other.m_number;
-        }
-        return m_title < other.m_title;
-    }
-
-private:
-    QString m_number;
-    QString m_title;
-};
-
-class DrawingsList final {
-public:
-    DrawingsList() {}
-
-    qsizetype insert(const QString& number, const QString& title) {
-        const QWriteLocker locker(&m_lock);
-        Drawing drawing(number, title);
-        for (auto [k, v] : m_drawings.asKeyValueRange()) {
-            if (v == drawing) {
-                return k;
-            }
-        }
-
-        qsizetype id = -1;
-        if (m_emptyIDs.isEmpty()) {
-            ++m_id;
-            id = m_id;
-        }
-        else {
-            id = m_emptyIDs.first();
-            m_emptyIDs.removeFirst();
-        }
-        m_drawings.insert(id, drawing);
-        return id;
-    }
-
-    qsizetype insert(const Drawing& drawing) {
-        return insert(drawing.getNumber(), drawing.getTitle());
-    }
-
-    bool remove(const Drawing& drawing) {
-        const QWriteLocker locker(&m_lock);
-        qsizetype id = -1;
-        for (auto [k, v] : m_drawings.asKeyValueRange()) {
-            if (v == drawing) {
-                id = k;
-                break;
-            }
-        }
-
-        if (id != -1) {
-            m_drawings.remove(id);
-            m_emptyIDs.append(id);
-            return true;
-        }
-        return false;
-    }
-
-    std::optional<qsizetype> getID(const Drawing& drawing) const {
-        const QReadLocker locker(&m_lock);
-        for (auto [k, v] : m_drawings.asKeyValueRange()) {
-            if (v == drawing) {
-                return k;
-            }
-        }
-        return std::nullopt;
-    }
-
-    std::optional<Drawing> getDrawing(qsizetype id) const {
-        const QReadLocker locker(&m_lock);
-        auto it = m_drawings.find(id);
-        if (it != m_drawings.end()) {
-            return *it;
-        }
-        return std::nullopt;
-    }
-
-    qsizetype size() const {
-        const QReadLocker locker(&m_lock);
-        return m_drawings.size();
-    }
-
-    void clear() {
-        const QWriteLocker locker(&m_lock);
-        m_drawings.clear();
-        m_emptyIDs.clear();
-        m_id = 0;
-    }
-
-private:
-    QHash<qsizetype, Drawing> m_drawings;
-    qsizetype m_id = 0;
-    QQueue<qsizetype> m_emptyIDs;
-    mutable QReadWriteLock m_lock;
-};
-
-inline uint qHash(const Drawing& drawing, uint seed = 0) {
-    return qHash(drawing.getNumber(), seed) ^ qHash(drawing.getTitle(), seed << 1);
-}
-
-template<typename T>
-class CustomList final {
-public:
-    CustomList() {}
-
-    qsizetype insert(const T& data) {
-        const QWriteLocker locker(&m_lock);
-        if (auto id = m_customData.key(data, -1); id != -1) {
-            return id;
-        }
-
-        qsizetype id = -1;
-        if (m_emptyIDs.isEmpty()) {
-            ++m_id;
-            id = m_id;
-        }
-        else {
-            id = m_emptyIDs.first();
-            m_emptyIDs.removeFirst();
-        }
-        m_customData.insert(id, data);
-        return id;
-    }
-
-    bool remove(const T& data) {
-        const QWriteLocker locker(&m_lock);
-        qsizetype id;
-        if (id = m_customData.key(data, -1); id != -1) {
-            m_customData.remove(id);
-            m_emptyIDs.append(id);
-            return true;
-        }
-        return false;
-    }
-
-    std::optional<qsizetype> getID(const T& data) const {
-        const QReadLocker locker(&m_lock);
-        if (auto id = m_customData.key(data, -1); id != -1) {
-            return id;
-        }
-        return std::nullopt;
-    }
-
-    std::optional<T> getValue(qsizetype id) const {
-        const QReadLocker locker(&m_lock);
-        if (T value = m_customData.value(id, T()); value != T()) {
-            return value;
-        }
-        return std::nullopt;
-    }
-
-    qsizetype size() const {
-        const QReadLocker locker(&m_lock);
-        return m_customData.size();
-    }
-
-    void clear() {
-        const QWriteLocker locker(&m_lock);
-        m_customData.clear();
-        m_emptyIDs.clear();
-        m_id = 0;
-    }
-
-private:
-    QHash<qsizetype, T> m_customData;
-    qsizetype m_id = 0;
-    QQueue<qsizetype> m_emptyIDs;
-    mutable QReadWriteLock m_lock;
-};
-
-template<typename T>
-class IRepository {
-public:
-    virtual ~IRepository() = default;
-
-    virtual std::optional<qsizetype> add(const T& value) = 0;
-    virtual bool remove(const T& value) = 0;
-    virtual std::optional<qsizetype> findId(const T& value) const = 0;
-    virtual std::optional<T> findValue(qsizetype id) const = 0;
-    virtual qsizetype count() const = 0;
-    virtual void clear() = 0;
-};
-
-class StringRepository : public IRepository<QString> {
-public:
-    StringRepository() = default;
-
-    std::optional<qsizetype> add(const QString& value) override {
-        qsizetype id = m_list.insert(value);
-        if (id > 0) {
-            return id;
-        }
-        return std::nullopt;
-    }
-
-    bool remove(const QString& value) override {
-        return m_list.remove(value);
-    }
-
-    std::optional<qsizetype> findId(const QString& value) const override {
-        if (auto id = m_list.getID(value); id.has_value()) {
-            return id;
-        }
-        return std::nullopt;
-    }
-
-    std::optional<QString> findValue(qsizetype id) const override {
-        if (auto value = m_list.getValue(id); value.has_value()) {
-            return value;
-        }
-        return std::nullopt;
-    }
-
-    qsizetype count() const override {
-        return m_list.size();
-    }
-
-    void clear() override {
-        m_list.clear();
-    }
-
-private:
-    CustomList<QString> m_list;
-};
-
-class NumericRepository : public IRepository<int> {
-public:
-    NumericRepository() = default;
-
-    std::optional<qsizetype> add(const int& value) override {
-        qsizetype id = m_list.insert(value);
-        if (id > 0) {
-            return id;
-        }
-        return std::nullopt;
-    }
-
-    bool remove(const int& value) override {
-        return m_list.remove(value);
-    }
-
-    std::optional<qsizetype> findId(const int& value) const override {
-        if (auto id = m_list.getID(value); id.has_value()) {
-            return id;
-        }
-        return std::nullopt;
-    }
-
-    std::optional<int> findValue(qsizetype id) const override {
-        if (auto value = m_list.getValue(id); value.has_value()) {
-            return value;
-        }
-        return std::nullopt;
-    }
-
-    qsizetype count() const override {
-        return m_list.size();
-    }
-
-    void clear() override {
-        m_list.clear();
-    }
-
-private:
-    CustomList<int> m_list;
-};
-
-class DateRepository : public IRepository<QString> {
-public:
-    DateRepository() = default;
-
-    std::optional<qsizetype> add(const QString& date) override {
-        if (auto id = m_dates.insert(date, m_format); id.has_value()) {
-            return id;
-        }
-        return std::nullopt;
-    }
-
-    bool remove(const QString& date) override {
-        return m_dates.remove(date, m_format);
-    }
-
-    std::optional<qsizetype> findId(const QString& date) const override {
-        if (auto id = m_dates.getID(date, m_format); id.has_value()) {
-            return id;
-        }
-        return std::nullopt;
-    }
-
-    std::optional<QString> findValue(qsizetype id) const override {
-        if (auto date = m_dates.getDate(id, m_format); date.has_value()) {
-            return date;
-        }
-        return std::nullopt;
-    }
-
-    qsizetype count() const override {
-        return m_dates.size();
-    }
-
-    void clear() override {
-        m_dates.clear();
-    }
-
-    void setDateFormat(const QString& format) {
-        m_format = format;
-    }
-
-    QString getDateFormat() const {
-        return m_format;
-    }
-
-    DatesListError::ErrorType lastError() const {
-        return m_dates.lastError();
-    }
-
-private:
-    DatesList m_dates;
-    QString m_format = "dd.MM.yyyy";
-};
-
-class DrawingRepository : public IRepository<Drawing> {
-public:
-    DrawingRepository() = default;
-
-    std::optional<qsizetype> add(const Drawing& drawing) override {
-        qsizetype id = m_drawings.insert(drawing);
-        if (id > 0) {
-            return id;
-        }
-        return std::nullopt;
-    }
-
-    std::optional<qsizetype> add(const QString& number, const QString& title) {
-        qsizetype id = m_drawings.insert(number, title);
-        if (id > 0) {
-            return id;
-        }
-        return std::nullopt;
-    }
-
-    bool remove(const Drawing& drawing) override {
-        return m_drawings.remove(drawing);
-    }
-
-    bool remove(const QString& number, const QString& title) {
-        Drawing drawing(number, title);
-        return m_drawings.remove(drawing);
-    }
-
-    std::optional<qsizetype> findId(const Drawing& drawing) const override {
-        if (auto id = m_drawings.getID(drawing); id.has_value()) {
-            return id;
-        }
-        return std::nullopt;
-    }
-
-    std::optional<Drawing> findValue(qsizetype id) const override {
-        if (auto drawing = m_drawings.getDrawing(id); drawing.has_value()) {
-            return drawing;
-        }
-        return std::nullopt;
-    }
-
-    qsizetype count() const override {
-        return m_drawings.size();
-    }
-
-    void clear() override {
-        m_drawings.clear();
-    }
-
-private:
-    DrawingsList m_drawings;
-};
-
-class RepositoryService {
-public:
-    RepositoryService()
-        : m_dateRepo(std::make_unique<DateRepository>())
-        , m_drawingRepo(std::make_unique<DrawingRepository>())
-        , m_executorRepo(std::make_unique<StringRepository>())
-        , m_authorRepo(std::make_unique<StringRepository>())
-        , m_castingMaterialRepo(std::make_unique<StringRepository>())
-        , m_modelMaterialRepo(std::make_unique<StringRepository>())
-        , m_machineRepo(std::make_unique<StringRepository>())
-        , m_noteRepo(std::make_unique<StringRepository>())
-        , m_amountRepo(std::make_unique<NumericRepository>()) { }
-
-    DateRepository& dates() {
-        return *m_dateRepo;
-    }
-    const DateRepository& dates() const {
-        return *m_dateRepo;
-    }
-
-    DrawingRepository& drawings() {
-        return *m_drawingRepo;
-    }
-    const DrawingRepository& drawings() const {
-        return *m_drawingRepo;
-    }
-
-    StringRepository& executors() {
-        return *m_executorRepo;
-    }
-    const StringRepository& executors() const {
-        return *m_executorRepo;
-    }
-
-    StringRepository& authors() {
-        return *m_authorRepo;
-    }
-    const StringRepository& authors() const {
-        return *m_authorRepo;
-    }
-
-    StringRepository& castingMaterials() {
-        return *m_castingMaterialRepo;
-    }
-    const StringRepository& castingMaterials() const {
-        return *m_castingMaterialRepo;
-    }
-
-    StringRepository& modelMaterials() {
-        return *m_modelMaterialRepo;
-    }
-    const StringRepository& modelMaterials() const {
-        return *m_modelMaterialRepo;
-    }
-
-    StringRepository& machines() {
-        return *m_machineRepo;
-    }
-    const StringRepository& machines() const {
-        return *m_machineRepo;
-    }
-
-    StringRepository& notes() {
-        return *m_noteRepo;
-    }
-    const StringRepository& notes() const {
-        return *m_noteRepo;
-    }
-
-    NumericRepository& amounts() {
-        return *m_amountRepo;
-    }
-    const NumericRepository& amounts() const {
-        return *m_amountRepo;
-    }
-
-private:
-    std::unique_ptr<DateRepository> m_dateRepo;
-    std::unique_ptr<DrawingRepository> m_drawingRepo;
-    std::unique_ptr<StringRepository> m_executorRepo;
-    std::unique_ptr<StringRepository> m_authorRepo;
-    std::unique_ptr<StringRepository> m_castingMaterialRepo;
-    std::unique_ptr<StringRepository> m_modelMaterialRepo;
-    std::unique_ptr<StringRepository> m_machineRepo;
-    std::unique_ptr<StringRepository> m_noteRepo;
-    std::unique_ptr<NumericRepository> m_amountRepo;
-};
+#include "Repository.h"
 
 struct Item {
     size_t date = 0;
-    Drawing *drawing;
+    Drawing* drawing;
     size_t amount = 0;
 
-    bool operator==(const Item& other) const {
+    bool operator ==(const Item& other) const {
         return date == other.date && *drawing == *other.drawing && amount == other.amount;
     }
 
-    bool operator<(const Item& other) const {
+    bool operator <(const Item& other) const {
         if (date < other.date) {
             return true;
         } else {
@@ -543,13 +57,15 @@ struct ItemID {
     size_t drawing_id = 0;
     size_t amount_id = 0;
 
-    bool operator==(const ItemID& other) const {
-        return date_id == other.date_id && drawing_id == other.drawing_id && amount_id == other.amount_id;
+    bool operator ==(const ItemID& other) const {
+        return date_id == other.date_id && drawing_id == other.drawing_id &&
+               amount_id == other.amount_id;
     }
 };
 
 inline uint qHash(const ItemID& itemCache, uint seed = 0) {
-    return qHash(itemCache.date_id, seed) ^ qHash(itemCache.drawing_id, seed << 1) ^ qHash(itemCache.amount_id, seed << 2);
+    return qHash(itemCache.date_id, seed) ^ qHash(itemCache.drawing_id, seed << 1) ^
+           qHash(itemCache.amount_id, seed << 2);
 }
 
 struct ItemData {
@@ -563,60 +79,62 @@ struct ItemData {
 
     QString at(int index) const {
         switch (index) {
-        case 0: {
-            return Item::dateToStr(item.date);
-        }
-        case 1: {
-            return item.drawing->getNumber();
-        }
-        case 2: {
-            return item.drawing->getTitle();
-        }
-        case 3: {
-            return executors.join(',');
-        }
-        case 4: {
-            return authors.join(',');
-        }
-        case 5: {
-            return QString::number(item.amount);
-        }
-        case 6: {
-            return castingMaterials.join(',');
-        }
-        case 7: {
-            return modelMaterials.join(',');
-        }
-        case 8: {
-            return machines.join(',');
-        }
-        case 9: {
-            return notes.join(',');
-        }
-        default: {
-            QString();
-        }
+            case 0: {
+                return Item::dateToStr(item.date);
+            }
+            case 1: {
+                return item.drawing->getNumber();
+            }
+            case 2: {
+                return item.drawing->getTitle();
+            }
+            case 3: {
+                return executors.join(',');
+            }
+            case 4: {
+                return authors.join(',');
+            }
+            case 5: {
+                return QString::number(item.amount);
+            }
+            case 6: {
+                return castingMaterials.join(',');
+            }
+            case 7: {
+                return modelMaterials.join(',');
+            }
+            case 8: {
+                return machines.join(',');
+            }
+            case 9: {
+                return notes.join(',');
+            }
+            default: {
+                QString();
+            }
         }
         return QString();
     }
 };
 
-inline QTextStream& operator<<(QTextStream& out, const Drawing& drawing) {
+inline QTextStream& operator <<(QTextStream& out, const Drawing& drawing) {
     out << "[Name: " << drawing.getNumber() << ", Title: " << drawing.getTitle() << "]";
     return out;
 }
 
-inline QTextStream& operator<<(QTextStream& out, const Item& obj) {
-    out << "[Date: " << obj.date << ", Drawing: " << obj.drawing << ", Amount: " << obj.amount << "]";
+inline QTextStream& operator <<(QTextStream& out, const Item& obj) {
+    out << "[Date: " << obj.date << ", Drawing: " << obj.drawing << ", Amount: " << obj.amount
+        << "]";
     return out;
 }
 
-inline QTextStream& operator<<(QTextStream& out, const ItemID& obj) {
-    out << "[DateID: " << obj.date_id << ",\t DrawingID: " << obj.drawing_id << ",\t AmountID: " << obj.amount_id << "]";
+inline QTextStream& operator <<(QTextStream& out, const ItemID& obj) {
+    out << "[DateID: " << obj.date_id << ",\t DrawingID: " << obj.drawing_id
+        << ",\t AmountID: " << obj.amount_id << "]";
     return out;
 }
 
-inline QDataStream &operator<<(QDataStream &out, const Drawing *data) {
+inline QDataStream& operator <<(QDataStream& out, const Drawing* data) {
     out << data->getNumber();
     out << data->getTitle();
     return out;
@@ -636,14 +154,14 @@ inline QDataStream &operator<<(QDataStream &out, const Drawing *data) {
 //     return out;
 // }
 
-inline QDataStream &operator>>(QDataStream &in, Drawing *data) {
+inline QDataStream& operator >>(QDataStream& in, Drawing* data) {
     QString number;
     QString title;
 
     in >> number;
     in >> title;
 
-    Drawing *drawing = new Drawing(number, title);
+    Drawing* drawing = new Drawing(number, title);
     qSwap(data, drawing);
     delete drawing;
 

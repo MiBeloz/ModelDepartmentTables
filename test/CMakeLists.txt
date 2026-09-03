@@ -1,6 +1,6 @@
 ﻿find_package(Qt6 REQUIRED COMPONENTS Test)
 
-#file(GLOB test_Files "test_*.cpp")
+file(GLOB test_Files "test_*.cpp")
 
 enable_testing()
 
@@ -8,14 +8,6 @@ add_custom_target(check
     COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     COMMENT "Running tests"
-)
-
-set(test_Files
-    test_DatesList.cpp
-    test_DrawingsList.cpp
-    test_CustomListInt.cpp
-    test_CustomListQString.cpp
-    test_RepositoryService.cpp
 )
 
 foreach(test_File ${test_Files})

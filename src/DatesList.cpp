@@ -1,4 +1,7 @@
-#include "DatesList.h"
+﻿#include "DatesList.h"
+
+#include <QDate>
+
 #include "Constants.h"
 
 DatesListError::ErrorType DatesListError::lastError() const {
@@ -9,11 +12,11 @@ void DatesListError::setError(ErrorType error) {
     m_error = error;
 }
 
-std::optional<qsizetype> DatesList::insert(const QString &date, const QString &format) {
+std::optional<qsizetype> DatesList::insert(const QString &date) {
     const QWriteLocker locker(&m_lock);
     setError(DatesListError::NoError);
-    if (auto intDate = strToDate(date, format); intDate.has_value()) {
-        for (auto [k, v] : m_dates.asKeyValueRange()) {
+    if (auto intDate = strToDate(date, m_format); intDate.has_value()) {
+        for (auto [k, v] : m_list.asKeyValueRange()) {
             if (v == intDate) {
                 return k;
             }
@@ -27,26 +30,26 @@ std::optional<qsizetype> DatesList::insert(const QString &date, const QString &f
             id = m_emptyIDs.first();
             m_emptyIDs.removeFirst();
         }
-        m_dates.insert(id, intDate.value());
+        m_list.insert(id, intDate.value());
         return id;
     }
     setError(DatesListError::FormatError);
     return std::nullopt;
 }
 
-bool DatesList::remove(const QString &date, const QString &format) {
+bool DatesList::remove(const QString &date) {
     const QWriteLocker locker(&m_lock);
     setError(DatesListError::NoError);
-    if (auto intDate = strToDate(date, format); intDate.has_value()) {
+    if (auto intDate = strToDate(date, m_format); intDate.has_value()) {
         qsizetype id = -1;
-        for (auto [k, v] : m_dates.asKeyValueRange()) {
+        for (auto [k, v] : m_list.asKeyValueRange()) {
             if (v == intDate) {
                 id = k;
                 break;
             }
         }
         if (id != -1) {
-            m_dates.remove(id);
+            m_list.remove(id);
             m_emptyIDs.append(id);
             return true;
         }
@@ -57,11 +60,11 @@ bool DatesList::remove(const QString &date, const QString &format) {
     return false;
 }
 
-std::optional<qsizetype> DatesList::getID(const QString &date, const QString &format) const {
+std::optional<qsizetype> DatesList::getID(const QString &date) const {
     const QReadLocker locker(&m_lock);
     setError(DatesListError::NoError);
-    if (auto intDate = strToDate(date, format); intDate.has_value()) {
-        for (auto [k, v] : m_dates.asKeyValueRange()) {
+    if (auto intDate = strToDate(date, m_format); intDate.has_value()) {
+        for (auto [k, v] : m_list.asKeyValueRange()) {
             if (v == intDate) {
                 return k;
             }
@@ -73,12 +76,12 @@ std::optional<qsizetype> DatesList::getID(const QString &date, const QString &fo
     return std::nullopt;
 }
 
-std::optional<QString> DatesList::getDate(qsizetype id, const QString &format) const {
+std::optional<QString> DatesList::getValue(qsizetype id) const {
     const QReadLocker locker(&m_lock);
     setError(DatesListError::NoError);
-    qsizetype date = m_dates.value(id, -1);
+    qsizetype date = m_list.value(id, -1);
     if (date != -1) {
-        if (auto result = dateToStr(date, format); result.has_value()) {
+        if (auto result = dateToStr(date, m_format); result.has_value()) {
             return result;
         }
         setError(DatesListError::FormatError);
@@ -88,21 +91,16 @@ std::optional<QString> DatesList::getDate(qsizetype id, const QString &format) c
     return std::nullopt;
 }
 
-qsizetype DatesList::size() const {
-    const QReadLocker locker(&m_lock);
-    return m_dates.size();
-}
-
-void DatesList::clear() {
-    const QWriteLocker locker(&m_lock);
-    setError(DatesListError::NoError);
-    m_dates.clear();
-    m_emptyIDs.clear();
-    m_id = 0;
-}
-
 DatesListError::ErrorType DatesList::lastError() const {
     return m_error.load(std::memory_order_acquire);
+}
+
+void DatesList::setDateFormat(const QString &format) {
+    m_format = format;
+}
+
+QString DatesList::getDateFormat() const {
+    return m_format;
 }
 
 std::optional<QString> DatesList::dateToStr(qsizetype date, const QString &format) {

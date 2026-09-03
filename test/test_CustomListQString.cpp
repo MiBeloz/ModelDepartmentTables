@@ -1,13 +1,11 @@
-﻿#include <QTest>
-#include <QObject>
+﻿#include <QObject>
+#include <QTest>
 
-#include "ItemData.h"
-
+#include "CustomList.h"
 
 CustomList<QString> custom_list;
 
-class TestCustomListQString final : public QObject
-{
+class TestCustomListQString final : public QObject {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(TestCustomListQString)
 
@@ -15,7 +13,6 @@ public:
     TestCustomListQString() = default;
 
 private slots:
-
 
     void testCreate() {
         QCOMPARE(custom_list.size(), 0);

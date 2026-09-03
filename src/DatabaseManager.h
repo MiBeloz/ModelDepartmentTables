@@ -1,24 +1,24 @@
 ﻿#ifndef DATABASEMANAGER_H
 #define DATABASEMANAGER_H
 
-#include <QObject>
-#include <QtSql>
-#include <QMutex>
-#include <QWaitCondition>
-#include <QThread>
 #include <QAtomicInt>
+#include <QMutex>
+#include <QObject>
+#include <QThread>
+#include <QWaitCondition>
+#include <QtSql>
 
 #include "CacheManager.hpp"
-
 
 class DatabaseManager : public QObject {
     Q_OBJECT
 
 public:
-    explicit DatabaseManager(QObject *parent = nullptr);
+    explicit DatabaseManager(QObject* parent = nullptr);
     ~DatabaseManager();
 
-    void setConnectionParams(const QString& host, int port,
+    void setConnectionParams(const QString& host,
+                             int port,
                              const QString& dbName,
                              const QString& user,
                              const QString& password);
@@ -36,7 +36,9 @@ public:
     QSqlQuery selectData(const QString& condition = QString());
 
     // Счетчик активных соединений
-    int activeConnectionCount() const { return m_activeConnections; }
+    int activeConnectionCount() const {
+        return m_activeConnections;
+    }
 
 signals:
     void sig_printActiveConnections(const QStringList& connectionName);
@@ -51,7 +53,7 @@ private:
     QMutex m_mutex;
     QSqlDatabase m_mainConnection;
     QThreadStorage<QSqlDatabase> m_threadConnections;
-    QAtomicInt m_activeConnections;  // Счетчик активных соединений
+    QAtomicInt m_activeConnections; // Счетчик активных соединений
 
     CacheManager m_cacheManager;
 

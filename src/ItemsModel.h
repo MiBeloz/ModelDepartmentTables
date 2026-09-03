@@ -1,15 +1,14 @@
-#ifndef ITEMSMODEL_H
+﻿#ifndef ITEMSMODEL_H
 #define ITEMSMODEL_H
 
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
 
-
 class ItemsModel : public QSortFilterProxyModel {
 public:
     explicit ItemsModel(QObject *parent = nullptr);
 
-    virtual ~ItemsModel() {};
+    virtual ~ItemsModel() { };
 
 protected:
     bool lessThan(const QModelIndex &left, const QModelIndex &right) const override;

@@ -1,12 +1,9 @@
 ﻿#include "MainWindow.h"
-#include "ui_MainWindow.h"
+
 #include "ItemsModel.h"
+#include "ui_MainWindow.h"
 
-
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-{
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
     m_itemsModel = new ItemsModel(this);
     m_newItemWindow = new NewItemWindow(this);
@@ -30,8 +27,6 @@ void MainWindow::rec_handleNewItem(const ItemData &newItem) {
     }
     ui->TV_items->resizeColumnsToContents();
 
-
-
     auto dateCache = m_cacheManager->getTypedCache<size_t>(CacheManager::Column::cDate);
     auto id_date = dateCache->insert(newItem.item.date);
 
@@ -53,13 +48,15 @@ void MainWindow::rec_handleNewItem(const ItemData &newItem) {
     auto amountCache = m_cacheManager->getTypedCache<size_t>(CacheManager::Column::cAmount);
     auto id_amount = amountCache->insert(newItem.item.amount);
 
-    auto castingMaterialCache = m_cacheManager->getTypedCache<QString>(CacheManager::Column::cCastingMaterial);
+    auto castingMaterialCache = m_cacheManager->getTypedCache<QString>(
+        CacheManager::Column::cCastingMaterial);
     QList<size_t> id_castingMaterials;
     for (size_t i = 0; i < newItem.castingMaterials.size(); ++i) {
         id_castingMaterials.append(castingMaterialCache->insert(newItem.castingMaterials[i]));
     }
 
-    auto modelMaterialCache = m_cacheManager->getTypedCache<QString>(CacheManager::Column::cModelMaterial);
+    auto modelMaterialCache = m_cacheManager->getTypedCache<QString>(
+        CacheManager::Column::cModelMaterial);
     QList<size_t> id_modelMaterials;
     for (size_t i = 0; i < newItem.modelMaterials.size(); ++i) {
         id_modelMaterials.append(modelMaterialCache->insert(newItem.modelMaterials[i]));
@@ -78,9 +75,7 @@ void MainWindow::rec_handleNewItem(const ItemData &newItem) {
     }
 
     auto itemCache = m_cacheManager->getTypedCache<ItemID>(CacheManager::Column::cItemFromIDs);
-    auto id_item = itemCache->insert(ItemID{id_date, id_drawing, id_amount});
-
-
+    auto id_item = itemCache->insert(ItemID { id_date, id_drawing, id_amount });
 
     auto itemExecutor = m_cacheManager->getTypedCache<size_t>(CacheManager::Column::cItemExecutor);
     for (size_t i = 0; i < id_executors.size(); ++i) {
@@ -92,12 +87,14 @@ void MainWindow::rec_handleNewItem(const ItemData &newItem) {
         itemAuthor->insert(id_item, id_authors[i]);
     }
 
-    auto itemCastingMaterial = m_cacheManager->getTypedCache<size_t>(CacheManager::Column::cItemCastingMaterial);
+    auto itemCastingMaterial = m_cacheManager->getTypedCache<size_t>(
+        CacheManager::Column::cItemCastingMaterial);
     for (size_t i = 0; i < id_castingMaterials.size(); ++i) {
         itemCastingMaterial->insert(id_item, id_castingMaterials[i]);
     }
 
-    auto itemModelMaterial = m_cacheManager->getTypedCache<size_t>(CacheManager::Column::cItemModelMaterial);
+    auto itemModelMaterial = m_cacheManager->getTypedCache<size_t>(
+        CacheManager::Column::cItemModelMaterial);
     for (size_t i = 0; i < id_modelMaterials.size(); ++i) {
         itemModelMaterial->insert(id_item, id_modelMaterials[i]);
     }
@@ -112,21 +109,20 @@ void MainWindow::rec_handleNewItem(const ItemData &newItem) {
         itemNote->insert(id_item, id_notes[i]);
     }
 
-    dateCache->writeToFile(           "workDates.txt");
-    drawingCache->writeToFile(        "drawings.txt");
-    executorCache->writeToFile(       "executors.txt");
-    amountCache->writeToFile(         "amounts.txt");
+    dateCache->writeToFile("workDates.txt");
+    drawingCache->writeToFile("drawings.txt");
+    executorCache->writeToFile("executors.txt");
+    amountCache->writeToFile("amounts.txt");
     castingMaterialCache->writeToFile("castingMaterials.txt");
-    modelMaterialCache->writeToFile(  "modelMaterials.txt");
-    machineCache->writeToFile(        "machines.txt");
-    noteCache->writeToFile(           "notes.txt");
-    itemCache->writeToFile(           "items.txt");
-    itemExecutor->writeToFile(        "itemExecutors.txt");
-    itemCastingMaterial->writeToFile( "itemCastingMaterials.txt");
-    itemModelMaterial->writeToFile(   "itemModelMaterials.txt");
-    itemMachine->writeToFile(         "itemMachines.txt");
-    itemNote->writeToFile(            "itemNotes.txt");
-
+    modelMaterialCache->writeToFile("modelMaterials.txt");
+    machineCache->writeToFile("machines.txt");
+    noteCache->writeToFile("notes.txt");
+    itemCache->writeToFile("items.txt");
+    itemExecutor->writeToFile("itemExecutors.txt");
+    itemCastingMaterial->writeToFile("itemCastingMaterials.txt");
+    itemModelMaterial->writeToFile("itemModelMaterials.txt");
+    itemMachine->writeToFile("itemMachines.txt");
+    itemNote->writeToFile("itemNotes.txt");
 
     // dateCache->clear();
     // drawingCache->clear();
@@ -143,7 +139,6 @@ void MainWindow::rec_handleNewItem(const ItemData &newItem) {
     // itemMachine->clear();
     // itemNote->clear();
 
-
     // dateCache->readFromFile(           "workDates.txt");
     // drawingCache->readFromFile(            "drawings.txt");
     // executorCache->readFromFile(           "executors.txt");
@@ -158,8 +153,6 @@ void MainWindow::rec_handleNewItem(const ItemData &newItem) {
     // itemModelMaterial->readFromFile(  "itemModelMaterials.txt");
     // itemMachine->readFromFile(        "itemMachines.txt");
     // itemNote->readFromFile(           "itemNotes.txt");
-
-
 
     // model->insertRow(0);
 
@@ -199,7 +192,10 @@ void MainWindow::rec_handleNewItem(const ItemData &newItem) {
 void MainWindow::init() {
     connect(ui->actionSettings, &QAction::triggered, this, [&]() { m_settingsWindow->open(); });
     connect(ui->PB_addItem, &QPushButton::clicked, this, [&]() { m_newItemWindow->open(); });
-    connect(m_newItemWindow, &NewItemWindow::sig_handleNewItem, this, &MainWindow::rec_handleNewItem);
+    connect(m_newItemWindow,
+            &NewItemWindow::sig_handleNewItem,
+            this,
+            &MainWindow::rec_handleNewItem);
 
     ui->TV_items->setModel(m_itemsModel);
     ui->TV_items->verticalHeader()->hide();
@@ -207,43 +203,41 @@ void MainWindow::init() {
     ui->TV_items->resizeColumnsToContents();
     ui->TV_items->sortByColumn(0, Qt::SortOrder::AscendingOrder);
 
-
-
-
-
-
-
     auto dateCache = m_cacheManager->getTypedCache<size_t>(CacheManager::Column::cDate);
     auto drawingCache = m_cacheManager->getTypedCache<Drawing>(CacheManager::Column::cDrawing);
     auto executorCache = m_cacheManager->getTypedCache<QString>(CacheManager::Column::cExecutor);
     auto authorCache = m_cacheManager->getTypedCache<QString>(CacheManager::Column::cAuthor);
     auto amountCache = m_cacheManager->getTypedCache<size_t>(CacheManager::Column::cAmount);
-    auto castingMaterialCache = m_cacheManager->getTypedCache<QString>(CacheManager::Column::cCastingMaterial);
-    auto modelMaterialCache = m_cacheManager->getTypedCache<QString>(CacheManager::Column::cModelMaterial);
+    auto castingMaterialCache = m_cacheManager->getTypedCache<QString>(
+        CacheManager::Column::cCastingMaterial);
+    auto modelMaterialCache = m_cacheManager->getTypedCache<QString>(
+        CacheManager::Column::cModelMaterial);
     auto machineCache = m_cacheManager->getTypedCache<QString>(CacheManager::Column::cMachine);
     auto noteCache = m_cacheManager->getTypedCache<QString>(CacheManager::Column::cNote);
     auto itemCache = m_cacheManager->getTypedCache<ItemID>(CacheManager::Column::cItemFromIDs);
     auto itemExecutor = m_cacheManager->getTypedCache<size_t>(CacheManager::Column::cItemExecutor);
     auto itemAuthor = m_cacheManager->getTypedCache<size_t>(CacheManager::Column::cItemAuthor);
-    auto itemCastingMaterial = m_cacheManager->getTypedCache<size_t>(CacheManager::Column::cItemCastingMaterial);
-    auto itemModelMaterial = m_cacheManager->getTypedCache<size_t>(CacheManager::Column::cItemModelMaterial);
+    auto itemCastingMaterial = m_cacheManager->getTypedCache<size_t>(
+        CacheManager::Column::cItemCastingMaterial);
+    auto itemModelMaterial = m_cacheManager->getTypedCache<size_t>(
+        CacheManager::Column::cItemModelMaterial);
     auto itemMachine = m_cacheManager->getTypedCache<size_t>(CacheManager::Column::cItemMachine);
     auto itemNote = m_cacheManager->getTypedCache<size_t>(CacheManager::Column::cItemNote);
 
-    dateCache->readFromFile(           "workDates.txt");
-    drawingCache->readFromFile(        "drawings.txt");
-    executorCache->readFromFile(       "executors.txt");
-    amountCache->readFromFile(         "amounts.txt");
+    dateCache->readFromFile("workDates.txt");
+    drawingCache->readFromFile("drawings.txt");
+    executorCache->readFromFile("executors.txt");
+    amountCache->readFromFile("amounts.txt");
     castingMaterialCache->readFromFile("castingMaterials.txt");
-    modelMaterialCache->readFromFile(  "modelMaterials.txt");
-    machineCache->readFromFile(        "machines.txt");
-    noteCache->readFromFile(           "notes.txt");
-    itemCache->readFromFile(           "items.txt");
-    itemExecutor->readFromFile(        "itemExecutors.txt");
-    itemCastingMaterial->readFromFile( "itemCastingMaterials.txt");
-    itemModelMaterial->readFromFile(   "itemModelMaterials.txt");
-    itemMachine->readFromFile(         "itemMachines.txt");
-    itemNote->readFromFile(            "itemNotes.txt");
+    modelMaterialCache->readFromFile("modelMaterials.txt");
+    machineCache->readFromFile("machines.txt");
+    noteCache->readFromFile("notes.txt");
+    itemCache->readFromFile("items.txt");
+    itemExecutor->readFromFile("itemExecutors.txt");
+    itemCastingMaterial->readFromFile("itemCastingMaterials.txt");
+    itemModelMaterial->readFromFile("itemModelMaterials.txt");
+    itemMachine->readFromFile("itemMachines.txt");
+    itemNote->readFromFile("itemNotes.txt");
 
     auto model = m_itemsModel->sourceModel();
 
@@ -286,4 +280,3 @@ void MainWindow::init() {
 
     ui->TV_items->resizeColumnsToContents();
 }
-

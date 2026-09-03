@@ -1,18 +1,17 @@
 ﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
 #include <QAbstractProxyModel>
+#include <QMainWindow>
 
+#include "CacheManager.hpp"
+#include "DatabaseManager.h"
 #include "NewItemWindow.h"
 #include "SettingsWindow.h"
-#include "DatabaseManager.h"
-#include "CacheManager.hpp"
-
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
-class MainWindow;
+    class MainWindow;
 }
 QT_END_NAMESPACE
 
@@ -24,7 +23,7 @@ public:
     ~MainWindow();
 
 private slots:
-    void rec_handleNewItem(const ItemData& newItem);
+    void rec_handleNewItem(const ItemData &newItem);
 
 private:
     Ui::MainWindow *ui;

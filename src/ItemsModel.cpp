@@ -1,13 +1,11 @@
+﻿#include "ItemsModel.h"
+
 #include <QDate>
 
-#include "ItemsModel.h"
-#include "TableHeaders.h"
 #include "ItemData.h"
+#include "TableHeaders.h"
 
-
-ItemsModel::ItemsModel(QObject *parent)
-    : QSortFilterProxyModel{parent}
-{
+ItemsModel::ItemsModel(QObject *parent) : QSortFilterProxyModel { parent } {
     m_itemModel = new QStandardItemModel(this);
     m_itemModel->setHorizontalHeaderLabels(TableHeaders::itemsTableHeaders());
     setSourceModel(m_itemModel);

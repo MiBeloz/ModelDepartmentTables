@@ -1,10 +1,11 @@
 ﻿#include "DatabaseManager.h"
+
 #include <QDebug>
+#include <QHostInfo>
 #include <QSqlError>
 #include <QSqlQuery>
-#include <QHostInfo>
 
-DatabaseManager::DatabaseManager(QObject *parent) : QObject(parent) {
+DatabaseManager::DatabaseManager(QObject* parent) : QObject(parent) {
     m_activeConnections = 0;
 
     // Проверяем доступность драйвера
@@ -27,11 +28,11 @@ DatabaseManager::~DatabaseManager() {
     qDebug() << "DatabaseManager destructor finished";
 }
 
-void DatabaseManager::setConnectionParams(const QString& host, int port,
+void DatabaseManager::setConnectionParams(const QString& host,
+                                          int port,
                                           const QString& dbName,
                                           const QString& user,
-                                          const QString& password)
-{
+                                          const QString& password) {
     QMutexLocker locker(&m_mutex);
     m_host = host;
     m_port = port;
@@ -85,9 +86,9 @@ bool DatabaseManager::connect() {
         // Получаем текущее время
         QString currentTime = QTime::currentTime().toString("hh:mm:ss");
 
-        qDebug() << "\n[" << currentTime << "] - Active connections: " << QSqlDatabase::connectionNames();
+        qDebug() << "\n[" << currentTime
+                 << "] - Active connections: " << QSqlDatabase::connectionNames();
         emit sig_printActiveConnections(QSqlDatabase::connectionNames());
-
     });
 
     // Запускаем таймер с интервалом 1000 мс (1 секунда)
@@ -125,8 +126,8 @@ QSqlDatabase DatabaseManager::getConnection() {
                                      .arg((quintptr)QThread::currentThreadId())
                                      .arg(QRandomGenerator::global()->generate());
 
-        qDebug() << "Creating new database connection for thread:"
-                 << QThread::currentThreadId() << "Name:" << connectionName;
+        qDebug() << "Creating new database connection for thread:" << QThread::currentThreadId()
+                 << "Name:" << connectionName;
 
         QSqlDatabase db = QSqlDatabase::addDatabase("QPSQL", connectionName);
         db.setHostName(m_host);
@@ -138,8 +139,7 @@ QSqlDatabase DatabaseManager::getConnection() {
 
         if (!db.open()) {
             qCritical() << "Failed to open thread connection for thread"
-                        << QThread::currentThreadId() << ":"
-                        << db.lastError().text();
+                        << QThread::currentThreadId() << ":" << db.lastError().text();
             return QSqlDatabase();
         }
 
@@ -152,7 +152,8 @@ QSqlDatabase DatabaseManager::getConnection() {
         // Подключаем сигнал завершения потока для очистки
         QThread* currentThread = QThread::currentThread();
         QObject::connect(currentThread, &QThread::finished, this, [this, connectionName]() {
-            qDebug() << "Thread" << QThread::currentThreadId() << "finished, cleaning up connection:" << connectionName;
+            qDebug() << "Thread" << QThread::currentThreadId()
+                     << "finished, cleaning up connection:" << connectionName;
 
             // Очищаем соединение для этого потока
             {
@@ -170,7 +171,8 @@ QSqlDatabase DatabaseManager::getConnection() {
             QSqlDatabase::removeDatabase(connectionName);
             m_activeConnections.deref(); // Уменьшаем счетчик активных соединений
 
-            qDebug() << "Connection" << connectionName << "cleaned up. Active connections:" << m_activeConnections;
+            qDebug() << "Connection" << connectionName
+                     << "cleaned up. Active connections:" << m_activeConnections;
         });
     }
 
@@ -178,7 +180,8 @@ QSqlDatabase DatabaseManager::getConnection() {
 }
 
 void DatabaseManager::disconnectAllThreads() {
-    qDebug() << "DatabaseManager::disconnectAllThreads() started. Active connections:" << m_activeConnections;
+    qDebug() << "DatabaseManager::disconnectAllThreads() started. Active connections:"
+             << m_activeConnections;
 
     // Ждем, пока все потоки освободят соединения
     int waitCount = 0;
@@ -188,7 +191,8 @@ void DatabaseManager::disconnectAllThreads() {
         qDebug() << "Waiting for active connections to close..." << m_activeConnections;
     }
 
-    qDebug() << "DatabaseManager::disconnectAllThreads() finished. Active connections:" << m_activeConnections;
+    qDebug() << "DatabaseManager::disconnectAllThreads() finished. Active connections:"
+             << m_activeConnections;
 }
 
 bool DatabaseManager::createTable() {
@@ -201,13 +205,12 @@ bool DatabaseManager::createTable() {
     QSqlQuery query(db);
 
     // Используем более безопасный синтаксис с проверкой существования
-    QString createTableSQL =
-        "CREATE TABLE IF NOT EXISTS test_data ("
-        "id SERIAL PRIMARY KEY,"
-        "thread_id INTEGER NOT NULL,"
-        "data TEXT UNIQUE NOT NULL,"
-        "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
-        ")";
+    QString createTableSQL = "CREATE TABLE IF NOT EXISTS test_data ("
+                             "id SERIAL PRIMARY KEY,"
+                             "thread_id INTEGER NOT NULL,"
+                             "data TEXT UNIQUE NOT NULL,"
+                             "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+                             ")";
 
     bool success = query.exec(createTableSQL);
 

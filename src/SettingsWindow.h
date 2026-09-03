@@ -5,7 +5,6 @@
 
 #include "SettingsSaver.h"
 
-
 enum ApplicationSettings {
     language,
     width,
@@ -23,19 +22,16 @@ enum ConnectionSettings {
 };
 
 struct Language {
-    Language(): isRTL(false) {}
+    Language() : isRTL(false) { }
 
     QString name;
     QString code;
     bool isRTL;
 };
 
-namespace Ui {
-class SettingsWindow;
-}
+namespace Ui { class SettingsWindow; }
 
-class SettingsWindow : public QDialog
-{
+class SettingsWindow : public QDialog {
     Q_OBJECT
 
 public:

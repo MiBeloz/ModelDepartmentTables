@@ -1,10 +1,9 @@
 ﻿#ifndef SETTINGSGROUP_H
 #define SETTINGSGROUP_H
 
-#include <QObject>
 #include <QList>
+#include <QObject>
 #include <QVariant>
-
 
 class SettingsGroup : public QObject {
     Q_OBJECT
@@ -12,10 +11,13 @@ class SettingsGroup : public QObject {
 public:
     struct Parameter {
         explicit Parameter(const QString& name, const QVariant& value, const QVariant& defaultValue)
-            : m_name(name), m_value(value), m_defaultValue(defaultValue) {}
+            : m_name(name)
+            , m_value(value)
+            , m_defaultValue(defaultValue) { }
 
-        bool operator==(const Parameter &other) const {
-            return m_name == other.m_name && m_value == other.m_value && m_defaultValue == other.m_defaultValue;
+        bool operator ==(const Parameter& other) const {
+            return m_name == other.m_name && m_value == other.m_value &&
+                   m_defaultValue == other.m_defaultValue;
         }
 
         QString m_name;
@@ -23,10 +25,10 @@ public:
         QVariant m_defaultValue;
     };
 
-    explicit SettingsGroup(const QString& groupName, QObject *parent = nullptr);
-    virtual ~SettingsGroup() {}
+    explicit SettingsGroup(const QString& groupName, QObject* parent = nullptr);
+    virtual ~SettingsGroup() { }
 
-    bool operator==(const SettingsGroup &other) const;
+    bool operator ==(const SettingsGroup& other) const;
 
     void addParameter(const Parameter& parameter);
     void addParameters(const QList<Parameter>& parameters);

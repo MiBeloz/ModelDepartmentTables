@@ -1,13 +1,11 @@
-﻿#include <QTest>
-#include <QObject>
+﻿#include <QObject>
+#include <QTest>
 
-#include "ItemData.h"
-
+#include "Repository.h"
 
 RepositoryService repo;
 
-class TestRepositoryService final : public QObject
-{
+class TestRepositoryService final : public QObject {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(TestRepositoryService)
 

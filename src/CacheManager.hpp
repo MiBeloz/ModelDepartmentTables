@@ -6,7 +6,6 @@
 #include "CacheLocker.hpp"
 #include "ItemData.h"
 
-
 class CacheManager : public QObject {
     Q_OBJECT
 
@@ -30,7 +29,7 @@ public:
         cItemNote
     };
 
-    CacheManager(QObject *parent = nullptr) : QObject(parent) {
+    CacheManager(QObject* parent = nullptr) : QObject(parent) {
         m_caches.append(std::make_shared<ThreadSafeCache<size_t>>("date", true));
         m_caches.append(std::make_shared<ThreadSafeCache<Drawing>>("drawing", true));
         m_caches.append(std::make_shared<ThreadSafeCache<QString>>("executor", true));

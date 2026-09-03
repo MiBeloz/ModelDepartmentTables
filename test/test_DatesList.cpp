@@ -1,8 +1,7 @@
-﻿#include <QTest>
-#include <QObject>
+﻿#include <QObject>
+#include <QTest>
 
 #include "DatesList.h"
-
 
 DatesList dates_list;
 

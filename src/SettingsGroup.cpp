@@ -1,11 +1,10 @@
 ﻿#include "SettingsGroup.h"
 
-
-SettingsGroup::SettingsGroup(const QString& groupName, QObject *parent)
+SettingsGroup::SettingsGroup(const QString& groupName, QObject* parent)
     : m_groupName(groupName)
-    , QObject(parent) {}
+    , QObject(parent) { }
 
-bool SettingsGroup::operator==(const SettingsGroup& other) const {
+bool SettingsGroup::operator ==(const SettingsGroup& other) const {
     return m_groupName == other.m_groupName && m_parameters == other.m_parameters;
 }
 
@@ -13,8 +12,7 @@ void SettingsGroup::addParameter(const Parameter& parameter) {
     if (qsizetype index = m_parameters.indexOf(parameter); index >= 0) {
         m_parameters[index].m_value = parameter.m_value;
         m_parameters[index].m_defaultValue = parameter.m_defaultValue;
-    }
-    else {
+    } else {
         m_parameters.append(parameter);
     }
 }

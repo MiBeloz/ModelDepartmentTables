@@ -1,11 +1,8 @@
 ﻿#include "NewItemWindow.h"
+
 #include "ui_NewItemWindow.h"
 
-
-NewItemWindow::NewItemWindow(QWidget *parent)
-    : QDialog(parent)
-    , ui(new Ui::NewItemWindow)
-{
+NewItemWindow::NewItemWindow(QWidget *parent) : QDialog(parent), ui(new Ui::NewItemWindow) {
     ui->setupUi(this);
     init();
 }
