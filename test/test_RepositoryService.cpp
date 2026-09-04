@@ -68,14 +68,14 @@ private slots:
     }
 
     void testGetDate() {
-        QCOMPARE(repo.dates().findValue(4), "13.06.2015");
-        QCOMPARE(repo.dates().findValue(2), "15.07.2024");
-        QCOMPARE(repo.dates().findValue(3), "26.03.2018");
-        QCOMPARE(repo.dates().findValue(5), "28.08.2019");
-        QCOMPARE(repo.dates().findValue(6), "09.01.2019");
-        QCOMPARE(repo.dates().findValue(1), "25.08.2025");
+        QCOMPARE(repo.dates().findStrValue(4), "13.06.2015");
+        QCOMPARE(repo.dates().findStrValue(2), "15.07.2024");
+        QCOMPARE(repo.dates().findStrValue(3), "26.03.2018");
+        QCOMPARE(repo.dates().findStrValue(5), "28.08.2019");
+        QCOMPARE(repo.dates().findStrValue(6), "09.01.2019");
+        QCOMPARE(repo.dates().findStrValue(1), "25.08.2025");
 
-        QCOMPARE(repo.dates().findValue(7), std::nullopt);
+        QCOMPARE(repo.dates().findStrValue(7), std::nullopt);
     }
 
     void clear() {

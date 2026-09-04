@@ -1,7 +1,7 @@
 ﻿#ifndef DRAWINGSLIST_H
 #define DRAWINGSLIST_H
 
-#include "IList.h"
+#include "CustomList.h"
 
 class Drawing final {
 public:
@@ -33,16 +33,14 @@ private:
     QString m_title;
 };
 
-class DrawingsList final : public IList<Drawing> {
+class DrawingsList final : public CustomList<Drawing> {
 public:
-    DrawingsList() { }
-
-    std::optional<qsizetype> insert(const QString& number, const QString& title);
     std::optional<qsizetype> insert(const Drawing& drawing) override;
     bool remove(const Drawing& drawing) override;
     std::optional<qsizetype> getID(const Drawing& drawing) const override;
     std::optional<Drawing> getValue(qsizetype id) const override;
-    QList<Drawing> getAllValues() const;
+
+    void foo() const { }
 };
 
 inline uint qHash(const Drawing& drawing, uint seed = 0) {

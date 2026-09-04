@@ -196,7 +196,7 @@ PenaltyExcessCharacter: 50
 PenaltyIndentedWhitespace: 0
 PenaltyReturnTypeOnItsOwnLine: 300
 PointerAlignment: Right
-PPIndentWidth:   -1
+PPIndentWidth:   0
 QualifierAlignment: Left
 ReferenceAlignment: Pointer
 ReflowComments:  false

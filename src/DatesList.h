@@ -1,7 +1,7 @@
 ﻿#ifndef DATESLIST_H
 #define DATESLIST_H
 
-#include "IList.h"
+#include "CustomList.h"
 
 class DatesList;
 class DatesListError final {
@@ -24,10 +24,8 @@ private:
     void setError(ErrorType error);
 };
 
-class DatesList final : public IList<qsizetype> {
+class DatesList final : public CustomList<qsizetype> {
 public:
-    DatesList() { }
-
     std::optional<qsizetype> insert(const QString &date);
     std::optional<qsizetype> insert(const qsizetype &exelFormat) override;
     bool remove(const QString &date);

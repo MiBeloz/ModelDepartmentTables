@@ -1,4 +1,5 @@
-﻿#include <QObject>
+﻿#include <QDebug>
+#include <QObject>
 #include <QTest>
 
 #include "DatesList.h"
@@ -76,14 +77,14 @@ private slots:
     }
 
     void testGetDate() {
-        QCOMPARE(dates_list.getDate(4), "13.06.2015");
-        QCOMPARE(dates_list.getDate(2), "15.07.2024");
-        QCOMPARE(dates_list.getDate(3), "26.03.2018");
-        QCOMPARE(dates_list.getDate(5), "28.08.2019");
-        QCOMPARE(dates_list.getDate(6), "09.01.2019");
-        QCOMPARE(dates_list.getDate(1), "25.08.2025");
+        QCOMPARE(dates_list.getStrValue(4), "13.06.2015");
+        QCOMPARE(dates_list.getStrValue(2), "15.07.2024");
+        QCOMPARE(dates_list.getStrValue(3), "26.03.2018");
+        QCOMPARE(dates_list.getStrValue(5), "28.08.2019");
+        QCOMPARE(dates_list.getStrValue(6), "09.01.2019");
+        QCOMPARE(dates_list.getStrValue(1), "25.08.2025");
 
-        QCOMPARE(dates_list.getDate(7), std::nullopt);
+        QCOMPARE(dates_list.getStrValue(7), std::nullopt);
         QCOMPARE(dates_list.lastError(), DatesListError::IdError);
     }
 };

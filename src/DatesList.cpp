@@ -13,43 +13,23 @@ void DatesListError::setError(ErrorType error) {
 }
 
 std::optional<qsizetype> DatesList::insert(const QString &date) {
-    const QWriteLocker locker(&m_lock);
     setError(DatesListError::NoError);
     if (auto intDate = strToDate(date, m_format); intDate.has_value()) {
-        for (auto [k, v] : m_list.asKeyValueRange()) {
-            if (v == intDate) {
-                return k;
-            }
-        }
-
-        qsizetype id = -1;
-        if (m_emptyIDs.isEmpty()) {
-            ++m_id;
-            id = m_id;
-        } else {
-            id = m_emptyIDs.dequeue();
-        }
-        m_list.insert(id, intDate.value());
-        return id;
+        return CustomList::insert(intDate.value());
     }
     setError(DatesListError::FormatError);
     return std::nullopt;
 }
 
-bool DatesList::remove(const QString &date) {
-    const QWriteLocker locker(&m_lock);
+std::optional<qsizetype> DatesList::insert(const qsizetype &exelFormat) {
     setError(DatesListError::NoError);
-    if (auto intDate = strToDate(date, m_format); intDate.has_value()) {
-        qsizetype id = -1;
-        for (auto [k, v] : m_list.asKeyValueRange()) {
-            if (v == intDate) {
-                id = k;
-                break;
-            }
-        }
-        if (id != -1) {
-            m_list.remove(id);
-            m_emptyIDs.append(id);
+    return CustomList::insert(exelFormat);
+}
+
+bool DatesList::remove(const QString &date) {
+    setError(DatesListError::NoError);
+    if (auto exelDate = strToDate(date, m_format); exelDate.has_value()) {
+        if (CustomList::remove(exelDate.value())) {
             return true;
         }
         setError(DatesListError::DateError);
@@ -59,14 +39,20 @@ bool DatesList::remove(const QString &date) {
     return false;
 }
 
-std::optional<qsizetype> DatesList::getID(const QString &date) const {
-    const QReadLocker locker(&m_lock);
+bool DatesList::remove(const qsizetype &exelFormat) {
     setError(DatesListError::NoError);
-    if (auto intDate = strToDate(date, m_format); intDate.has_value()) {
-        for (auto [k, v] : m_list.asKeyValueRange()) {
-            if (v == intDate) {
-                return k;
-            }
+    if (CustomList::remove(exelFormat)) {
+        return true;
+    }
+    setError(DatesListError::FormatError);
+    return false;
+}
+
+std::optional<qsizetype> DatesList::getID(const QString &date) const {
+    setError(DatesListError::NoError);
+    if (auto exelDate = strToDate(date, m_format); exelDate.has_value()) {
+        if (auto id = CustomList::getID(exelDate.value()); id.has_value()) {
+            return id;
         }
         setError(DatesListError::DateError);
         return std::nullopt;
@@ -75,16 +61,33 @@ std::optional<qsizetype> DatesList::getID(const QString &date) const {
     return std::nullopt;
 }
 
-std::optional<QString> DatesList::getValue(qsizetype id) const {
-    const QReadLocker locker(&m_lock);
+std::optional<qsizetype> DatesList::getID(const qsizetype &exelFormat) const {
     setError(DatesListError::NoError);
-    qsizetype date = m_list.value(id, -1);
-    if (date != -1) {
-        if (auto result = dateToStr(date, m_format); result.has_value()) {
-            return result;
+    if (auto id = CustomList::getID(exelFormat); id.has_value()) {
+        return id;
+    }
+    setError(DatesListError::DateError);
+    return std::nullopt;
+}
+
+std::optional<QString> DatesList::getStrValue(qsizetype id) const {
+    const QReadLocker locker(&this->m_lock);
+    setError(DatesListError::NoError);
+    if (auto date = CustomList::getValue(id); date.has_value()) {
+        if (auto strDate = dateToStr(date.value(), m_format); strDate.has_value()) {
+            return strDate;
         }
         setError(DatesListError::FormatError);
         return std::nullopt;
+    }
+    setError(DatesListError::IdError);
+    return std::nullopt;
+}
+
+std::optional<qsizetype> DatesList::getValue(qsizetype id) const {
+    setError(DatesListError::NoError);
+    if (auto date = CustomList::getValue(id); date.has_value()) {
+        return date;
     }
     setError(DatesListError::IdError);
     return std::nullopt;
