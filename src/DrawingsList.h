@@ -35,10 +35,22 @@ private:
 
 class DrawingsList final : public CustomList<Drawing> {
 public:
-    std::optional<qsizetype> insert(const Drawing& drawing) override;
-    bool remove(const Drawing& drawing) override;
-    std::optional<qsizetype> getID(const Drawing& drawing) const override;
-    std::optional<Drawing> getValue(qsizetype id) const override;
+    std::optional<qsizetype> insert(const Drawing& drawing) override {
+        return CustomList::insert(drawing);
+    }
+    bool remove(const Drawing& drawing) override {
+        return CustomList::remove(drawing);
+    }
+    std::optional<qsizetype> getID(const Drawing& drawing) const override {
+        return CustomList::getID(drawing);
+    }
+    std::optional<Drawing> getValue(qsizetype id) const override {
+        const QReadLocker locker(&m_lock);
+        if (auto it = m_list.find(id); it != m_list.end()) {
+            return *it;
+        }
+        return std::nullopt;
+    }
 
     void foo() const { }
 };

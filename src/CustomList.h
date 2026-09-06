@@ -70,9 +70,9 @@ inline std::optional<qsizetype> CustomList<T>::getID(const T& data) const {
 template<typename T>
 inline std::optional<T> CustomList<T>::getValue(qsizetype id) const {
     const QReadLocker locker(&m_lock);
-    // if (T value = m_list.value(id, T()); value != T()) {
-    //     return value;
-    // }
+    if (T value = m_list.value(id, T()); value != T()) {
+        return value;
+    }
     return std::nullopt;
 }
 

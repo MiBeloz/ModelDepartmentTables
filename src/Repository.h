@@ -7,10 +7,15 @@
 template<typename T>
 class CustomRepository {
 public:
-    CustomRepository(std::unique_ptr<CustomList<T>> list = std::make_unique<CustomList<T>>())
-        : m_list(std::move(list)) { }
+    CustomRepository(CustomList<T>* list = nullptr) : m_list(dynamic_cast<decltype(list)>(list)) {
+        if (!list) {
+            list = new CustomList<T>();
+        }
+    }
 
-    virtual ~CustomRepository() = default;
+    virtual ~CustomRepository() {test
+        delete m_list;
+    }
 
     virtual std::optional<qsizetype> add(const T& value) {
         return m_list->insert(value);
@@ -28,6 +33,7 @@ public:
         return m_list->getValue(id);
     }
 
+
     virtual QList<T> findAllValues() const {
         return m_list->getAllValues();
     }
@@ -41,46 +47,87 @@ public:
     }
 
 protected:
-    std::unique_ptr<CustomList<T>> m_list;
+    CustomList<T>* m_list;
 };
 
 class DatesRepository final : public CustomRepository<qsizetype> {
 public:
-    DatesRepository() : CustomRepository(std::make_unique<DatesList>()) { }
+    DatesRepository() {
+        m_list = new DatesList();
+    }
     virtual ~DatesRepository() = default;
 
-    std::optional<qsizetype> add(const QString& date);
+    std::optional<qsizetype> add(const QString& date) {
+        DatesList *datesListPtr = dynamic_cast<DatesList *>(m_list);
+        if (datesListPtr) {
+            return datesListPtr->insert(date);
+        }
+        return std::nullopt;
+    }
     virtual std::optional<qsizetype> add(const qsizetype& exelFormat) override;
-    bool remove(const QString& date);
+    bool remove(const QString& date) {
+        return this->remove(date);
+    }
     virtual bool remove(const qsizetype& exelFormat) override;
-    std::optional<qsizetype> findId(const QString& date) const;
+    std::optional<qsizetype> findId(const QString& date) const {
+        return this->findId(date);
+    }
     virtual std::optional<qsizetype> findId(const qsizetype& exelFormat) const override;
-    std::optional<QString> findStrValue(qsizetype id) const;
-    virtual std::optional<qsizetype> findValue(qsizetype id) const override;
+    std::optional<QString> findStrValue(qsizetype id) const {
+        return this->findStrValue(id);
+    }
+    virtual std::optional<qsizetype> findValue(qsizetype id) const override {
+        return m_list->getValue(id);
+    }
     virtual QList<qsizetype> findAllValues() const override;
 
     virtual qsizetype count() const override;
     virtual void clear() override;
 
-    void setDateFormat(const QString& format);
-    QString getDateFormat() const;
+    void setDateFormat(const QString& format) {
+        this->setDateFormat(format);
+    }
+    QString getDateFormat() const {
+        return this->getDateFormat();
+    }
 
-    DatesListError::ErrorType lastError() const;
+    DatesListError::ErrorType lastError() const {
+        return this->lastError();
+    }
 };
 
 class DrawingsRepository final : public CustomRepository<Drawing> {
 public:
-    DrawingsRepository() : CustomRepository(std::make_unique<DrawingsList>()) { }
+    DrawingsRepository() {
+        m_list = new DrawingsList();
+
+    }
     virtual ~DrawingsRepository() = default;
 
-    virtual std::optional<qsizetype> add(const Drawing& drawing) override;
-    virtual bool remove(const Drawing& drawing) override;
-    virtual std::optional<qsizetype> findId(const Drawing& drawing) const override;
-    virtual std::optional<Drawing> findValue(qsizetype id) const override;
-    virtual QList<Drawing> findAllValues() const override;
+    // virtual std::optional<qsizetype> add(const Drawing& drawing) override;// {
+    //     // DrawingsList *drawingsListPtr = dynamic_cast<DrawingsList *>(m_list.get());
+    //     // if (drawingsListPtr) {
+    //     //     return drawingsListPtr->insert(drawing);
+    //     // }
+    //     // return std::nullopt;
+    // //}
+    // virtual bool remove(const Drawing& drawing) override;
+    // virtual std::optional<qsizetype> findId(const Drawing& drawing) const override;
+    // virtual std::optional<Drawing> findValue(qsizetype id) const override {
+    //     DrawingsList *drawingsListPtr = dynamic_cast<DrawingsList *>(m_list.get());
+    //     if (drawingsListPtr) {
+    //         return drawingsListPtr->getValue(id);
+    //     }
+    //     return std::nullopt;
+    // }
+    // virtual QList<Drawing> findAllValues() const override;
 
-    virtual qsizetype count() const override;
-    virtual void clear() override;
+    // virtual qsizetype count() const override;
+    // virtual void clear() override;
+
+    virtual std::optional<Drawing> findValue(qsizetype id) const override {
+        return m_list->getValue(id);
+    }
 };
 
 class RepositoryService final {
@@ -96,32 +143,68 @@ public:
         , m_noteRepo(std::make_unique<CustomRepository<QString>>())
         , m_amountRepo(std::make_unique<CustomRepository<int>>()) { }
 
-    DatesRepository& dates();
-    const DatesRepository& dates() const;
+    DatesRepository& dates() {
+        return *m_dateRepo;
+    }
+    const DatesRepository& dates() const {
+        return *m_dateRepo;
+    }
 
-    DrawingsRepository& drawings();
-    const DrawingsRepository& drawings() const;
+    DrawingsRepository& drawings() {
+        return *m_drawingRepo;
+    }
+    const DrawingsRepository& drawings() const {
+        return *m_drawingRepo;
+    }
 
-    CustomRepository<QString>& executors();
-    const CustomRepository<QString>& executors() const;
+    CustomRepository<QString>& executors() {
+        return *m_executorRepo;
+    }
+    const CustomRepository<QString>& executors() const {
+        return *m_executorRepo;
+    }
 
-    CustomRepository<QString>& authors();
-    const CustomRepository<QString>& authors() const;
+    CustomRepository<QString>& authors() {
+        return *m_authorRepo;
+    }
+    const CustomRepository<QString>& authors() const {
+        return *m_authorRepo;
+    }
 
-    CustomRepository<QString>& castingMaterials();
-    const CustomRepository<QString>& castingMaterials() const;
+    CustomRepository<QString>& castingMaterials() {
+        return *m_castingMaterialRepo;
+    }
+    const CustomRepository<QString>& castingMaterials() const {
+        return *m_castingMaterialRepo;
+    }
 
-    CustomRepository<QString>& modelMaterials();
-    const CustomRepository<QString>& modelMaterials() const;
+    CustomRepository<QString>& modelMaterials() {
+        return *m_modelMaterialRepo;
+    }
+    const CustomRepository<QString>& modelMaterials() const {
+        return *m_modelMaterialRepo;
+    }
 
-    CustomRepository<QString>& machines();
-    const CustomRepository<QString>& machines() const;
+    CustomRepository<QString>& machines() {
+        return *m_machineRepo;
+    }
+    const CustomRepository<QString>& machines() const {
+        return *m_machineRepo;
+    }
 
-    CustomRepository<QString>& notes();
-    const CustomRepository<QString>& notes() const;
+    CustomRepository<QString>& notes() {
+        return *m_noteRepo;
+    }
+    const CustomRepository<QString>& notes() const {
+        return *m_noteRepo;
+    }
 
-    CustomRepository<int>& amounts();
-    const CustomRepository<int>& amounts() const;
+    CustomRepository<int>& amounts() {
+        return *m_amountRepo;
+    }
+    const CustomRepository<int>& amounts() const {
+        return *m_amountRepo;
+    }
 
 private:
     std::unique_ptr<DatesRepository> m_dateRepo;
