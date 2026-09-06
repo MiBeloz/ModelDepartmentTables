@@ -21,7 +21,6 @@ public:
     ErrorType lastError() const;
 
 private:
-    QString m_format = "dd.MM.yyyy";
     ErrorType m_error;
 
     void setError(ErrorType error) {
@@ -63,10 +62,10 @@ public:
         setError(DatesListError::FormatError);
         return false;
     }
-    std::optional<qsizetype> getID(const QString &date) const {
+    std::optional<qsizetype> getId(const QString &date) const {
         setError(DatesListError::NoError);
         if (auto exelDate = strToDate(date, m_format); exelDate.has_value()) {
-            if (auto id = CustomList::getID(exelDate.value()); id.has_value()) {
+            if (auto id = CustomList::getId(exelDate.value()); id.has_value()) {
                 return id;
             }
             setError(DatesListError::DateError);
@@ -75,16 +74,15 @@ public:
         setError(DatesListError::FormatError);
         return std::nullopt;
     }
-    std::optional<qsizetype> getID(const qsizetype &exelFormat) const override {
+    std::optional<qsizetype> getId(const qsizetype &exelFormat) const override {
         setError(DatesListError::NoError);
-        if (auto id = CustomList::getID(exelFormat); id.has_value()) {
+        if (auto id = CustomList::getId(exelFormat); id.has_value()) {
             return id;
         }
         setError(DatesListError::DateError);
         return std::nullopt;
     }
     std::optional<QString> getStrValue(qsizetype id) const {
-        const QReadLocker locker(&this->m_lock);
         setError(DatesListError::NoError);
         if (auto date = CustomList::getValue(id); date.has_value()) {
             if (auto strDate = dateToStr(date.value(), m_format); strDate.has_value()) {
@@ -130,13 +128,12 @@ public:
         QDate inputDate = QDate::fromString(date, format);
         if (inputDate.isValid()) {
             return inputDate.toJulianDay() - baseDate.toJulianDay();
-            ;
         }
         return std::nullopt;
     }
 
 private:
-    QString m_format;
+    QString m_format = "dd.MM.yyyy";
     mutable std::atomic<DatesListError::ErrorType> m_error { DatesListError::NoError };
 
     void setError(DatesListError::ErrorType error) const {

@@ -57,14 +57,14 @@ private slots:
     }
 
     void testGetId() {
-        QCOMPARE(custom_list.getID("11"), 4);
-        QCOMPARE(custom_list.getID("15"), 2);
-        QCOMPARE(custom_list.getID("3"), 3);
-        QCOMPARE(custom_list.getID("10"), 5);
-        QCOMPARE(custom_list.getID("6"), 6);
-        QCOMPARE(custom_list.getID("7"), 1);
+        QCOMPARE(custom_list.getId("11"), 4);
+        QCOMPARE(custom_list.getId("15"), 2);
+        QCOMPARE(custom_list.getId("3"), 3);
+        QCOMPARE(custom_list.getId("10"), 5);
+        QCOMPARE(custom_list.getId("6"), 6);
+        QCOMPARE(custom_list.getId("7"), 1);
 
-        QCOMPARE(custom_list.getID("33"), std::nullopt);
+        QCOMPARE(custom_list.getId("33"), std::nullopt);
     }
 
     void testGetValue() {

@@ -63,16 +63,16 @@ private slots:
     }
 
     void testGetId() {
-        QCOMPARE(dates_list.getID("13.06.2015"), 4);
-        QCOMPARE(dates_list.getID("15.07.2024"), 2);
-        QCOMPARE(dates_list.getID("26.03.2018"), 3);
-        QCOMPARE(dates_list.getID("28.08.2019"), 5);
-        QCOMPARE(dates_list.getID("09.01.2019"), 6);
-        QCOMPARE(dates_list.getID("25.08.2025"), 1);
+        QCOMPARE(dates_list.getId("13.06.2015"), 4);
+        QCOMPARE(dates_list.getId("15.07.2024"), 2);
+        QCOMPARE(dates_list.getId("26.03.2018"), 3);
+        QCOMPARE(dates_list.getId("28.08.2019"), 5);
+        QCOMPARE(dates_list.getId("09.01.2019"), 6);
+        QCOMPARE(dates_list.getId("25.08.2025"), 1);
 
-        QCOMPARE(dates_list.getID("01.05.2017"), std::nullopt);
+        QCOMPARE(dates_list.getId("01.05.2017"), std::nullopt);
         QCOMPARE(dates_list.lastError(), DatesListError::DateError);
-        QCOMPARE(dates_list.getID("55.05.2017"), std::nullopt);
+        QCOMPARE(dates_list.getId("55.05.2017"), std::nullopt);
         QCOMPARE(dates_list.lastError(), DatesListError::FormatError);
     }
 

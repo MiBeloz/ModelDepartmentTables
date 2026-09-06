@@ -13,14 +13,14 @@ public:
 
     virtual std::optional<qsizetype> insert(const T& data);
     virtual bool remove(const T& data);
-    virtual std::optional<qsizetype> getID(const T& data) const;
+    virtual std::optional<qsizetype> getId(const T& data) const;
     virtual std::optional<T> getValue(qsizetype id) const;
     virtual QList<T> getAllValues() const;
 
     virtual qsizetype size() const;
     virtual void clear();
 
-protected:
+private:
     QHash<qsizetype, T> m_list;
     qsizetype m_id = 0;
     QQueue<qsizetype> m_emptyIDs;
@@ -59,7 +59,7 @@ inline bool CustomList<T>::remove(const T& data) {
 }
 
 template<typename T>
-inline std::optional<qsizetype> CustomList<T>::getID(const T& data) const {
+inline std::optional<qsizetype> CustomList<T>::getId(const T& data) const {
     const QReadLocker locker(&m_lock);
     if (auto id = m_list.key(data, -1); id != -1) {
         return id;
@@ -70,8 +70,8 @@ inline std::optional<qsizetype> CustomList<T>::getID(const T& data) const {
 template<typename T>
 inline std::optional<T> CustomList<T>::getValue(qsizetype id) const {
     const QReadLocker locker(&m_lock);
-    if (T value = m_list.value(id, T()); value != T()) {
-        return value;
+    if (auto it = m_list.find(id); it != m_list.end()) {
+        return *it;
     }
     return std::nullopt;
 }
