@@ -4,10 +4,10 @@
 #include "DatesList.h"
 #include "Drawing.h"
 
-template<typename T>
+template<typename T, typename U = CustomList<T>>
 class CustomRepository {
 public:
-    CustomRepository(std::unique_ptr<CustomList<T>> list = std::make_unique<CustomList<T>>())
+    CustomRepository(std::unique_ptr<U> list = std::make_unique<U>())
         : m_list(std::move(list)) { }
 
     virtual ~CustomRepository() { }
@@ -42,50 +42,41 @@ public:
     }
 
 protected:
-    std::unique_ptr<CustomList<T>> m_list;
+    std::unique_ptr<U> m_list;
 };
 
-class DatesRepository final : public CustomRepository<qsizetype> {
+class DatesRepository final : public CustomRepository<qsizetype, DatesList> {
 public:
-    DatesRepository() : CustomRepository(std::make_unique<DatesList>()) { }
+    DatesRepository() : CustomRepository() { }
 
     virtual ~DatesRepository() = default;
 
     std::optional<qsizetype> add(const QString& date) {
-        return getDatesList()->insert(date);
+        return m_list->insert(date);
     }
 
     bool remove(const QString& date) {
-        return getDatesList()->remove(date);
+        return m_list->remove(date);
     }
 
     std::optional<qsizetype> findId(const QString& date) const {
-        return getDatesList()->getId(date);
+        return m_list->getId(date);
     }
 
     std::optional<QString> findStrValue(qsizetype id) const {
-        return getDatesList()->getStrValue(id);
+        return m_list->getStrValue(id);
     }
 
     DatesListError::ErrorType lastError() const {
-        return getDatesList()->lastError();
+        return m_list->lastError();
     }
 
     void setDateFormat(const QString& format) {
-        getDatesList()->setDateFormat(format);
+        m_list->setDateFormat(format);
     }
 
     QString getDateFormat() const {
-        return getDatesList()->getDateFormat();
-    }
-
-private:
-    DatesList* getDatesList() {
-        return static_cast<DatesList*>(m_list.get());
-    }
-
-    const DatesList* getDatesList() const {
-        return static_cast<const DatesList*>(m_list.get());
+        return m_list->getDateFormat();
     }
 };
 
