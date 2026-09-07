@@ -5,6 +5,8 @@
 
 CustomList<QString> custom_list;
 
+std::shared_ptr<MementoBase> snapshot;
+
 class TestCustomListQString final : public QObject {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(TestCustomListQString)
@@ -32,6 +34,9 @@ private slots:
 
         QCOMPARE(custom_list.insert("10"), 5);
         QCOMPARE(custom_list.size(), 5);
+
+        custom_list.printState();
+        snapshot = custom_list.createMemento();
     }
 
     void testRemove() {
@@ -43,6 +48,8 @@ private slots:
 
         QCOMPARE(custom_list.remove("1"), true);
         QCOMPARE(custom_list.size(), 3);
+
+        custom_list.printState();
     }
 
     void testInsertWithQueue() {
@@ -76,6 +83,10 @@ private slots:
         QCOMPARE(custom_list.getValue(1), "7");
 
         QCOMPARE(custom_list.getValue(7), std::nullopt);
+
+        custom_list.printState();
+        custom_list.restoreFromMemento(snapshot);
+        custom_list.printState();
     }
 };
 

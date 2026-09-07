@@ -1,4 +1,4 @@
-#ifndef DRAWING_H
+﻿#ifndef DRAWING_H
 #define DRAWING_H
 
 #include <QHash>

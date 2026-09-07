@@ -104,7 +104,7 @@ public:
     }
 
     DatesListError::ErrorType lastError() const {
-        return m_error.load(std::memory_order_acquire);
+        return m_error;
     }
 
     void setDateFormat(const QString &format) {
@@ -134,10 +134,10 @@ public:
 
 private:
     QString m_format = "dd.MM.yyyy";
-    mutable std::atomic<DatesListError::ErrorType> m_error { DatesListError::NoError };
+    mutable DatesListError::ErrorType m_error { DatesListError::NoError };
 
     void setError(DatesListError::ErrorType error) const {
-        m_error.store(error, std::memory_order_release);
+        m_error = error;
     }
 };
 
