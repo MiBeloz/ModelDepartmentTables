@@ -7,46 +7,6 @@
 #include <QReadWriteLock>
 
 template<typename T>
-class CustomListMemento;
-
-template<typename T>
-struct CustomListState {
-    QHash<qsizetype, T> m_list;
-    qsizetype m_id = 0;
-    QQueue<qsizetype> m_emptyId;
-
-    CustomListState() = default; // Добавлен конструктор по умолчанию
-
-    CustomListState(const QHash<qsizetype, T>& list, qsizetype id, const QQueue<qsizetype>& emptyId)
-        : m_list(list)
-        , m_id(id)
-        , m_emptyId(emptyId) { }
-};
-
-class MementoBase {
-public:
-    virtual ~MementoBase() = default;
-};
-
-template<typename T>
-class CustomList;
-
-template<typename T>
-class CustomListMemento : public MementoBase {
-private:
-    CustomListState<T> m_state;
-
-    explicit CustomListMemento(const CustomListState<T>& state) : m_state(state) { }
-
-public:
-    const CustomListState<T>& getState() const {
-        return m_state;
-    }
-
-    friend class CustomList<T>;
-};
-
-template<typename T>
 class CustomList {
 public:
     CustomList() = default;
@@ -61,30 +21,58 @@ public:
     virtual qsizetype size() const;
     virtual void clear();
 
-    // Создать снимок состояния
-    virtual std::shared_ptr<MementoBase> createMemento() const {
+    void serialize(QDataStream& out) const {
         QReadLocker locker(&m_lock);
 
-        CustomListState<T> state(m_list, m_id, m_emptyId);
-        return std::shared_ptr<MementoBase>(new CustomListMemento<T>(state));
+        out << SERIALIZATION_VERSION;
+        out << static_cast<quint32>(m_list.size());
+        for (auto it = m_list.begin(); it != m_list.end(); ++it) {
+            out << it.key() << it.value();
+        }
+        out << static_cast<qint64>(m_id);
+        out << static_cast<quint32>(m_emptyId.size());
+        for (auto id : m_emptyId) {
+            out << static_cast<qint64>(id);
+        }
     }
 
-    // Восстановить состояние из снимка
-    virtual void restoreFromMemento(const std::shared_ptr<MementoBase>& memento) {
-        auto specific = std::dynamic_pointer_cast<CustomListMemento<T>>(memento);
-        if (!specific) {
-            throw std::runtime_error("Invalid memento type for CustomList");
-        }
-
+    void deserialize(QDataStream& in) {
         QWriteLocker locker(&m_lock);
-        const auto& state = specific->getState();
-        m_list = state.m_list;
-        m_id = state.m_id;
-        m_emptyId = state.m_emptyId;
+
+        quint32 version;
+        in >> version;
+
+        m_list.clear();
+        m_emptyId.clear();
+        m_id = 0;
+
+        quint32 size;
+        in >> size;
+        for (quint32 i = 0; i < size; ++i) {
+            qsizetype key;
+            alignas(T) T* value = reinterpret_cast<T*>(new char[sizeof(T)]());
+
+            in >> key >> *value;
+            m_list.insert(key, *value);
+
+            value->~T();
+            delete reinterpret_cast<char*>(value);
+        }
+        qint64 id;
+        in >> id;
+        m_id = static_cast<qsizetype>(id);
+        quint32 emptySize;
+        in >> emptySize;
+        for (quint32 i = 0; i < emptySize; ++i) {
+            qint64 emptyId;
+            in >> emptyId;
+            m_emptyId.enqueue(static_cast<qsizetype>(emptyId));
+        }
     }
 
     void printState() const {
         QReadLocker locker(&m_lock);
+
         qDebug() << "ID counter: " << m_id;
         qDebug() << "Free IDs:";
         for (auto id : m_emptyId) {
@@ -101,11 +89,13 @@ private:
     qsizetype m_id = 0;
     QQueue<qsizetype> m_emptyId;
     mutable QReadWriteLock m_lock;
+    static constexpr quint32 SERIALIZATION_VERSION = 1;
 };
 
 template<typename T>
 inline std::optional<qsizetype> CustomList<T>::insert(const T& data) {
     const QWriteLocker locker(&m_lock);
+
     for (auto [k, v] : m_list.asKeyValueRange()) {
         if (v == data) {
             return k;
@@ -126,6 +116,7 @@ inline std::optional<qsizetype> CustomList<T>::insert(const T& data) {
 template<typename T>
 inline bool CustomList<T>::remove(const T& data) {
     const QWriteLocker locker(&m_lock);
+
     for (auto it = m_list.begin(); it != m_list.end(); ++it) {
         if (it.value() == data) {
             m_emptyId.enqueue(it.key());
@@ -139,6 +130,7 @@ inline bool CustomList<T>::remove(const T& data) {
 template<typename T>
 inline std::optional<qsizetype> CustomList<T>::getId(const T& data) const {
     const QReadLocker locker(&m_lock);
+
     if (auto id = m_list.key(data, -1); id != -1) {
         return id;
     }
@@ -148,6 +140,7 @@ inline std::optional<qsizetype> CustomList<T>::getId(const T& data) const {
 template<typename T>
 inline std::optional<T> CustomList<T>::getValue(qsizetype id) const {
     const QReadLocker locker(&m_lock);
+
     if (auto it = m_list.find(id); it != m_list.end()) {
         return *it;
     }
@@ -157,18 +150,21 @@ inline std::optional<T> CustomList<T>::getValue(qsizetype id) const {
 template<typename T>
 inline QList<T> CustomList<T>::getAllValues() const {
     const QReadLocker locker(&m_lock);
+
     return m_list.values();
 }
 
 template<typename T>
 inline qsizetype CustomList<T>::size() const {
     const QReadLocker locker(&m_lock);
+
     return m_list.size();
 }
 
 template<typename T>
 inline void CustomList<T>::clear() {
     const QWriteLocker locker(&m_lock);
+
     m_list.clear();
     m_emptyId.clear();
     m_id = 0;
