@@ -6,8 +6,6 @@
 
 class Drawing final {
 public:
-    //Drawing() = default;
-
     explicit Drawing(const QString& number, const QString& title)
         : m_number(number)
         , m_title(title) { }

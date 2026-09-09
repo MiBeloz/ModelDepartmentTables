@@ -4,7 +4,6 @@
 #include <QAbstractProxyModel>
 #include <QMainWindow>
 
-#include "CacheManager.hpp"
 #include "DatabaseManager.h"
 #include "NewItemWindow.h"
 #include "SettingsWindow.h"
@@ -23,7 +22,7 @@ public:
     ~MainWindow();
 
 private slots:
-    void rec_handleNewItem(const ItemData &newItem);
+    //void rec_handleNewItem(const ItemData &newItem);
 
 private:
     Ui::MainWindow *ui;
@@ -32,7 +31,6 @@ private:
     QAbstractProxyModel *m_itemsModel;
 
     DatabaseManager *m_dbManager;
-    CacheManager *m_cacheManager;
 
     void init();
 };

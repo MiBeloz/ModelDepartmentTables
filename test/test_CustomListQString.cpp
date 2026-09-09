@@ -32,16 +32,6 @@ private slots:
 
         QCOMPARE(custom_list.insert("10"), 5);
         QCOMPARE(custom_list.size(), 5);
-
-        qDebug() << "Before serialize";
-        custom_list.printState();
-        QFile file("CustomListQString.txt");
-        if (file.open(QIODeviceBase::WriteOnly)) {
-            QDataStream stream(&file);
-            stream.setVersion(QDataStream::Qt_6_11);
-            custom_list.serialize(stream);
-        }
-        file.close();
     }
 
     void testRemove() {
@@ -86,20 +76,6 @@ private slots:
         QCOMPARE(custom_list.getValue(1), "7");
 
         QCOMPARE(custom_list.getValue(7), std::nullopt);
-
-        qDebug() << "Before deserialize";
-        custom_list.printState();
-
-        QFile file("CustomListQString.txt");
-        if (file.open(QIODeviceBase::ReadOnly)) {
-            QDataStream stream(&file);
-            stream.setVersion(QDataStream::Qt_6_11);
-            custom_list.deserialize(stream);
-        }
-        file.close();
-
-        qDebug() << "After deserialize";
-        custom_list.printState();
     }
 };
 

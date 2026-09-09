@@ -3,7 +3,7 @@
 
 #include <QDialog>
 
-#include "ItemData.h"
+// #include "ItemData.h"
 
 namespace Ui {
     class NewItemWindow;
@@ -17,10 +17,10 @@ public:
     ~NewItemWindow();
 
 signals:
-    void sig_handleNewItem(const ItemData &newItem);
+    //void sig_handleNewItem(const ItemData &newItem);
 
 private slots:
-    void rec_onPB_okClicked();
+    //void rec_onPB_okClicked();
     void rec_onPB_cancelClicked();
 
 private:

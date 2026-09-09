@@ -18,8 +18,8 @@ public:
     virtual std::optional<T> getValue(qsizetype id) const;
     virtual QList<T> getAllValues() const;
 
-    virtual qsizetype size() const;
-    virtual void clear();
+    qsizetype size() const;
+    void clear();
 
     void serialize(QDataStream& out) const {
         QReadLocker locker(&m_lock);
@@ -73,15 +73,16 @@ public:
     void printState() const {
         QReadLocker locker(&m_lock);
 
-        qDebug() << "ID counter: " << m_id;
-        qDebug() << "Free IDs:";
+        qDebug() << "\tID counter: " << m_id;
+        qDebug() << "\tFree IDs:";
         for (auto id : m_emptyId) {
-            qDebug() << '\t' << id;
+            qDebug() << "\t\t" << id;
         }
-        qDebug() << "Items: ";
+        qDebug() << "\tItems: ";
         for (auto it = m_list.begin(); it != m_list.end(); ++it) {
-            qDebug() << '\t' << it.key() << " -> " << it.value();
+            qDebug() << "\t\t" << it.key() << " -> " << it.value();
         }
+        qDebug() << Qt::endl;
     }
 
 private:

@@ -5,6 +5,7 @@
 #include "Drawing.h"
 
 CustomList<Drawing> drawings_list;
+
 auto d_IMN_111 = Drawing("ИМН-111", "Колесо рабочее");
 auto d_111_11 = Drawing("111-11", "Шкиф");
 auto d_1_234 = Drawing("1-234", "Башмак");
@@ -41,16 +42,6 @@ private slots:
 
         QCOMPARE(drawings_list.insert(d_987_789), 5);
         QCOMPARE(drawings_list.size(), 5);
-
-        qDebug() << "Before serialize";
-        drawings_list.printState();
-        QFile file("CustomListDrawing.txt");
-        if (file.open(QIODeviceBase::WriteOnly)) {
-            QDataStream stream(&file);
-            stream.setVersion(QDataStream::Qt_6_11);
-            drawings_list.serialize(stream);
-        }
-        file.close();
     }
 
     void testRemove() {
@@ -95,20 +86,6 @@ private slots:
         QCOMPARE(drawings_list.getValue(1), d_IMN_111);
 
         QCOMPARE(drawings_list.getValue(7), std::nullopt);
-
-        qDebug() << "Before deserialize";
-        drawings_list.printState();
-
-        QFile file("CustomListDrawing.txt");
-        if (file.open(QIODeviceBase::ReadOnly)) {
-            QDataStream stream(&file);
-            stream.setVersion(QDataStream::Qt_6_11);
-            drawings_list.deserialize(stream);
-        }
-        file.close();
-
-        qDebug() << "After deserialize";
-        drawings_list.printState();
     }
 };
 

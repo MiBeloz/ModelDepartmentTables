@@ -2,7 +2,6 @@
 
 #include <QDate>
 
-#include "ItemData.h"
 #include "TableHeaders.h"
 
 ItemsModel::ItemsModel(QObject *parent) : QSortFilterProxyModel { parent } {
@@ -17,8 +16,8 @@ bool ItemsModel::lessThan(const QModelIndex &left, const QModelIndex &right) con
 
     QDate leftDate;
     QDate rightDate;
-    leftDate = QDate::fromString(leftData, Item::dateFormat);
-    rightDate = QDate::fromString(rightData, Item::dateFormat);
+    // leftDate = QDate::fromString(leftData, Item::dateFormat);
+    // rightDate = QDate::fromString(rightData, Item::dateFormat);
 
     if (!leftDate.isValid() || !rightDate.isValid()) {
         return QString::localeAwareCompare(leftData, rightData) < 0;

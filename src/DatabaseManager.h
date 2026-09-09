@@ -8,7 +8,7 @@
 #include <QWaitCondition>
 #include <QtSql>
 
-#include "CacheManager.hpp"
+// #include "CacheManager.hpp"
 
 class DatabaseManager : public QObject {
     Q_OBJECT
@@ -55,7 +55,7 @@ private:
     QThreadStorage<QSqlDatabase> m_threadConnections;
     QAtomicInt m_activeConnections; // Счетчик активных соединений
 
-    CacheManager m_cacheManager;
+    // CacheManager m_cacheManager;
 
     QTimer* m_monitorTimer;
 };
