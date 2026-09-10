@@ -9,12 +9,12 @@ struct Record {
     explicit Record(const QString& _date,
                     const Drawing& _drawing,
                     int _amount,
-                    const QStringView& _executors,
-                    const QStringView& _authors,
-                    const QStringView& _castingMaterials,
-                    const QStringView& _modelMaterials,
-                    const QStringView& _machines,
-                    const QStringView& _notes)
+                    const QStringList& _executors,
+                    const QStringList& _authors,
+                    const QStringList& _castingMaterials,
+                    const QStringList& _modelMaterials,
+                    const QStringList& _machines,
+                    const QStringList& _notes)
         : date(_date)
         , drawing(_drawing)
         , amount(_amount)
@@ -28,30 +28,30 @@ struct Record {
     QString date;
     Drawing drawing;
     int amount = 0;
-    QStringView executors;
-    QStringView authors;
-    QStringView castingMaterials;
-    QStringView modelMaterials;
-    QStringView machines;
-    QStringView notes;
+    QStringList executors;
+    QStringList authors;
+    QStringList castingMaterials;
+    QStringList modelMaterials;
+    QStringList machines;
+    QStringList notes;
 };
 
-class IdRecord {
+class LinkRecord {
 public:
-    explicit IdRecord(qsizetype idDate, qsizetype idDrawing, qsizetype idAmount)
+    explicit LinkRecord(qsizetype idDate, qsizetype idDrawing, qsizetype idAmount)
         : m_idDate(idDate)
         , m_idDrawing(idDrawing)
         , m_idAmount(idAmount) { }
 
-    explicit IdRecord(qsizetype idDate,
-                      qsizetype idDrawing,
-                      qsizetype idAmount,
-                      const QSet<qsizetype>& idExecutors,
-                      const QSet<qsizetype>& idAuthors,
-                      const QSet<qsizetype>& idCastingMaterials,
-                      const QSet<qsizetype>& idModelMaterials,
-                      const QSet<qsizetype>& idMachines,
-                      const QSet<qsizetype>& idNotes)
+    explicit LinkRecord(qsizetype idDate,
+                        qsizetype idDrawing,
+                        qsizetype idAmount,
+                        const QSet<qsizetype>& idExecutors,
+                        const QSet<qsizetype>& idAuthors,
+                        const QSet<qsizetype>& idCastingMaterials,
+                        const QSet<qsizetype>& idModelMaterials,
+                        const QSet<qsizetype>& idMachines,
+                        const QSet<qsizetype>& idNotes)
         : m_idDate(idDate)
         , m_idDrawing(idDrawing)
         , m_idAmount(idAmount)
@@ -62,7 +62,7 @@ public:
         , m_idMachines(idMachines)
         , m_idNotes(idNotes) { }
 
-    bool operator ==(const IdRecord& other) const {
+    bool operator ==(const LinkRecord& other) const {
         return m_idDate == other.m_idDate && m_idDrawing == other.m_idDrawing &&
                m_idAmount == other.m_idAmount;
     }
@@ -179,16 +179,92 @@ class RecordStorage {
 public:
     RecordStorage() = default;
 
-    void add(const Record& record) {
-        m_records.insert(record);
+    bool add(const Record& record) {
+        qsizetype idDate = 0;
+        if (auto id = m_service.dates().add(record.date); id.has_value()) {
+            idDate = id.value();
+        } else {
+            return false;
+        }
+
+        qsizetype idDrawing = 0;
+        if (auto id = m_service.drawings().add(record.drawing); id.has_value()) {
+            idDrawing = id.value();
+        } else {
+            m_service.dates().remove(record.date);
+            return false;
+        }
+
+        qsizetype idAmount = 0;
+        if (auto id = m_service.amounts().add(record.amount); id.has_value()) {
+            idAmount = id.value();
+        } else {
+            m_service.dates().remove(record.date);
+            m_service.drawings().remove(record.drawing);
+            return false;
+        }
+
+        QSet<qsizetype> idExecutors;
+        for (auto it = record.executors.begin(); it != record.executors.end(); ++it) {
+            if (auto id = m_service.executors().add(*it); id.has_value()) {
+                idExecutors.insert(id.value());
+            }
+        }
+
+        QSet<qsizetype> idAuthors;
+        for (auto it = record.authors.begin(); it != record.authors.end(); ++it) {
+            if (auto id = m_service.authors().add(*it); id.has_value()) {
+                idAuthors.insert(id.value());
+            }
+        }
+
+        QSet<qsizetype> idCastingMaterials;
+        for (auto it = record.castingMaterials.begin(); it != record.castingMaterials.end(); ++it) {
+            if (auto id = m_service.castingMaterials().add(*it); id.has_value()) {
+                idCastingMaterials.insert(id.value());
+            }
+        }
+
+        QSet<qsizetype> idModelMaterials;
+        for (auto it = record.modelMaterials.begin(); it != record.modelMaterials.end(); ++it) {
+            if (auto id = m_service.modelMaterials().add(*it); id.has_value()) {
+                idModelMaterials.insert(id.value());
+            }
+        }
+
+        QSet<qsizetype> idMachines;
+        for (auto it = record.machines.begin(); it != record.machines.end(); ++it) {
+            if (auto id = m_service.machines().add(*it); id.has_value()) {
+                idMachines.insert(id.value());
+            }
+        }
+
+        QSet<qsizetype> idNotes;
+        for (auto it = record.notes.begin(); it != record.notes.end(); ++it) {
+            if (auto id = m_service.notes().add(*it); id.has_value()) {
+                idNotes.insert(id.value());
+            }
+        }
+
+        m_records.insert(LinkRecord(idDate,
+                                    idDrawing,
+                                    idAmount,
+                                    idExecutors,
+                                    idAuthors,
+                                    idCastingMaterials,
+                                    idModelMaterials,
+                                    idMachines,
+                                    idNotes));
+
+        return true;
     }
 
     void remove(const Record& record) {
-        m_records.remove(record);
+        //m_records.remove(record);
     }
 
     QSet<Record> get() const {
-        return m_records;
+        return QSet<Record>();
     }
 
     qsizetype count() const {
@@ -200,17 +276,18 @@ public:
     }
 
 private:
-    QSet<Record> m_records;
-};
-
-class recordData {
-public:
-    recordData(const RecordStorage& recordStorage) : m_storage(recordStorage) { }
-
-private:
-    RecordStorage m_storage;
+    QSet<LinkRecord> m_records;
     StorageService m_service;
 };
+
+// class RecordData {
+// public:
+//     RecordData(const RecordStorage& recordStorage) : m_storage(recordStorage) { }
+
+// private:
+//     RecordStorage m_storage;
+//     StorageService m_service;
+// };
 
 // inline QTextStream& operator <<(QTextStream& out, const Drawing& drawing) {
 //     out << "[Name: " << drawing.getNumber() << ", Title: " << drawing.getTitle() << "]";
