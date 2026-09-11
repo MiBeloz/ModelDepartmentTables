@@ -2,6 +2,8 @@
 #define CONSTANTS_H
 
 constexpr const int startDateExcel = 2415019;
+constexpr const char* StorageSaverFilename = "data.mdt";
+
 namespace mdt {
 #define STRINGIZE(x) #x
 #define STRINGIZE_VALUE_OF(x) STRINGIZE(x)
