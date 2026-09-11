@@ -199,8 +199,19 @@ public:
         if (auto id = m_service.drawings().add(record.drawing); id.has_value()) {
             idDrawing = id.value();
         } else {
-            m_service.dates().remove(record.date);
-            return false;
+            int counter = 0;
+            for (auto it = m_linkRecords.begin(); it != m_linkRecords.end(); ++it) {
+                if (it->getIdDate() == idDate) {
+                    ++counter;
+                    if (counter > 1) {
+                        break;
+                    }
+                }
+            }
+            if (counter == 1) {
+                m_service.dates().remove(record.date);
+                return false;
+            }
         }
 
         qsizetype idAmount = 0;
@@ -212,47 +223,12 @@ public:
             return false;
         }
 
-        QSet<qsizetype> idExecutors;
-        for (auto it = record.executors.begin(); it != record.executors.end(); ++it) {
-            if (auto id = m_service.executors().add(*it); id.has_value()) {
-                idExecutors.insert(id.value());
-            }
-        }
-
-        QSet<qsizetype> idAuthors;
-        for (auto it = record.authors.begin(); it != record.authors.end(); ++it) {
-            if (auto id = m_service.authors().add(*it); id.has_value()) {
-                idAuthors.insert(id.value());
-            }
-        }
-
-        QSet<qsizetype> idCastingMaterials;
-        for (auto it = record.castingMaterials.begin(); it != record.castingMaterials.end(); ++it) {
-            if (auto id = m_service.castingMaterials().add(*it); id.has_value()) {
-                idCastingMaterials.insert(id.value());
-            }
-        }
-
-        QSet<qsizetype> idModelMaterials;
-        for (auto it = record.modelMaterials.begin(); it != record.modelMaterials.end(); ++it) {
-            if (auto id = m_service.modelMaterials().add(*it); id.has_value()) {
-                idModelMaterials.insert(id.value());
-            }
-        }
-
-        QSet<qsizetype> idMachines;
-        for (auto it = record.machines.begin(); it != record.machines.end(); ++it) {
-            if (auto id = m_service.machines().add(*it); id.has_value()) {
-                idMachines.insert(id.value());
-            }
-        }
-
-        QSet<qsizetype> idNotes;
-        for (auto it = record.notes.begin(); it != record.notes.end(); ++it) {
-            if (auto id = m_service.notes().add(*it); id.has_value()) {
-                idNotes.insert(id.value());
-            }
-        }
+        auto idExecutors = addHelper(record.executors, m_service.executors());
+        auto idAuthors = addHelper(record.authors, m_service.authors());
+        auto idCastingMaterials = addHelper(record.castingMaterials, m_service.castingMaterials());
+        auto idModelMaterials = addHelper(record.modelMaterials, m_service.modelMaterials());
+        auto idMachines = addHelper(record.machines, m_service.machines());
+        auto idNotes = addHelper(record.notes, m_service.notes());
 
         LinkRecord linkRecord(idDate,
                               idDrawing,
@@ -329,7 +305,7 @@ public:
                               idMachines,
                               idNotes);
 
-        if (m_records.remove(linkRecord)) {
+        if (m_linkRecords.remove(linkRecord)) {
             // TODO
             // Check other linkRecords and remove dead links.
         }
@@ -341,18 +317,30 @@ public:
     }
 
     qsizetype count() const {
-        return m_records.count();
+        return m_linkRecords.count();
     }
 
     void clear() {
-        m_records.clear();
+        m_linkRecords.clear();
     }
 
 private:
-    QSet<LinkRecord> m_records;
+    QSet<LinkRecord> m_linkRecords;
     StorageService m_service;
 
-    LinkRecord getLinkRecord(const Record& record) const { }
+    template<typename T>
+    QSet<qsizetype> addHelper(const QStringList& values, CustomStorage<T>& storage) const {
+        QSet<qsizetype> result;
+        for (auto it = values.begin(); it != values.end(); ++it) {
+            if (auto id = storage.add(*it); id.has_value()) {
+                result.insert(id.value());
+            }
+        }
+        return result;
+    }
+
+    template<typename T>
+    QSet<qsizetype> findIdHelper(const CustomList<T>& list, const QStringList& values) const { }
 };
 
 // class RecordData {
