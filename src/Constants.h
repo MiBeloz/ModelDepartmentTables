@@ -3,6 +3,8 @@
 
 constexpr const int startDateExcel = 2415019;
 constexpr const char* StorageSaverFilename = "data.mdt";
+constexpr const char* StorageSaverFilenameTmp = "data.mdt.tmp";
+constexpr const char* StorageSaverFilenameBackup = "data.mdt.backup";
 
 namespace mdt {
 #define STRINGIZE(x) #x

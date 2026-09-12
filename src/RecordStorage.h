@@ -11,12 +11,12 @@ struct Record {
     explicit Record(const QString& _date,
                     const Drawing& _drawing,
                     int _amount,
-                    const QStringList& _executors,
-                    const QStringList& _authors,
-                    const QStringList& _castingMaterials,
-                    const QStringList& _modelMaterials,
-                    const QStringList& _machines,
-                    const QStringList& _notes)
+                    const QStringList& _executors = QStringList(),
+                    const QStringList& _authors = QStringList(),
+                    const QStringList& _castingMaterials = QStringList(),
+                    const QStringList& _modelMaterials = QStringList(),
+                    const QStringList& _machines = QStringList(),
+                    const QStringList& _notes = QStringList())
         : date(_date)
         , drawing(_drawing)
         , amount(_amount)
@@ -169,25 +169,39 @@ private:
     QSet<qsizetype> m_idModelMaterials;
     QSet<qsizetype> m_idMachines;
     QSet<qsizetype> m_idNotes;
+
+    friend uint qHash(const LinkRecord& linkRecord, uint seed);
 };
+
+inline uint qHash(const LinkRecord& linkRecord, uint seed = 0) {
+    return qHash(linkRecord.m_idDate, seed) ^ qHash(linkRecord.m_idDrawing, seed) ^
+           qHash(linkRecord.m_idAmount, seed) ^ qHash(linkRecord.m_idExecutors, seed) ^
+           qHash(linkRecord.m_idAuthors, seed) ^ qHash(linkRecord.m_idCastingMaterials, seed) ^
+           qHash(linkRecord.m_idModelMaterials, seed) ^ qHash(linkRecord.m_idMachines, seed) ^
+           qHash(linkRecord.m_idNotes, seed);
+}
 
 class RecordStorage {
 public:
-    RecordStorage() {
-        FileStorageSaver fileSaver(StorageSaverFilename);
-        if (!fileSaver.load(m_service)) {
-            // TODO
+    RecordStorage()
+        : m_fileServiceSaver(StorageSaverFilename)
+        , m_fileServiceSaverTmp(StorageSaverFilenameTmp) {
+        if (m_fileServiceSaver.load(m_service)) {
+            m_fileServiceSaverTmp.save(m_service);
         }
+
+        // TODO
     }
 
     ~RecordStorage() {
-        FileStorageSaver fileSaver(StorageSaverFilename);
-        if (!fileSaver.save(m_service)) {
-            // TODO
-        }
+        m_fileServiceSaver.replace(m_fileServiceSaverTmp);
     }
 
     bool add(const Record& record) {
+        if (!checkDate(record.date) || record.amount < 1) {
+            return false;
+        }
+
         qsizetype idDate = 0;
         if (auto id = m_service.dates().add(record.date); id.has_value()) {
             idDate = id.value();
@@ -199,27 +213,13 @@ public:
         if (auto id = m_service.drawings().add(record.drawing); id.has_value()) {
             idDrawing = id.value();
         } else {
-            int counter = 0;
-            for (auto it = m_linkRecords.begin(); it != m_linkRecords.end(); ++it) {
-                if (it->getIdDate() == idDate) {
-                    ++counter;
-                    if (counter > 1) {
-                        break;
-                    }
-                }
-            }
-            if (counter == 1) {
-                m_service.dates().remove(record.date);
-                return false;
-            }
+            return false;
         }
 
         qsizetype idAmount = 0;
         if (auto id = m_service.amounts().add(record.amount); id.has_value()) {
             idAmount = id.value();
         } else {
-            m_service.dates().remove(record.date);
-            m_service.drawings().remove(record.drawing);
             return false;
         }
 
@@ -240,60 +240,33 @@ public:
                               idMachines,
                               idNotes);
 
-        m_records.insert(linkRecord);
+        m_linkRecords.insert(linkRecord);
+
+        m_fileServiceSaverTmp.save(m_service);
+        // m_fileLinkRecordSaverTmp.save(m_linkRecords);
 
         return true;
     }
 
     bool remove(const Record& record) {
-        auto idDate = m_service.dates().findId(record.date);
-        auto idDrawing = m_service.drawings().findId(record.drawing);
-        auto idAmount = m_service.amounts().findId(record.amount);
-        if (!idDate.has_value() && !idDrawing.has_value() && !idAmount.has_value()) {
+        if (!checkDate(record.date) || record.amount < 1) {
             return false;
         }
 
-        QSet<qsizetype> idExecutors;
-        for (auto it = record.executors.begin(); it != record.executors.end(); ++it) {
-            if (auto id = m_service.executors().findId(*it); id.has_value()) {
-                idExecutors.insert(id.value());
-            }
+        auto idDate = m_service.dates().findId(record.date);
+        auto idDrawing = m_service.drawings().findId(record.drawing);
+        auto idAmount = m_service.amounts().findId(record.amount);
+        if (!idDate.has_value() || !idDrawing.has_value() || !idAmount.has_value()) {
+            return false;
         }
 
-        QSet<qsizetype> idAuthors;
-        for (auto it = record.authors.begin(); it != record.authors.end(); ++it) {
-            if (auto id = m_service.authors().findId(*it); id.has_value()) {
-                idAuthors.insert(id.value());
-            }
-        }
-
-        QSet<qsizetype> idCastingMaterials;
-        for (auto it = record.castingMaterials.begin(); it != record.castingMaterials.end(); ++it) {
-            if (auto id = m_service.castingMaterials().findId(*it); id.has_value()) {
-                idCastingMaterials.insert(id.value());
-            }
-        }
-
-        QSet<qsizetype> idModelMaterials;
-        for (auto it = record.modelMaterials.begin(); it != record.modelMaterials.end(); ++it) {
-            if (auto id = m_service.modelMaterials().findId(*it); id.has_value()) {
-                idModelMaterials.insert(id.value());
-            }
-        }
-
-        QSet<qsizetype> idMachines;
-        for (auto it = record.machines.begin(); it != record.machines.end(); ++it) {
-            if (auto id = m_service.machines().findId(*it); id.has_value()) {
-                idMachines.insert(id.value());
-            }
-        }
-
-        QSet<qsizetype> idNotes;
-        for (auto it = record.notes.begin(); it != record.notes.end(); ++it) {
-            if (auto id = m_service.notes().findId(*it); id.has_value()) {
-                idNotes.insert(id.value());
-            }
-        }
+        auto idExecutors = findIdHelper(record.executors, m_service.executors());
+        auto idAuthors = findIdHelper(record.authors, m_service.authors());
+        auto idCastingMaterials = findIdHelper(record.castingMaterials,
+                                               m_service.castingMaterials());
+        auto idModelMaterials = findIdHelper(record.modelMaterials, m_service.modelMaterials());
+        auto idMachines = findIdHelper(record.machines, m_service.machines());
+        auto idNotes = findIdHelper(record.notes, m_service.notes());
 
         LinkRecord linkRecord(idDate.value(),
                               idDrawing.value(),
@@ -324,9 +297,69 @@ public:
         m_linkRecords.clear();
     }
 
+    void print() {
+        qDebug() << "LinkRecords:";
+        qsizetype i = 1;
+        for (auto it : m_linkRecords) {
+            qDebug() << "\tLinkRecord" << i++;
+            qDebug() << "\t\tDate =" << it.getIdDate() << "-"
+                     << m_service.dates().findStrValue(it.getIdDate()).value();
+            qDebug() << "\t\tDrawing =" << it.getIdDrawing() << "-"
+                     << m_service.drawings().findValue(it.getIdDrawing()).value().getNumber() << "-"
+                     << m_service.drawings().findValue(it.getIdDrawing()).value().getTitle();
+            qDebug() << "\t\tAmount =" << it.getIdAmount() << "-"
+                     << m_service.amounts().findValue(it.getIdAmount()).value();
+
+            QSet executors = it.getIdExecutors();
+            qDebug() << "\t\tExecutors =" << it.getIdExecutors() << "-";
+            for (auto it2 = executors.begin(); it2 != executors.end(); ++it2) {
+                qDebug() << "\t\t\t" << m_service.executors().findValue(*it2).value();
+            }
+
+            QSet authors = it.getIdAuthors();
+            qDebug() << "\t\tAuthors =" << it.getIdAuthors() << "-";
+            for (auto it2 = authors.begin(); it2 != authors.end(); ++it2) {
+                qDebug() << "\t\t\t" << m_service.authors().findValue(*it2).value();
+            }
+
+            QSet castingMaterials = it.getIdCastingMaterials();
+            qDebug() << "\t\tCastingMaterials =" << it.getIdCastingMaterials() << "-";
+            for (auto it2 = castingMaterials.begin(); it2 != castingMaterials.end(); ++it2) {
+                qDebug() << "\t\t\t" << m_service.castingMaterials().findValue(*it2).value();
+            }
+
+            QSet modelMaterials = it.getIdModelMaterials();
+            qDebug() << "\t\tModelMaterials =" << it.getIdModelMaterials() << "-";
+            for (auto it2 = modelMaterials.begin(); it2 != modelMaterials.end(); ++it2) {
+                qDebug() << "\t\t\t" << m_service.modelMaterials().findValue(*it2).value();
+            }
+
+            QSet machines = it.getIdMachines();
+            qDebug() << "\t\tMachines =" << it.getIdMachines() << "-";
+            for (auto it2 = machines.begin(); it2 != machines.end(); ++it2) {
+                qDebug() << "\t\t\t" << m_service.machines().findValue(*it2).value();
+            }
+
+            QSet notes = it.getIdNotes();
+            qDebug() << "\t\tNotes =" << it.getIdNotes() << "-";
+            for (auto it2 = notes.begin(); it2 != notes.end(); ++it2) {
+                qDebug() << "\t\t\t" << m_service.notes().findValue(*it2).value();
+            }
+        }
+    }
+
 private:
     QSet<LinkRecord> m_linkRecords;
     StorageService m_service;
+    FileStorageSaver m_fileServiceSaver;
+    FileStorageSaver m_fileServiceSaverTmp;
+
+    bool checkDate(const QString& date) {
+        if (auto d = DatesList::strToDate(date); d.has_value()) {
+            return true;
+        }
+        return false;
+    }
 
     template<typename T>
     QSet<qsizetype> addHelper(const QStringList& values, CustomStorage<T>& storage) const {
@@ -340,7 +373,15 @@ private:
     }
 
     template<typename T>
-    QSet<qsizetype> findIdHelper(const CustomList<T>& list, const QStringList& values) const { }
+    QSet<qsizetype> findIdHelper(const QStringList& values, CustomStorage<T>& storage) const {
+        QSet<qsizetype> result;
+        for (auto it = values.begin(); it != values.end(); ++it) {
+            if (auto id = storage.findId(*it); id.has_value()) {
+                result.insert(id.value());
+            }
+        }
+        return result;
+    }
 };
 
 // class RecordData {
