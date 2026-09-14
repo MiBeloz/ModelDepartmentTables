@@ -10,6 +10,8 @@ public:
     virtual bool save(const StorageService& storage) = 0;
 
     virtual bool load(StorageService& storage) = 0;
+
+    virtual bool commit() = 0;
 };
 
 #endif // ISTORAGESAVER_H

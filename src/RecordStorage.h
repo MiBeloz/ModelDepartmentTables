@@ -10,7 +10,7 @@
 struct Record {
     explicit Record(const QString& _date,
                     const Drawing& _drawing,
-                    int _amount,
+                    qsizetype _amount,
                     const QStringList& _executors = QStringList(),
                     const QStringList& _authors = QStringList(),
                     const QStringList& _castingMaterials = QStringList(),
@@ -29,7 +29,7 @@ struct Record {
 
     QString date;
     Drawing drawing;
-    int amount = 0;
+    qsizetype amount = 0;
     QStringList executors;
     QStringList authors;
     QStringList castingMaterials;
@@ -181,21 +181,12 @@ inline uint qHash(const LinkRecord& linkRecord, uint seed = 0) {
            qHash(linkRecord.m_idNotes, seed);
 }
 
-class RecordStorage {
+class RecordStorage final {
 public:
     RecordStorage()
-        : m_fileServiceSaver(StorageSaverFilename)
-        , m_fileServiceSaverTmp(StorageSaverFilenameTmp) {
-        if (m_fileServiceSaver.load(m_service)) {
-            m_fileServiceSaverTmp.save(m_service);
-        }
+        : m_fileServiceSaver(StorageSaverFilename, StorageSaverFilenameTmp, StorageSaverFilenameBackup) { }
 
-        // TODO
-    }
-
-    ~RecordStorage() {
-        m_fileServiceSaver.replace(m_fileServiceSaverTmp);
-    }
+    ~RecordStorage() { }
 
     bool add(const Record& record) {
         if (!checkDate(record.date) || record.amount < 1) {
@@ -242,7 +233,10 @@ public:
 
         m_linkRecords.insert(linkRecord);
 
-        m_fileServiceSaverTmp.save(m_service);
+        m_fileServiceSaver.save(m_service);
+        // if (m_fileServiceSaver.save(m_service) && m_fileServiceSaver.commit()) {
+        //     return true;
+        // }
         // m_fileLinkRecordSaverTmp.save(m_linkRecords);
 
         return true;
@@ -352,7 +346,6 @@ private:
     QSet<LinkRecord> m_linkRecords;
     StorageService m_service;
     FileStorageSaver m_fileServiceSaver;
-    FileStorageSaver m_fileServiceSaverTmp;
 
     bool checkDate(const QString& date) {
         if (auto d = DatesList::strToDate(date); d.has_value()) {

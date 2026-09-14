@@ -5,7 +5,7 @@
 #include "StorageService.h"
 
 StorageService storage;
-FileStorageSaver saver("data.txt");
+FileStorageSaver saver("data.txt", "data.txt.tmp", "data.txt.backup");
 
 auto d_IMN_111 = Drawing("ИМН-111", "Колесо рабочее");
 auto d_111_11 = Drawing("111-11", "Шкиф");
@@ -100,6 +100,7 @@ private slots:
 
         qDebug() << "----------   SAVE   ----------";
         saver.save(storage);
+        saver.commit();
         qDebug() << "Dates:";
         storage.dates().printState();
         qDebug() << "Drawings:";

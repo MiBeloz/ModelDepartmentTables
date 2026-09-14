@@ -2,6 +2,7 @@
 #define FILESTORAGESAVER_H
 
 #include <QFile>
+#include <QFileInfo>
 
 #include "IStorageSaver.h"
 
@@ -16,33 +17,7 @@ public:
         m_saved = false;
     }
 
-    virtual ~FileStorageSaver() {
-        if (m_saved) {
-            if (m_file.exists()) {
-                if (m_backupFile.exists()) {
-                    if (m_backupFile.remove()) {
-                        if (!m_file.copy(m_backupFile.fileName())) {
-                            // false TODO
-                        }
-                    }
-                } else {
-                    if (!m_file.copy(m_backupFile.fileName())) {
-                        // false TODO
-                    }
-                }
-                if (m_file.remove()) {
-                    if (m_tempFile.rename(m_file.fileName())) {
-                        // true TODO
-                    }
-                }
-            } else {
-                if (m_tempFile.rename(m_file.fileName())) {
-                    // true TODO
-                }
-            }
-            // false TODO
-        }
-    }
+    virtual ~FileStorageSaver() = default;
 
     bool save(const StorageService &storage) override {
         if (m_tempFile.open(QIODeviceBase::WriteOnly)) {
@@ -97,6 +72,61 @@ public:
         } else {
             return false;
         }
+    }
+
+    // bool commit() override {
+    //     if (m_saved) {
+    //         if (m_file.exists()) {
+    //             if (m_backupFile.exists()) {
+    //                 if (m_backupFile.remove()) {
+    //                     if (!m_file.rename(m_backupFile.fileName())) {
+    //                         return false;
+    //                     }
+    //                 }
+    //             } else {
+    //                 if (!m_file.rename(m_backupFile.fileName())) {
+    //                     return false;
+    //                 }
+    //             }
+    //             if (m_tempFile.rename(m_file.fileName())) {
+    //                 m_saved = false;
+    //                 return true;
+    //             }
+    //         } else {
+    //             if (m_tempFile.rename(m_file.fileName())) {
+    //                 m_saved = false;
+    //                 return true;
+    //             }
+    //         }
+    //         return false;
+    //     }
+    //     return true;
+    // }
+
+    bool commit() override {
+        if (!m_saved)
+            return true;
+
+        // 1. Если рабочий файл существует — уводим его в бэкап
+        QString nameOfFile = m_file.fileName();
+        if (m_file.exists()) {
+            if (m_backupFile.exists() && !m_backupFile.remove())
+                return false;
+
+            if (!m_file.rename(m_backupFile.fileName()))
+                return false;
+        }
+
+        // 2. Пытаемся поставить temp на место рабочего файла
+        if (!m_tempFile.rename(nameOfFile)) {
+            // откат: вернуть бэкап обратно
+            if (m_backupFile.exists())
+                m_backupFile.rename(nameOfFile);
+        return false;
+        }
+
+        m_saved = false;
+        return true;
     }
 
 private:
