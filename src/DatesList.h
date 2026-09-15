@@ -28,9 +28,9 @@ private:
     }
 };
 
-class DatesList final : public CustomList<qsizetype> {
+class DatesList final : public CustomList<qint64> {
 public:
-    std::optional<qsizetype> insert(const QString &date) {
+    std::optional<qint64> insert(const QString &date) {
         setError(DatesListError::NoError);
         if (auto intDate = strToDate(date, m_format); intDate.has_value()) {
             return CustomList::insert(intDate.value());
@@ -38,7 +38,7 @@ public:
         setError(DatesListError::FormatError);
         return std::nullopt;
     }
-    std::optional<qsizetype> insert(const qsizetype &exelFormat) override {
+    std::optional<qint64> insert(const qint64 &exelFormat) override {
         setError(DatesListError::NoError);
         return CustomList::insert(exelFormat);
     }
@@ -54,7 +54,7 @@ public:
         setError(DatesListError::FormatError);
         return false;
     }
-    bool remove(const qsizetype &exelFormat) override {
+    bool remove(const qint64 &exelFormat) override {
         setError(DatesListError::NoError);
         if (CustomList::remove(exelFormat)) {
             return true;
@@ -62,7 +62,7 @@ public:
         setError(DatesListError::FormatError);
         return false;
     }
-    std::optional<qsizetype> getId(const QString &date) const {
+    std::optional<qint64> getId(const QString &date) const {
         setError(DatesListError::NoError);
         if (auto exelDate = strToDate(date, m_format); exelDate.has_value()) {
             if (auto id = CustomList::getId(exelDate.value()); id.has_value()) {
@@ -74,7 +74,7 @@ public:
         setError(DatesListError::FormatError);
         return std::nullopt;
     }
-    std::optional<qsizetype> getId(const qsizetype &exelFormat) const override {
+    std::optional<qint64> getId(const qint64 &exelFormat) const override {
         setError(DatesListError::NoError);
         if (auto id = CustomList::getId(exelFormat); id.has_value()) {
             return id;
@@ -82,7 +82,7 @@ public:
         setError(DatesListError::DateError);
         return std::nullopt;
     }
-    std::optional<QString> getStrValue(qsizetype id) const {
+    std::optional<QString> getStrValue(qint64 id) const {
         setError(DatesListError::NoError);
         if (auto date = CustomList::getValue(id); date.has_value()) {
             if (auto strDate = dateToStr(date.value(), m_format); strDate.has_value()) {
@@ -94,7 +94,7 @@ public:
         setError(DatesListError::IdError);
         return std::nullopt;
     }
-    std::optional<qsizetype> getValue(qsizetype id) const override {
+    std::optional<qint64> getValue(qint64 id) const override {
         setError(DatesListError::NoError);
         if (auto date = CustomList::getValue(id); date.has_value()) {
             return date;
@@ -114,7 +114,7 @@ public:
         return m_format;
     }
 
-    static std::optional<QString> dateToStr(qsizetype date, const QString &format = "dd.MM.yyyy") {
+    static std::optional<QString> dateToStr(qint64 date, const QString &format = "dd.MM.yyyy") {
         QDate baseDate = QDate::fromJulianDay(startDateExcel);
         baseDate = baseDate.addDays(date);
         if (baseDate.isValid()) {
@@ -122,8 +122,8 @@ public:
         }
         return std::nullopt;
     }
-    static std::optional<qsizetype> strToDate(const QString &date,
-                                              const QString &format = "dd.MM.yyyy") {
+    static std::optional<qint64> strToDate(const QString &date,
+                                           const QString &format = "dd.MM.yyyy") {
         QDate baseDate = QDate::fromJulianDay(startDateExcel);
         QDate inputDate = QDate::fromString(date, format);
         if (inputDate.isValid()) {

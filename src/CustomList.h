@@ -12,27 +12,27 @@ public:
     CustomList() = default;
     virtual ~CustomList() = default;
 
-    virtual std::optional<qsizetype> insert(const T& data);
+    virtual std::optional<qint64> insert(const T& data);
     virtual bool remove(const T& data);
-    virtual std::optional<qsizetype> getId(const T& data) const;
-    virtual std::optional<T> getValue(qsizetype id) const;
+    virtual std::optional<qint64> getId(const T& data) const;
+    virtual std::optional<T> getValue(qint64 id) const;
     virtual QList<T> getAllValues() const;
 
-    qsizetype size() const;
+    qint64 size() const;
     void clear();
 
     void serialize(QDataStream& out) const {
         QReadLocker locker(&m_lock);
 
         out << SERIALIZATION_VERSION;
-        out << static_cast<quint32>(m_list.size());
+        out << static_cast<qint64>(m_list.size());
         for (auto it = m_list.begin(); it != m_list.end(); ++it) {
             out << it.key() << it.value();
         }
-        out << static_cast<qint64>(m_id);
-        out << static_cast<quint32>(m_emptyId.size());
+        out << m_id;
+        out << static_cast<qint64>(m_emptyId.size());
         for (auto id : m_emptyId) {
-            out << static_cast<qint64>(id);
+            out << id;
         }
     }
 
@@ -46,10 +46,10 @@ public:
         m_emptyId.clear();
         m_id = 0;
 
-        quint32 size;
+        qint64 size;
         in >> size;
-        for (quint32 i = 0; i < size; ++i) {
-            qsizetype key;
+        for (qint64 i = 0; i < size; ++i) {
+            qint64 key;
             alignas(T) T* value = reinterpret_cast<T*>(new char[sizeof(T)]());
 
             in >> key >> *value;
@@ -58,15 +58,15 @@ public:
             value->~T();
             delete reinterpret_cast<char*>(value);
         }
-        qint64 id;
-        in >> id;
-        m_id = static_cast<qsizetype>(id);
-        quint32 emptySize;
+
+        in >> m_id;
+
+        qint64 emptySize;
         in >> emptySize;
-        for (quint32 i = 0; i < emptySize; ++i) {
+        for (qint64 i = 0; i < emptySize; ++i) {
             qint64 emptyId;
             in >> emptyId;
-            m_emptyId.enqueue(static_cast<qsizetype>(emptyId));
+            m_emptyId.enqueue(emptyId);
         }
     }
 
@@ -86,15 +86,15 @@ public:
     }
 
 private:
-    QHash<qsizetype, T> m_list;
-    qsizetype m_id = 0;
-    QQueue<qsizetype> m_emptyId;
+    QHash<qint64, T> m_list;
+    qint64 m_id = 0;
+    QQueue<qint64> m_emptyId;
     mutable QReadWriteLock m_lock;
     static constexpr quint32 SERIALIZATION_VERSION = 1;
 };
 
 template<typename T>
-inline std::optional<qsizetype> CustomList<T>::insert(const T& data) {
+inline std::optional<qint64> CustomList<T>::insert(const T& data) {
     const QWriteLocker locker(&m_lock);
 
     for (auto [k, v] : m_list.asKeyValueRange()) {
@@ -103,7 +103,7 @@ inline std::optional<qsizetype> CustomList<T>::insert(const T& data) {
         }
     }
 
-    qsizetype id = -1;
+    qint64 id = -1;
     if (m_emptyId.isEmpty()) {
         ++m_id;
         id = m_id;
@@ -129,7 +129,7 @@ inline bool CustomList<T>::remove(const T& data) {
 }
 
 template<typename T>
-inline std::optional<qsizetype> CustomList<T>::getId(const T& data) const {
+inline std::optional<qint64> CustomList<T>::getId(const T& data) const {
     const QReadLocker locker(&m_lock);
 
     if (auto id = m_list.key(data, -1); id != -1) {
@@ -139,7 +139,7 @@ inline std::optional<qsizetype> CustomList<T>::getId(const T& data) const {
 }
 
 template<typename T>
-inline std::optional<T> CustomList<T>::getValue(qsizetype id) const {
+inline std::optional<T> CustomList<T>::getValue(qint64 id) const {
     const QReadLocker locker(&m_lock);
 
     if (auto it = m_list.find(id); it != m_list.end()) {
@@ -156,10 +156,10 @@ inline QList<T> CustomList<T>::getAllValues() const {
 }
 
 template<typename T>
-inline qsizetype CustomList<T>::size() const {
+inline qint64 CustomList<T>::size() const {
     const QReadLocker locker(&m_lock);
 
-    return m_list.size();
+    return static_cast<qint64>(m_list.size());
 }
 
 template<typename T>
