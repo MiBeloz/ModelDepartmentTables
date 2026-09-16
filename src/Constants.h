@@ -1,10 +1,11 @@
 ﻿#ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-constexpr const int startDateExcel = 2415019;
-constexpr const char* StorageSaverFilename = "data.mdt";
-constexpr const char* StorageSaverFilenameTmp = "data.mdt.tmp";
-constexpr const char* StorageSaverFilenameBackup = "data.mdt.backup";
+constexpr const int START_DATE_EXCEL = 2415019;
+constexpr const unsigned int CURRENT_SERIALIZATION_VERSION = 1;
+constexpr const char* STORAGE_SAVER_FILENAME = "data.mdt";
+constexpr const char* STORAGE_SAVER_FILENAME_TMP = "data.mdt.tmp";
+constexpr const char* STORAGE_SAVER_FILENAME_BACKUP = "data.mdt.backup";
 
 namespace mdt {
 #define STRINGIZE(x) #x

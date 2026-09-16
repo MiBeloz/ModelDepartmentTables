@@ -55,108 +55,151 @@ public:
         , m_idMachines(idMachines)
         , m_idNotes(idNotes) { }
 
+    RecordLink(const RecordLink& other) {
+        m_idDate = other.m_idDate;
+        m_idDrawing = other.m_idDrawing;
+        m_idAmount = other.m_idAmount;
+        m_idExecutors = other.m_idExecutors;
+        m_idAuthors = other.m_idAuthors;
+        m_idCastingMaterials = other.m_idCastingMaterials;
+        m_idModelMaterials = other.m_idModelMaterials;
+        m_idMachines = other.m_idMachines;
+        m_idNotes = other.m_idNotes;
+    }
+
     bool operator ==(const RecordLink& other) const {
-        return m_idDate && m_idDrawing && m_idAmount;
+        QReadLocker locker(&m_lock);
+        QReadLocker otherLocker(&other.m_lock);
+        return m_idDate == other.m_idDate && m_idDrawing == other.m_idDrawing &&
+               m_idAmount == other.m_idAmount && m_idExecutors == other.m_idExecutors &&
+               m_idAuthors == other.m_idAuthors &&
+               m_idCastingMaterials == other.m_idCastingMaterials &&
+               m_idModelMaterials == other.m_idModelMaterials &&
+               m_idMachines == other.m_idMachines && m_idNotes == other.m_idNotes;
     }
 
     void setIdDate(qint64 idDate) {
+        QWriteLocker locker(&m_lock);
         m_idDate = idDate;
     }
 
     void setIdDrawing(qint64 idDrawing) {
+        QWriteLocker locker(&m_lock);
         m_idDrawing = idDrawing;
     }
 
     void setIdAmount(qint64 idAmount) {
+        QWriteLocker locker(&m_lock);
         m_idAmount = idAmount;
     }
 
     void addExecutors(const QSet<qint64>& idExecutors) {
+        QWriteLocker locker(&m_lock);
         m_idExecutors.unite(idExecutors);
     }
 
     void addAuthors(const QSet<qint64>& idAuthors) {
+        QWriteLocker locker(&m_lock);
         m_idAuthors.unite(idAuthors);
     }
 
     void addCastingMaterials(const QSet<qint64>& idCastingMaterials) {
+        QWriteLocker locker(&m_lock);
         m_idCastingMaterials.unite(idCastingMaterials);
     }
 
     void addModelMaterials(const QSet<qint64>& idModelMaterials) {
+        QWriteLocker locker(&m_lock);
         m_idModelMaterials.unite(idModelMaterials);
     }
 
     void addMachines(const QSet<qint64>& idMachines) {
+        QWriteLocker locker(&m_lock);
         m_idMachines.unite(idMachines);
     }
 
     void addNotes(const QSet<qint64>& idNotes) {
+        QWriteLocker locker(&m_lock);
         m_idNotes.unite(idNotes);
     }
 
     void removeExecutors(const QSet<qint64>& idExecutors) {
+        QWriteLocker locker(&m_lock);
         m_idExecutors.subtract(idExecutors);
     }
 
     void removeAuthors(const QSet<qint64>& idAuthors) {
+        QWriteLocker locker(&m_lock);
         m_idAuthors.subtract(idAuthors);
     }
 
     void removeCastingMaterials(const QSet<qint64>& idCastingMaterials) {
+        QWriteLocker locker(&m_lock);
         m_idCastingMaterials.subtract(idCastingMaterials);
     }
 
     void removeModelMaterials(const QSet<qint64>& idModelMaterials) {
+        QWriteLocker locker(&m_lock);
         m_idModelMaterials.subtract(idModelMaterials);
     }
 
     void removeMachines(const QSet<qint64>& idMachines) {
+        QWriteLocker locker(&m_lock);
         m_idMachines.subtract(idMachines);
     }
 
     void removeNotes(const QSet<qint64>& idNotes) {
+        QWriteLocker locker(&m_lock);
         m_idNotes.subtract(idNotes);
     }
 
     qint64 getIdDate() const {
+        QReadLocker locker(&m_lock);
         return m_idDate;
     }
 
     qint64 getIdDrawing() const {
+        QReadLocker locker(&m_lock);
         return m_idDrawing;
     }
 
     qint64 getIdAmount() const {
+        QReadLocker locker(&m_lock);
         return m_idAmount;
     }
 
     QSet<qint64> getIdExecutors() const {
+        QReadLocker locker(&m_lock);
         return m_idExecutors;
     }
 
     QSet<qint64> getIdAuthors() const {
+        QReadLocker locker(&m_lock);
         return m_idAuthors;
     }
 
     QSet<qint64> getIdCastingMaterials() const {
+        QReadLocker locker(&m_lock);
         return m_idCastingMaterials;
     }
 
     QSet<qint64> getIdModelMaterials() const {
+        QReadLocker locker(&m_lock);
         return m_idModelMaterials;
     }
 
     QSet<qint64> getIdMachines() const {
+        QReadLocker locker(&m_lock);
         return m_idMachines;
     }
 
     QSet<qint64> getIdNotes() const {
+        QReadLocker locker(&m_lock);
         return m_idNotes;
     }
 
     void serialize(QDataStream& out) const {
-        //QReadLocker locker(&m_lock);
+        QReadLocker locker(&m_lock);
 
         out << SERIALIZATION_VERSION;
 
@@ -196,10 +239,12 @@ public:
     }
 
     void deserialize(QDataStream& in) {
-        //QWriteLocker locker(&m_lock);
+        QWriteLocker locker(&m_lock);
 
         quint32 version;
         in >> version;
+        // TODO
+        // Check version
 
         m_idDate = 0;
         m_idDrawing = 0;
@@ -231,7 +276,37 @@ public:
             m_idAuthors.insert(id);
         }
 
-        /////////////////TODO
+        qint64 castingMaterialsSize;
+        in >> castingMaterialsSize;
+        for (qint64 i = 0; i < castingMaterialsSize; ++i) {
+            qint64 id;
+            in >> id;
+            m_idCastingMaterials.insert(id);
+        }
+
+        qint64 modelMaterialsSize;
+        in >> modelMaterialsSize;
+        for (qint64 i = 0; i < modelMaterialsSize; ++i) {
+            qint64 id;
+            in >> id;
+            m_idModelMaterials.insert(id);
+        }
+
+        qint64 machinesSize;
+        in >> machinesSize;
+        for (qint64 i = 0; i < machinesSize; ++i) {
+            qint64 id;
+            in >> id;
+            m_idMachines.insert(id);
+        }
+
+        qint64 notesSize;
+        in >> notesSize;
+        for (qint64 i = 0; i < notesSize; ++i) {
+            qint64 id;
+            in >> id;
+            m_idNotes.insert(id);
+        }
     }
 
 private:
@@ -245,6 +320,7 @@ private:
     QSet<qint64> m_idMachines;
     QSet<qint64> m_idNotes;
     static constexpr quint32 SERIALIZATION_VERSION = 1;
+    mutable QReadWriteLock m_lock;
 
     friend uint qHash(const RecordLink& recordLink, uint seed);
 };
@@ -260,11 +336,14 @@ inline uint qHash(const RecordLink& recordLink, uint seed = 0) {
 class RecordStorage final {
 public:
     RecordStorage()
-        : m_fileStorageSaver(StorageSaverFilename,
-                             StorageSaverFilenameTmp,
-                             StorageSaverFilenameBackup) { }
+        : m_fileStorageSaver(STORAGE_SAVER_FILENAME,
+                             STORAGE_SAVER_FILENAME_TMP,
+                             STORAGE_SAVER_FILENAME_BACKUP) { }
 
     ~RecordStorage() { }
+
+    RecordStorage(const RecordStorage&) = delete;
+    RecordStorage& operator =(const RecordStorage&) = delete;
 
     bool add(const Record& record) {
         if (!checkDate(record.date) || record.amount < 1) {
@@ -309,15 +388,14 @@ public:
                               idMachines,
                               idNotes);
 
-        m_recordsLinks.insert(recordLink);
+        if (m_fileStorageSaver.save(m_service)) {
+            if (m_fileStorageSaver.commit()) {
+                m_recordsLinks.insert(recordLink);
+                return true;
+            }
+        }
 
-        m_fileStorageSaver.save(m_service);
-        // if (m_fileServiceSaver.save(m_service) && m_fileServiceSaver.commit()) {
-        //     return true;
-        // }
-        // m_fileLinkRecordSaverTmp.save(m_linkRecords);
-
-        return true;
+        return false;
     }
 
     bool remove(const Record& record) {
@@ -352,12 +430,17 @@ public:
 
         if (m_recordsLinks.remove(recordLink)) {
             // TODO
-            // Check other linkRecords and remove dead links.
+            // Check other recordsLinks and remove dead links.
+            // Check m_service and remove dead values.
+
+            return true;
         }
         return false;
     }
 
     QSet<Record> get() const {
+        // TODO
+        // Return all records
         return QSet<Record>();
     }
 
@@ -425,7 +508,7 @@ private:
     StorageService m_service;
     FileStorageSaver m_fileStorageSaver;
 
-    bool checkDate(const QString& date) {
+    bool checkDate(const QString& date) const {
         if (auto d = DatesList::strToDate(date); d.has_value()) {
             return true;
         }
@@ -433,7 +516,7 @@ private:
     }
 
     template<typename T>
-    QSet<qint64> addHelper(const QStringList& values, CustomStorage<T>& storage) const {
+    QSet<qint64> addHelper(const QStringList& values, CustomStorage<T>& storage) {
         QSet<qint64> result;
         for (auto it = values.begin(); it != values.end(); ++it) {
             if (auto id = storage.add(*it); id.has_value()) {
@@ -444,7 +527,7 @@ private:
     }
 
     template<typename T>
-    QSet<qint64> findIdHelper(const QStringList& values, CustomStorage<T>& storage) const {
+    QSet<qint64> findIdHelper(const QStringList& values, const CustomStorage<T>& storage) const {
         QSet<qint64> result;
         for (auto it = values.begin(); it != values.end(); ++it) {
             if (auto id = storage.findId(*it); id.has_value()) {

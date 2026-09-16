@@ -10,6 +10,17 @@ public:
         : m_number(number)
         , m_title(title) { }
 
+    bool operator ==(const Drawing& other) const {
+        return m_number == other.m_number && m_title == other.m_title;
+    }
+
+    bool operator <(const Drawing& other) const {
+        if (m_number != other.m_number) {
+            return m_number < other.m_number;
+        }
+        return m_title < other.m_title;
+    }
+
     QString getNumber() const {
         return m_number;
     }
@@ -24,17 +35,6 @@ public:
 
     void setTitle(const QString& title) {
         m_title = title;
-    }
-
-    bool operator ==(const Drawing& other) const {
-        return m_number == other.m_number && m_title == other.m_title;
-    }
-
-    bool operator <(const Drawing& other) const {
-        if (m_number != other.m_number) {
-            return m_number < other.m_number;
-        }
-        return m_title < other.m_title;
     }
 
     friend QDebug& operator <<(QDebug& deb, const Drawing& dr) {

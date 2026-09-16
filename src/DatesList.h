@@ -115,7 +115,7 @@ public:
     }
 
     static std::optional<QString> dateToStr(qint64 date, const QString &format = "dd.MM.yyyy") {
-        QDate baseDate = QDate::fromJulianDay(startDateExcel);
+        QDate baseDate = QDate::fromJulianDay(START_DATE_EXCEL);
         baseDate = baseDate.addDays(date);
         if (baseDate.isValid()) {
             return baseDate.toString(format);
@@ -124,7 +124,7 @@ public:
     }
     static std::optional<qint64> strToDate(const QString &date,
                                            const QString &format = "dd.MM.yyyy") {
-        QDate baseDate = QDate::fromJulianDay(startDateExcel);
+        QDate baseDate = QDate::fromJulianDay(START_DATE_EXCEL);
         QDate inputDate = QDate::fromString(date, format);
         if (inputDate.isValid()) {
             return inputDate.toJulianDay() - baseDate.toJulianDay();
