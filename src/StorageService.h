@@ -16,7 +16,7 @@ public:
         , m_modelMaterialStorage(std::make_unique<CustomStorage<QString>>())
         , m_machineStorage(std::make_unique<CustomStorage<QString>>())
         , m_noteStorage(std::make_unique<CustomStorage<QString>>())
-        , m_amountStorage(std::make_unique<CustomStorage<qsizetype>>()) { }
+        , m_amountStorage(std::make_unique<CustomStorage<qint32>>()) { }
 
     DatesStorage& dates() {
         return *m_dateStorage;
@@ -74,10 +74,10 @@ public:
         return *m_noteStorage;
     }
 
-    CustomStorage<qsizetype>& amounts() {
+    CustomStorage<qint32>& amounts() {
         return *m_amountStorage;
     }
-    const CustomStorage<qsizetype>& amounts() const {
+    const CustomStorage<qint32>& amounts() const {
         return *m_amountStorage;
     }
 
@@ -90,7 +90,7 @@ private:
     std::unique_ptr<CustomStorage<QString>> m_modelMaterialStorage;
     std::unique_ptr<CustomStorage<QString>> m_machineStorage;
     std::unique_ptr<CustomStorage<QString>> m_noteStorage;
-    std::unique_ptr<CustomStorage<qsizetype>> m_amountStorage;
+    std::unique_ptr<CustomStorage<qint32>> m_amountStorage;
 };
 
 #endif // STORAGESERVICE_H

@@ -3,10 +3,12 @@
 
 #include <QDebug>
 #include <QHash>
-#include <QQueue>
+#include <QObject>
 #include <QReadWriteLock>
+#include <QStack>
 
 #include "Constants.h"
+#include "Exceptions.h"
 
 template<typename T>
 class CustomList {
@@ -14,115 +16,26 @@ public:
     CustomList() = default;
     virtual ~CustomList() = default;
 
-    virtual std::optional<qint64> insert(const T& data);
+    CustomList(const CustomList& other);
+    CustomList(CustomList&& other);
+
+    CustomList<T>& operator =(const CustomList<T>& other);
+    CustomList<T>& operator =(CustomList<T>&& other);
+
+    bool operator ==(const CustomList<T>& other) const;
+    bool operator !=(const CustomList<T>& other) const;
+
+    virtual std::optional<qint32> insert(const T& data);
     virtual bool remove(const T& data);
-    virtual std::optional<qint64> getId(const T& data) const;
-    virtual std::optional<T> getValue(qint64 id) const;
+    virtual std::optional<qint32> getId(const T& data) const;
+    virtual std::optional<T> getValue(qint32 id) const;
     virtual QList<T> getAllValues() const;
 
-    qint64 size() const;
+    qsizetype size() const;
     void clear();
 
-    void serialize(QDataStream& out) const {
-        QReadLocker locker(&m_lock);
-
-        out << SERIALIZATION_VERSION;
-        out << static_cast<qint64>(m_list.size());
-        for (auto it = m_list.begin(); it != m_list.end(); ++it) {
-            out << it.key() << it.value();
-        }
-        out << m_id;
-        out << static_cast<qint64>(m_emptyId.size());
-        for (auto id : m_emptyId) {
-            out << id;
-        }
-    }
-
-    void deserialize(QDataStream& in) {
-        QWriteLocker locker(&m_lock);
-
-        quint32 version { };
-        in >> version;
-        if (in.status() != QDataStream::Ok) {
-            return;
-        }
-        if (version != CURRENT_SERIALIZATION_VERSION) {
-            in.setStatus(QDataStream::Status::ReadCorruptData);
-            return;
-        }
-
-        qint64 listSize;
-        in >> listSize;
-        if (in.status() != QDataStream::Ok) {
-            return;
-        }
-        if (listSize < 0) {
-            in.setStatus(QDataStream::Status::ReadCorruptData);
-            return;
-        }
-
-        QHash<qint64, T> tmpList;
-        for (qint64 i = 0; i < listSize; ++i) {
-            qint64 key;
-            alignas(T) T* value = reinterpret_cast<T*>(new char[sizeof(T)]());
-
-            try {
-                in >> key >> *value;
-            } catch (...) {
-                value->~T();
-                delete reinterpret_cast<char*>(value);
-                in.setStatus(QDataStream::Status::ReadCorruptData);
-                return;
-            }
-            if (in.status() != QDataStream::Ok) {
-                value->~T();
-                delete reinterpret_cast<char*>(value);
-                return;
-            }
-            try {
-                tmpList.insert(key, *value);
-            } catch (...) {
-                value->~T();
-                delete reinterpret_cast<char*>(value);
-                in.setStatus(QDataStream::Status::ReadCorruptData);
-                return;
-            }
-        }
-
-        qint64 tmpId { };
-        in >> tmpId;
-        if (in.status() != QDataStream::Ok) {
-            return;
-        }
-        if (tmpId < 0) {
-            in.setStatus(QDataStream::Status::ReadCorruptData);
-            return;
-        }
-
-        qint64 emptyIdSize;
-        in >> emptyIdSize;
-        if (in.status() != QDataStream::Ok) {
-            return;
-        }
-        if (emptyIdSize < 0) {
-            in.setStatus(QDataStream::Status::ReadCorruptData);
-            return;
-        }
-
-        QQueue<qint64> tmpEmptyId;
-        for (qint64 i = 0; i < emptyIdSize; ++i) {
-            qint64 emptyId;
-            in >> emptyId;
-            if (in.status() != QDataStream::Ok) {
-                return;
-            }
-            tmpEmptyId.enqueue(emptyId);
-        }
-
-        m_list = std::move(tmpList);
-        m_emptyId = std::move(tmpEmptyId);
-        m_id = tmpId;
-    }
+    void serialize(QDataStream& out) const;
+    void deserialize(QDataStream& in);
 
     void printState() const {
         QReadLocker locker(&m_lock);
@@ -140,15 +53,99 @@ public:
     }
 
 private:
-    QHash<qint64, T> m_list;
-    qint64 m_id = 0;
-    QQueue<qint64> m_emptyId;
+    QHash<qint32, T> m_list;
+    qint32 m_id = 0;
+    QStack<qint32> m_emptyId;
     mutable QReadWriteLock m_lock;
-    static constexpr quint32 SERIALIZATION_VERSION = 1;
+
+    void throwStreamError(QDataStream::Status status) const;
+
+    void deserializeVersion(QDataStream& in) const;
+    QHash<qint32, T> deserializeList(QDataStream& in) const;
+    qint32 deserializeId(QDataStream& in) const;
+    QStack<qint32> deserializeEmptyId(QDataStream& in) const;
 };
 
 template<typename T>
-inline std::optional<qint64> CustomList<T>::insert(const T& data) {
+inline CustomList<T>::CustomList(const CustomList& other) {
+    QReadLocker otherLocker(&other.m_lock);
+
+    m_list = other.m_list;
+    m_id = other.m_id;
+    m_emptyId = other.m_emptyId;
+}
+
+template<typename T>
+inline CustomList<T>::CustomList(CustomList&& other) {
+    QWriteLocker otherLocker(&other.m_lock);
+
+    m_list = std::move(other.m_list);
+    m_id = other.m_id;
+    other.m_id = 0;
+    m_emptyId = std::move(other.m_emptyId);
+}
+
+template<typename T>
+inline CustomList<T>& CustomList<T>::operator =(const CustomList<T>& other) {
+    if (this == &other) {
+        return *this;
+    }
+
+    QReadWriteLock* first = &m_lock;
+    QReadWriteLock* second = &other.m_lock;
+    if (second < first) {
+        std::swap(first, second);
+    }
+
+    QWriteLocker l1(first);
+    QWriteLocker l2(second);
+
+    m_list = other.m_list;
+    m_id = other.m_id;
+    m_emptyId = other.m_emptyId;
+    return *this;
+}
+
+template<typename T>
+inline CustomList<T>& CustomList<T>::operator =(CustomList<T>&& other) {
+    if (this == &other) {
+        return *this;
+    }
+
+    QReadWriteLock* first = &m_lock;
+    QReadWriteLock* second = &other.m_lock;
+    if (second < first) {
+        std::swap(first, second);
+    }
+
+    QWriteLocker l1(first);
+    QWriteLocker l2(second);
+
+    m_list = std::move(other.m_list);
+    m_id = other.m_id;
+    other.m_id = 0;
+    m_emptyId = std::move(other.m_emptyId);
+    return *this;
+}
+
+template<typename T>
+inline bool CustomList<T>::operator ==(const CustomList<T>& other) const {
+    QReadLocker locker(&m_lock);
+    QReadLocker otherLocker(&other.m_lock);
+
+    return m_list == other.m_list && m_id == other.m_id && m_emptyId == other.m_emptyId;
+}
+
+template<typename T>
+inline bool CustomList<T>::operator !=(const CustomList<T>& other) const {
+    QReadLocker locker(&m_lock);
+    QReadLocker otherLocker(&other.m_lock);
+
+    return !(*this == other);
+}
+
+template<typename T>
+inline std::optional<qint32> CustomList<T>::insert(const T& data) {
     const QWriteLocker locker(&m_lock);
 
     for (auto [k, v] : m_list.asKeyValueRange()) {
@@ -157,12 +154,12 @@ inline std::optional<qint64> CustomList<T>::insert(const T& data) {
         }
     }
 
-    qint64 id = -1;
+    qint32 id = -1;
     if (m_emptyId.isEmpty()) {
         ++m_id;
         id = m_id;
     } else {
-        id = m_emptyId.dequeue();
+        id = m_emptyId.pop();
     }
     m_list.insert(id, data);
     return id;
@@ -174,7 +171,7 @@ inline bool CustomList<T>::remove(const T& data) {
 
     for (auto it = m_list.begin(); it != m_list.end(); ++it) {
         if (it.value() == data) {
-            m_emptyId.enqueue(it.key());
+            m_emptyId.push(it.key());
             m_list.erase(it);
             return true;
         }
@@ -183,7 +180,7 @@ inline bool CustomList<T>::remove(const T& data) {
 }
 
 template<typename T>
-inline std::optional<qint64> CustomList<T>::getId(const T& data) const {
+inline std::optional<qint32> CustomList<T>::getId(const T& data) const {
     const QReadLocker locker(&m_lock);
 
     if (auto id = m_list.key(data, -1); id != -1) {
@@ -193,7 +190,7 @@ inline std::optional<qint64> CustomList<T>::getId(const T& data) const {
 }
 
 template<typename T>
-inline std::optional<T> CustomList<T>::getValue(qint64 id) const {
+inline std::optional<T> CustomList<T>::getValue(qint32 id) const {
     const QReadLocker locker(&m_lock);
 
     if (auto it = m_list.find(id); it != m_list.end()) {
@@ -210,10 +207,10 @@ inline QList<T> CustomList<T>::getAllValues() const {
 }
 
 template<typename T>
-inline qint64 CustomList<T>::size() const {
+inline qsizetype CustomList<T>::size() const {
     const QReadLocker locker(&m_lock);
 
-    return static_cast<qint64>(m_list.size());
+    return m_list.size();
 }
 
 template<typename T>
@@ -223,6 +220,130 @@ inline void CustomList<T>::clear() {
     m_list.clear();
     m_emptyId.clear();
     m_id = 0;
+}
+
+template<typename T>
+inline void CustomList<T>::serialize(QDataStream& out) const {
+    QReadLocker locker(&m_lock);
+
+    out << REQUIRED_SERIALIZATION_VERSION;
+    out << static_cast<qint32>(m_list.size());
+    for (auto it = m_list.begin(); it != m_list.end(); ++it) {
+        out << it.key() << it.value();
+    }
+    out << m_id;
+    out << static_cast<qint32>(m_emptyId.size());
+    for (auto id : m_emptyId) {
+        out << id;
+    }
+
+    if (out.status() != QDataStream::Ok) {
+        throwStreamError(out.status());
+    }
+}
+
+template<typename T>
+inline void CustomList<T>::deserialize(QDataStream& in) {
+    QWriteLocker locker(&m_lock);
+
+    deserializeVersion(in);
+    QHash<qint32, T> tmpList = deserializeList(in);
+    qint32 tmpId = deserializeId(in);
+    QStack<qint32> tmpEmptyId = deserializeEmptyId(in);
+
+    m_list = tmpList;
+    m_id = tmpId;
+    m_emptyId = tmpEmptyId;
+}
+
+template<typename T>
+inline void CustomList<T>::throwStreamError(QDataStream::Status status) const {
+    throw RuntimeError(
+        QObject::tr("QDataStream error. Error code: '%1'.").arg(static_cast<int>(status)));
+}
+
+template<typename T>
+inline void CustomList<T>::deserializeVersion(QDataStream& in) const {
+    quint32 version { };
+    in >> version;
+    if (in.status() != QDataStream::Ok) {
+        throwStreamError(in.status());
+    }
+    if (version != REQUIRED_SERIALIZATION_VERSION) {
+        in.setStatus(QDataStream::Status::ReadCorruptData);
+        throw RuntimeError(
+            QObject::tr("Version error. Required version: '%1', Current version: '%2'")
+                .arg(QString::number(REQUIRED_SERIALIZATION_VERSION), QString::number(version)));
+    }
+}
+
+template<typename T>
+inline QHash<qint32, T> CustomList<T>::deserializeList(QDataStream& in) const {
+    qint32 size;
+    in >> size;
+    if (in.status() != QDataStream::Ok) {
+        throwStreamError(in.status());
+    }
+    if (size < 0) {
+        in.setStatus(QDataStream::Status::ReadCorruptData);
+        throwStreamError(in.status());
+    }
+
+    QHash<qint32, T> list;
+    for (qint32 i = 0; i < size; ++i) {
+        qint32 key;
+        alignas(T) T* value = reinterpret_cast<T*>(new char[sizeof(T)]());
+
+        in >> key >> *value;
+        if (in.status() != QDataStream::Ok) {
+            value->~T();
+            delete reinterpret_cast<char*>(value);
+            throwStreamError(in.status());
+        }
+        list.insert(key, *value);
+
+        value->~T();
+        delete reinterpret_cast<char*>(value);
+    }
+    return list;
+}
+
+template<typename T>
+inline qint32 CustomList<T>::deserializeId(QDataStream& in) const {
+    qint32 id { };
+    in >> id;
+    if (in.status() != QDataStream::Ok) {
+        throwStreamError(in.status());
+    }
+    if (id < 0) {
+        in.setStatus(QDataStream::Status::ReadCorruptData);
+        throwStreamError(in.status());
+    }
+    return id;
+}
+
+template<typename T>
+inline QStack<qint32> CustomList<T>::deserializeEmptyId(QDataStream& in) const {
+    qint32 size;
+    in >> size;
+    if (in.status() != QDataStream::Ok) {
+        throwStreamError(in.status());
+    }
+    if (size < 0) {
+        in.setStatus(QDataStream::Status::ReadCorruptData);
+        throwStreamError(in.status());
+    }
+
+    QStack<qint32> ids;
+    for (qint32 i = 0; i < size; ++i) {
+        qint32 id;
+        in >> id;
+        if (in.status() != QDataStream::Ok) {
+            throwStreamError(in.status());
+        }
+        ids.push(id);
+    }
+    return ids;
 }
 
 #endif // CUSTOMLIST_H

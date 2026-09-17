@@ -6,7 +6,7 @@
 struct Record {
     explicit Record(const QString& _date,
                     const Drawing& _drawing,
-                    qint64 _amount,
+                    qint32 _amount,
                     const QStringList& _executors = QStringList(),
                     const QStringList& _authors = QStringList(),
                     const QStringList& _castingMaterials = QStringList(),
@@ -25,7 +25,7 @@ struct Record {
 
     QString date;
     Drawing drawing;
-    qint64 amount = 0;
+    qint32 amount = 0;
     QStringList executors;
     QStringList authors;
     QStringList castingMaterials;
@@ -36,15 +36,15 @@ struct Record {
 
 class RecordLink {
 public:
-    explicit RecordLink(qint64 idDate,
-                        qint64 idDrawing,
-                        qint64 idAmount,
-                        const QSet<qint64>& idExecutors,
-                        const QSet<qint64>& idAuthors,
-                        const QSet<qint64>& idCastingMaterials,
-                        const QSet<qint64>& idModelMaterials,
-                        const QSet<qint64>& idMachines,
-                        const QSet<qint64>& idNotes)
+    explicit RecordLink(qint32 idDate,
+                        qint32 idDrawing,
+                        qint32 idAmount,
+                        const QSet<qint32>& idExecutors,
+                        const QSet<qint32>& idAuthors,
+                        const QSet<qint32>& idCastingMaterials,
+                        const QSet<qint32>& idModelMaterials,
+                        const QSet<qint32>& idMachines,
+                        const QSet<qint32>& idNotes)
         : m_idDate(idDate)
         , m_idDrawing(idDrawing)
         , m_idAmount(idAmount)
@@ -78,122 +78,122 @@ public:
                m_idMachines == other.m_idMachines && m_idNotes == other.m_idNotes;
     }
 
-    void setIdDate(qint64 idDate) {
+    void setIdDate(qint32 idDate) {
         QWriteLocker locker(&m_lock);
         m_idDate = idDate;
     }
 
-    void setIdDrawing(qint64 idDrawing) {
+    void setIdDrawing(qint32 idDrawing) {
         QWriteLocker locker(&m_lock);
         m_idDrawing = idDrawing;
     }
 
-    void setIdAmount(qint64 idAmount) {
+    void setIdAmount(qint32 idAmount) {
         QWriteLocker locker(&m_lock);
         m_idAmount = idAmount;
     }
 
-    void addExecutors(const QSet<qint64>& idExecutors) {
+    void addExecutors(const QSet<qint32>& idExecutors) {
         QWriteLocker locker(&m_lock);
         m_idExecutors.unite(idExecutors);
     }
 
-    void addAuthors(const QSet<qint64>& idAuthors) {
+    void addAuthors(const QSet<qint32>& idAuthors) {
         QWriteLocker locker(&m_lock);
         m_idAuthors.unite(idAuthors);
     }
 
-    void addCastingMaterials(const QSet<qint64>& idCastingMaterials) {
+    void addCastingMaterials(const QSet<qint32>& idCastingMaterials) {
         QWriteLocker locker(&m_lock);
         m_idCastingMaterials.unite(idCastingMaterials);
     }
 
-    void addModelMaterials(const QSet<qint64>& idModelMaterials) {
+    void addModelMaterials(const QSet<qint32>& idModelMaterials) {
         QWriteLocker locker(&m_lock);
         m_idModelMaterials.unite(idModelMaterials);
     }
 
-    void addMachines(const QSet<qint64>& idMachines) {
+    void addMachines(const QSet<qint32>& idMachines) {
         QWriteLocker locker(&m_lock);
         m_idMachines.unite(idMachines);
     }
 
-    void addNotes(const QSet<qint64>& idNotes) {
+    void addNotes(const QSet<qint32>& idNotes) {
         QWriteLocker locker(&m_lock);
         m_idNotes.unite(idNotes);
     }
 
-    void removeExecutors(const QSet<qint64>& idExecutors) {
+    void removeExecutors(const QSet<qint32>& idExecutors) {
         QWriteLocker locker(&m_lock);
         m_idExecutors.subtract(idExecutors);
     }
 
-    void removeAuthors(const QSet<qint64>& idAuthors) {
+    void removeAuthors(const QSet<qint32>& idAuthors) {
         QWriteLocker locker(&m_lock);
         m_idAuthors.subtract(idAuthors);
     }
 
-    void removeCastingMaterials(const QSet<qint64>& idCastingMaterials) {
+    void removeCastingMaterials(const QSet<qint32>& idCastingMaterials) {
         QWriteLocker locker(&m_lock);
         m_idCastingMaterials.subtract(idCastingMaterials);
     }
 
-    void removeModelMaterials(const QSet<qint64>& idModelMaterials) {
+    void removeModelMaterials(const QSet<qint32>& idModelMaterials) {
         QWriteLocker locker(&m_lock);
         m_idModelMaterials.subtract(idModelMaterials);
     }
 
-    void removeMachines(const QSet<qint64>& idMachines) {
+    void removeMachines(const QSet<qint32>& idMachines) {
         QWriteLocker locker(&m_lock);
         m_idMachines.subtract(idMachines);
     }
 
-    void removeNotes(const QSet<qint64>& idNotes) {
+    void removeNotes(const QSet<qint32>& idNotes) {
         QWriteLocker locker(&m_lock);
         m_idNotes.subtract(idNotes);
     }
 
-    qint64 getIdDate() const {
+    qint32 getIdDate() const {
         QReadLocker locker(&m_lock);
         return m_idDate;
     }
 
-    qint64 getIdDrawing() const {
+    qint32 getIdDrawing() const {
         QReadLocker locker(&m_lock);
         return m_idDrawing;
     }
 
-    qint64 getIdAmount() const {
+    qint32 getIdAmount() const {
         QReadLocker locker(&m_lock);
         return m_idAmount;
     }
 
-    QSet<qint64> getIdExecutors() const {
+    QSet<qint32> getIdExecutors() const {
         QReadLocker locker(&m_lock);
         return m_idExecutors;
     }
 
-    QSet<qint64> getIdAuthors() const {
+    QSet<qint32> getIdAuthors() const {
         QReadLocker locker(&m_lock);
         return m_idAuthors;
     }
 
-    QSet<qint64> getIdCastingMaterials() const {
+    QSet<qint32> getIdCastingMaterials() const {
         QReadLocker locker(&m_lock);
         return m_idCastingMaterials;
     }
 
-    QSet<qint64> getIdModelMaterials() const {
+    QSet<qint32> getIdModelMaterials() const {
         QReadLocker locker(&m_lock);
         return m_idModelMaterials;
     }
 
-    QSet<qint64> getIdMachines() const {
+    QSet<qint32> getIdMachines() const {
         QReadLocker locker(&m_lock);
         return m_idMachines;
     }
 
-    QSet<qint64> getIdNotes() const {
+    QSet<qint32> getIdNotes() const {
         QReadLocker locker(&m_lock);
         return m_idNotes;
     }
@@ -201,38 +201,38 @@ public:
     void serialize(QDataStream& out) const {
         QReadLocker locker(&m_lock);
 
-        out << SERIALIZATION_VERSION;
+        out << REQUIRED_SERIALIZATION_VERSION;
 
         out << m_idDate;
         out << m_idDrawing;
         out << m_idAmount;
 
-        out << static_cast<qint64>(m_idExecutors.size());
+        out << static_cast<qint32>(m_idExecutors.size());
         for (auto it = m_idExecutors.begin(); it != m_idExecutors.end(); ++it) {
             out << *it;
         }
 
-        out << static_cast<qint64>(m_idAuthors.size());
+        out << static_cast<qint32>(m_idAuthors.size());
         for (auto it = m_idAuthors.begin(); it != m_idAuthors.end(); ++it) {
             out << *it;
         }
 
-        out << static_cast<qint64>(m_idCastingMaterials.size());
+        out << static_cast<qint32>(m_idCastingMaterials.size());
         for (auto it = m_idCastingMaterials.begin(); it != m_idCastingMaterials.end(); ++it) {
             out << *it;
         }
 
-        out << static_cast<qint64>(m_idModelMaterials.size());
+        out << static_cast<qint32>(m_idModelMaterials.size());
         for (auto it = m_idModelMaterials.begin(); it != m_idModelMaterials.end(); ++it) {
             out << *it;
         }
 
-        out << static_cast<qint64>(m_idMachines.size());
+        out << static_cast<qint32>(m_idMachines.size());
         for (auto it = m_idMachines.begin(); it != m_idMachines.end(); ++it) {
             out << *it;
         }
 
-        out << static_cast<qint64>(m_idNotes.size());
+        out << static_cast<qint32>(m_idNotes.size());
         for (auto it = m_idNotes.begin(); it != m_idNotes.end(); ++it) {
             out << *it;
         }
@@ -241,88 +241,97 @@ public:
     void deserialize(QDataStream& in) {
         QWriteLocker locker(&m_lock);
 
-        quint32 version;
-        in >> version;
-        // TODO
-        // Check version
+        deserializeVersion(in);
 
-        m_idDate = 0;
-        m_idDrawing = 0;
-        m_idAmount = 0;
-        m_idExecutors.clear();
-        m_idAuthors.clear();
-        m_idCastingMaterials.clear();
-        m_idModelMaterials.clear();
-        m_idMachines.clear();
-        m_idNotes.clear();
+        qint32 tmpDate = deserializeId(in);
+        qint32 tmpDrawing = deserializeId(in);
+        qint32 tmpAmount = deserializeId(in);
+        QSet<qint32> tmpExecutors = deserializeIds(in);
+        QSet<qint32> tmpAuthors = deserializeIds(in);
+        QSet<qint32> tmpCastingMaterials = deserializeIds(in);
+        QSet<qint32> tmpModelMaterials = deserializeIds(in);
+        QSet<qint32> tmpMachines = deserializeIds(in);
+        QSet<qint32> tmpNotes = deserializeIds(in);
 
-        in >> m_idDate;
-        in >> m_idDrawing;
-        in >> m_idAmount;
-
-        qint64 executorsSize;
-        in >> executorsSize;
-        for (qint64 i = 0; i < executorsSize; ++i) {
-            qint64 id;
-            in >> id;
-            m_idExecutors.insert(id);
-        }
-
-        qint64 authorsSize;
-        in >> authorsSize;
-        for (qint64 i = 0; i < authorsSize; ++i) {
-            qint64 id;
-            in >> id;
-            m_idAuthors.insert(id);
-        }
-
-        qint64 castingMaterialsSize;
-        in >> castingMaterialsSize;
-        for (qint64 i = 0; i < castingMaterialsSize; ++i) {
-            qint64 id;
-            in >> id;
-            m_idCastingMaterials.insert(id);
-        }
-
-        qint64 modelMaterialsSize;
-        in >> modelMaterialsSize;
-        for (qint64 i = 0; i < modelMaterialsSize; ++i) {
-            qint64 id;
-            in >> id;
-            m_idModelMaterials.insert(id);
-        }
-
-        qint64 machinesSize;
-        in >> machinesSize;
-        for (qint64 i = 0; i < machinesSize; ++i) {
-            qint64 id;
-            in >> id;
-            m_idMachines.insert(id);
-        }
-
-        qint64 notesSize;
-        in >> notesSize;
-        for (qint64 i = 0; i < notesSize; ++i) {
-            qint64 id;
-            in >> id;
-            m_idNotes.insert(id);
-        }
+        m_idDate = tmpDate;
+        m_idDrawing = tmpDrawing;
+        m_idAmount = tmpAmount;
+        m_idExecutors = tmpExecutors;
+        m_idAuthors = tmpAuthors;
+        m_idCastingMaterials = tmpCastingMaterials;
+        m_idModelMaterials = tmpModelMaterials;
+        m_idMachines = tmpMachines;
+        m_idNotes = tmpNotes;
     }
 
 private:
-    qint64 m_idDate = 0;
-    qint64 m_idDrawing = 0;
-    qint64 m_idAmount = 0;
-    QSet<qint64> m_idExecutors;
-    QSet<qint64> m_idAuthors;
-    QSet<qint64> m_idCastingMaterials;
-    QSet<qint64> m_idModelMaterials;
-    QSet<qint64> m_idMachines;
-    QSet<qint64> m_idNotes;
-    static constexpr quint32 SERIALIZATION_VERSION = 1;
+    qint32 m_idDate = 0;
+    qint32 m_idDrawing = 0;
+    qint32 m_idAmount = 0;
+    QSet<qint32> m_idExecutors;
+    QSet<qint32> m_idAuthors;
+    QSet<qint32> m_idCastingMaterials;
+    QSet<qint32> m_idModelMaterials;
+    QSet<qint32> m_idMachines;
+    QSet<qint32> m_idNotes;
     mutable QReadWriteLock m_lock;
 
     friend uint qHash(const RecordLink& recordLink, uint seed);
+
+    void throwStreamError(QDataStream::Status status) const {
+        throw RuntimeError(
+            QObject::tr("QDataStream error. Error code: '%1'.").arg(static_cast<int>(status)));
+    }
+
+    void deserializeVersion(QDataStream& in) const {
+        quint32 version { };
+        in >> version;
+        if (in.status() != QDataStream::Ok) {
+            throwStreamError(in.status());
+        }
+        if (version != REQUIRED_SERIALIZATION_VERSION) {
+            in.setStatus(QDataStream::Status::ReadCorruptData);
+            throw RuntimeError(
+                QObject::tr("Version error. Required version: '%1', Current version: '%2'")
+                    .arg(QString::number(REQUIRED_SERIALIZATION_VERSION), QString::number(version)));
+        }
+    }
+
+    qint32 deserializeId(QDataStream& in) const {
+        qint32 id { };
+        in >> id;
+        if (in.status() != QDataStream::Ok) {
+            throwStreamError(in.status());
+        }
+        if (id < 0) {
+            in.setStatus(QDataStream::Status::ReadCorruptData);
+            throwStreamError(in.status());
+        }
+        return id;
+    }
+
+    QSet<qint32> deserializeIds(QDataStream& in) const {
+        qint32 size;
+        in >> size;
+        if (in.status() != QDataStream::Ok) {
+            throwStreamError(in.status());
+        }
+        if (size < 0) {
+            in.setStatus(QDataStream::Status::ReadCorruptData);
+            throwStreamError(in.status());
+        }
+
+        QSet<qint32> ids;
+        for (qint32 i = 0; i < size; ++i) {
+            qint32 id;
+            in >> id;
+            if (in.status() != QDataStream::Ok) {
+                throwStreamError(in.status());
+            }
+            ids.insert(id);
+        }
+        return ids;
+    }
 };
 
 inline uint qHash(const RecordLink& recordLink, uint seed = 0) {
@@ -350,21 +359,21 @@ public:
             return false;
         }
 
-        qint64 idDate = 0;
+        qint32 idDate = 0;
         if (auto id = m_service.dates().add(record.date); id.has_value()) {
             idDate = id.value();
         } else {
             return false;
         }
 
-        qint64 idDrawing = 0;
+        qint32 idDrawing = 0;
         if (auto id = m_service.drawings().add(record.drawing); id.has_value()) {
             idDrawing = id.value();
         } else {
             return false;
         }
 
-        qint64 idAmount = 0;
+        qint32 idAmount = 0;
         if (auto id = m_service.amounts().add(record.amount); id.has_value()) {
             idAmount = id.value();
         } else {
@@ -444,8 +453,8 @@ public:
         return QSet<Record>();
     }
 
-    qint64 count() const {
-        return static_cast<qint64>(m_recordsLinks.count());
+    qsizetype count() const {
+        return m_recordsLinks.count();
     }
 
     void clear() {
@@ -454,7 +463,7 @@ public:
 
     void print() {
         qDebug() << "LinkRecords:";
-        qint64 i = 1;
+        qint32 i = 1;
         for (auto& it : std::as_const(m_recordsLinks)) {
             qDebug() << "\tLinkRecord" << i++;
             qDebug() << "\t\tDate =" << it.getIdDate() << "-"
@@ -516,8 +525,8 @@ private:
     }
 
     template<typename T>
-    QSet<qint64> addHelper(const QStringList& values, CustomStorage<T>& storage) {
-        QSet<qint64> result;
+    QSet<qint32> addHelper(const QStringList& values, CustomStorage<T>& storage) {
+        QSet<qint32> result;
         for (auto it = values.begin(); it != values.end(); ++it) {
             if (auto id = storage.add(*it); id.has_value()) {
                 result.insert(id.value());
@@ -527,8 +536,8 @@ private:
     }
 
     template<typename T>
-    QSet<qint64> findIdHelper(const QStringList& values, const CustomStorage<T>& storage) const {
-        QSet<qint64> result;
+    QSet<qint32> findIdHelper(const QStringList& values, const CustomStorage<T>& storage) const {
+        QSet<qint32> result;
         for (auto it = values.begin(); it != values.end(); ++it) {
             if (auto id = storage.findId(*it); id.has_value()) {
                 result.insert(id.value());

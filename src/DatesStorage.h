@@ -4,13 +4,13 @@
 #include "CustomStorage.h"
 #include "DatesList.h"
 
-class DatesStorage final : public CustomStorage<qint64, DatesList> {
+class DatesStorage final : public CustomStorage<qint32, DatesList> {
 public:
     DatesStorage() : CustomStorage() { }
 
     virtual ~DatesStorage() = default;
 
-    std::optional<qint64> add(const QString& date) {
+    std::optional<qint32> add(const QString& date) {
         return m_list->insert(date);
     }
 
@@ -18,11 +18,11 @@ public:
         return m_list->remove(date);
     }
 
-    std::optional<qint64> findId(const QString& date) const {
+    std::optional<qint32> findId(const QString& date) const {
         return m_list->getId(date);
     }
 
-    std::optional<QString> findStrValue(qint64 id) const {
+    std::optional<QString> findStrValue(qint32 id) const {
         return m_list->getStrValue(id);
     }
 

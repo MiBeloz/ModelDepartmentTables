@@ -15,7 +15,7 @@ public:
 
     ~FileRecordLinkSaver() override = default;
 
-    bool save(const RecordLink &storage) override {
+    bool save(const RecordLink &recordLink) override {
         if (m_tempFile.open(QIODeviceBase::WriteOnly)) {
             QDataStream stream(&m_tempFile);
             stream.setVersion(QDataStream::Qt_6_11);

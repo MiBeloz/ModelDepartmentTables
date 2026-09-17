@@ -12,7 +12,7 @@ public:
 
     virtual ~CustomStorage() { }
 
-    virtual std::optional<qint64> add(const ValueType& value) {
+    virtual std::optional<qint32> add(const ValueType& value) {
         return m_list->insert(value);
     }
 
@@ -20,11 +20,11 @@ public:
         return m_list->remove(value);
     }
 
-    virtual std::optional<qint64> findId(const ValueType& value) const {
+    virtual std::optional<qint32> findId(const ValueType& value) const {
         return m_list->getId(value);
     }
 
-    virtual std::optional<ValueType> findValue(qint64 id) const {
+    virtual std::optional<ValueType> findValue(qint32 id) const {
         return m_list->getValue(id);
     }
 
@@ -32,7 +32,7 @@ public:
         return m_list->getAllValues();
     }
 
-    qint64 count() const {
+    qsizetype count() const {
         return m_list->size();
     }
 
