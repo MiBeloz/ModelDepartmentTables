@@ -1,21 +1,21 @@
-﻿#ifndef IFILESAVER_H
-#define IFILESAVER_H
+﻿#ifndef SAVERFILE_H
+#define SAVERFILE_H
 
 #include <QFile>
 
-#include "ISaver.h"
+#include "Saver.h"
 
 template<typename T>
-class IFileSaver : public ISaver<T> {
+class SaverFile : public Saver<T> {
 public:
-    IFileSaver(const QString &fileName, const QString &tempFileName, const QString &backupFileName) {
+    SaverFile(const QString &fileName, const QString &tempFileName, const QString &backupFileName) {
         m_file.setFileName(fileName);
         m_tempFile.setFileName(tempFileName);
         m_backupFile.setFileName(backupFileName);
         m_saved = false;
     }
 
-    ~IFileSaver() override = default;
+    ~SaverFile() override = default;
 
     bool commit() override {
         if (!m_saved) {
@@ -54,4 +54,4 @@ protected:
     bool m_saved;
 };
 
-#endif // IFILESAVER_H
+#endif // SAVERFILE_H

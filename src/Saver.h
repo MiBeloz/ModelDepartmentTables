@@ -1,10 +1,10 @@
-﻿#ifndef ISAVER_H
-#define ISAVER_H
+﻿#ifndef SAVER_H
+#define SAVER_H
 
 template<typename T>
-class ISaver {
+class Saver {
 public:
-    virtual ~ISaver() = default;
+    virtual ~Saver() = default;
 
     virtual bool save(const T& storage) = 0;
 
@@ -13,4 +13,4 @@ public:
     virtual bool commit() = 0;
 };
 
-#endif // ISAVER_H
+#endif // SAVER_H

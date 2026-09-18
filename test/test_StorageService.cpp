@@ -1,7 +1,7 @@
 ﻿#include <QObject>
 #include <QTest>
 
-#include "FileStorageSaver.h"
+#include "SaverFileStorage.h"
 #include "StorageService.h"
 
 StorageService storage;

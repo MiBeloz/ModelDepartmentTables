@@ -19,11 +19,11 @@ public:
     CustomList(const CustomList& other);
     CustomList(CustomList&& other);
 
-    CustomList<T>& operator =(const CustomList<T>& other);
-    CustomList<T>& operator =(CustomList<T>&& other);
+    CustomList& operator =(const CustomList& other);
+    CustomList& operator =(CustomList&& other);
 
-    bool operator ==(const CustomList<T>& other) const;
-    bool operator !=(const CustomList<T>& other) const;
+    bool operator ==(const CustomList& other) const;
+    bool operator !=(const CustomList& other) const;
 
     virtual std::optional<qint32> insert(const T& data);
     virtual bool remove(const T& data);
@@ -86,7 +86,7 @@ inline CustomList<T>::CustomList(CustomList&& other) {
 }
 
 template<typename T>
-inline CustomList<T>& CustomList<T>::operator =(const CustomList<T>& other) {
+inline CustomList<T>& CustomList<T>::operator =(const CustomList& other) {
     if (this == &other) {
         return *this;
     }
@@ -107,7 +107,7 @@ inline CustomList<T>& CustomList<T>::operator =(const CustomList<T>& other) {
 }
 
 template<typename T>
-inline CustomList<T>& CustomList<T>::operator =(CustomList<T>&& other) {
+inline CustomList<T>& CustomList<T>::operator =(CustomList&& other) {
     if (this == &other) {
         return *this;
     }
@@ -129,7 +129,7 @@ inline CustomList<T>& CustomList<T>::operator =(CustomList<T>&& other) {
 }
 
 template<typename T>
-inline bool CustomList<T>::operator ==(const CustomList<T>& other) const {
+inline bool CustomList<T>::operator ==(const CustomList& other) const {
     QReadLocker locker(&m_lock);
     QReadLocker otherLocker(&other.m_lock);
 
@@ -137,7 +137,7 @@ inline bool CustomList<T>::operator ==(const CustomList<T>& other) const {
 }
 
 template<typename T>
-inline bool CustomList<T>::operator !=(const CustomList<T>& other) const {
+inline bool CustomList<T>::operator !=(const CustomList& other) const {
     QReadLocker locker(&m_lock);
     QReadLocker otherLocker(&other.m_lock);
 

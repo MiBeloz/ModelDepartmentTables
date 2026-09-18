@@ -1,7 +1,7 @@
 ﻿#include <QObject>
 #include <QTest>
 
-#include "RecordStorage.h"
+#include "StorageOfRecord.h"
 
 RecordStorage storage;
 
