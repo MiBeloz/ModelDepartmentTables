@@ -17,10 +17,10 @@ public:
     virtual ~CustomList() = default;
 
     CustomList(const CustomList& other);
-    CustomList(CustomList&& other);
+    CustomList(CustomList&& other) noexcept;
 
     CustomList& operator =(const CustomList& other);
-    CustomList& operator =(CustomList&& other);
+    CustomList& operator =(CustomList&& other) noexcept;
 
     bool operator ==(const CustomList& other) const;
     bool operator !=(const CustomList& other) const;
@@ -76,7 +76,7 @@ inline CustomList<T>::CustomList(const CustomList& other) {
 }
 
 template<typename T>
-inline CustomList<T>::CustomList(CustomList&& other) {
+inline CustomList<T>::CustomList(CustomList&& other) noexcept {
     QWriteLocker otherLocker(&other.m_lock);
 
     m_list = std::move(other.m_list);
@@ -107,40 +107,43 @@ inline CustomList<T>& CustomList<T>::operator =(const CustomList& other) {
 }
 
 template<typename T>
-inline CustomList<T>& CustomList<T>::operator =(CustomList&& other) {
+inline CustomList<T>& CustomList<T>::operator =(CustomList&& other) noexcept {
     if (this == &other) {
         return *this;
     }
 
-    QReadWriteLock* first = &m_lock;
+    QReadWriteLock* first  = &m_lock;
     QReadWriteLock* second = &other.m_lock;
-    if (second < first) {
-        std::swap(first, second);
-    }
+    if (second < first) std::swap(first, second);
 
     QWriteLocker l1(first);
     QWriteLocker l2(second);
 
     m_list = std::move(other.m_list);
     m_id = other.m_id;
-    other.m_id = 0;
     m_emptyId = std::move(other.m_emptyId);
+    other.m_id = 0;
     return *this;
 }
 
 template<typename T>
 inline bool CustomList<T>::operator ==(const CustomList& other) const {
-    QReadLocker locker(&m_lock);
-    QReadLocker otherLocker(&other.m_lock);
+    if (this == &other) {
+        return true;
+    }
+
+    QReadWriteLock* first  = &m_lock;
+    QReadWriteLock* second = &other.m_lock;
+    if (second < first) std::swap(first, second);
+
+    QReadLocker l1(first);
+    QReadLocker l2(second);
 
     return m_list == other.m_list && m_id == other.m_id && m_emptyId == other.m_emptyId;
 }
 
 template<typename T>
 inline bool CustomList<T>::operator !=(const CustomList& other) const {
-    QReadLocker locker(&m_lock);
-    QReadLocker otherLocker(&other.m_lock);
-
     return !(*this == other);
 }
 
@@ -292,18 +295,13 @@ inline QHash<qint32, T> CustomList<T>::deserializeList(QDataStream& in) const {
     QHash<qint32, T> list;
     for (qint32 i = 0; i < size; ++i) {
         qint32 key;
-        alignas(T) T* value = reinterpret_cast<T*>(new char[sizeof(T)]());
+        T value;
 
-        in >> key >> *value;
+        in >> key >> value;
         if (in.status() != QDataStream::Ok) {
-            value->~T();
-            delete reinterpret_cast<char*>(value);
             throwStreamError(in.status());
         }
-        list.insert(key, *value);
-
-        value->~T();
-        delete reinterpret_cast<char*>(value);
+        list.insert(key, value);
     }
     return list;
 }

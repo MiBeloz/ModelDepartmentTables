@@ -10,6 +10,154 @@
 
 class RecordLink {
 public:
+    class Setter {
+    public:
+        explicit Setter(RecordLink& link) : m_link(link) {}
+
+        Setter& idDate(qint32 id) {
+            m_link.setIdDate(id);
+            return *this;
+        }
+
+        Setter& idDrawing(qint32 id) {
+            m_link.setIdDrawing(id);
+            return *this;
+        }
+
+        Setter& idAmount(qint32 id) {
+            m_link.setIdAmount(id);
+            return *this;
+        }
+
+    private:
+        RecordLink& m_link;
+    };
+
+    class Adder {
+    public:
+        explicit Adder(RecordLink& link) : m_link(link) {}
+
+        Adder& idExecutors(const QSet<qint32>& ids) {
+            m_link.addExecutors(ids);
+            return *this;
+        }
+
+        Adder& idAuthors(const QSet<qint32>& ids) {
+            m_link.addAuthors(ids);
+            return *this;
+        }
+
+        Adder& idCastingMaterials(const QSet<qint32>& ids) {
+            m_link.addCastingMaterials(ids);
+            return *this;
+        }
+
+        Adder& idModelMaterials(const QSet<qint32>& ids) {
+            m_link.addModelMaterials(ids);
+            return *this;
+        }
+
+        Adder& idMachines(const QSet<qint32>& ids) {
+            m_link.addMachines(ids);
+            return *this;
+        }
+
+        Adder& idNotes(const QSet<qint32>& ids) {
+            m_link.addNotes(ids);
+            return *this;
+        }
+
+    private:
+        RecordLink& m_link;
+    };
+
+    class Remover {
+    public:
+        explicit Remover(RecordLink& link) : m_link(link) {}
+
+        Remover& removeExecutors(const QSet<qint32>& ids) {
+            m_link.removeExecutors(ids);
+            return *this;
+        }
+
+        Remover& removeAuthors(const QSet<qint32>& ids) {
+            m_link.removeAuthors(ids);
+            return *this;
+        }
+
+        Remover& removeCastingMaterials(const QSet<qint32>& ids) {
+            m_link.removeCastingMaterials(ids);
+            return *this;
+        }
+
+        Remover& removeModelMaterials(const QSet<qint32>& ids) {
+            m_link.removeModelMaterials(ids);
+            return *this;
+        }
+
+        Remover& removeMachines(const QSet<qint32>& ids) {
+            m_link.removeMachines(ids);
+            return *this;
+        }
+
+        Remover& removeNotes(const QSet<qint32>& ids) {
+            m_link.removeNotes(ids);
+            return *this;
+        }
+
+    private:
+        RecordLink& m_link;
+    };
+
+    class Getter {
+    public:
+        explicit Getter(const RecordLink& link) : m_link(link) {}
+
+        qint32 idDate() const {
+            return m_link.getIdDate();
+        }
+
+        qint32 idDrawing() const {
+            return m_link.getIdDrawing();
+        }
+
+        qint32 idAmount() const {
+            return m_link.getIdAmount();
+        }
+
+        QSet<qint32> idExecutors() const {
+            return m_link.getIdExecutors();
+        }
+
+        QSet<qint32> idAuthors() const {
+            return m_link.getIdAuthors();
+        }
+
+        QSet<qint32> idCastingMaterials() const {
+            return m_link.getIdCastingMaterials();
+        }
+
+        QSet<qint32> idModelMaterials() const {
+            return m_link.getIdModelMaterials();
+        }
+
+        QSet<qint32> idMachines() const {
+            return m_link.getIdMachines();
+        }
+
+        QSet<qint32> idNotes() const {
+            return m_link.getIdNotes();
+        }
+
+    private:
+        const RecordLink& m_link;
+    };
+
+    friend class Setter;
+    friend class Adder;
+    friend class Remover;
+    friend class Getter;
+
     explicit RecordLink(qint32 idDate,
                         qint32 idDrawing,
                         qint32 idAmount,
@@ -43,20 +191,22 @@ public:
         m_idNotes = other.m_idNotes;
     }
 
-    RecordLink(RecordLink&& other) {
-        swap(other);
-
+    RecordLink(RecordLink&& other) noexcept {
         QWriteLocker otherLocker(&other.m_lock);
+
+        m_idDate = other.m_idDate;
+        m_idDrawing = other.m_idDrawing;
+        m_idAmount = other.m_idAmount;
+        m_idExecutors = std::move(other.m_idExecutors);
+        m_idAuthors = std::move(other.m_idAuthors);
+        m_idCastingMaterials = std::move(other.m_idCastingMaterials);
+        m_idModelMaterials = std::move(other.m_idModelMaterials);
+        m_idMachines = std::move(other.m_idMachines);
+        m_idNotes = std::move(other.m_idNotes);
 
         other.m_idDate = 0;
         other.m_idDrawing = 0;
         other.m_idAmount = 0;
-        other.m_idExecutors.clear();
-        other.m_idAuthors.clear();
-        other.m_idCastingMaterials.clear();
-        other.m_idModelMaterials.clear();
-        other.m_idMachines.clear();
-        other.m_idNotes.clear();
     }
 
     RecordLink& operator =(const RecordLink& other) {
@@ -84,30 +234,47 @@ public:
         m_idNotes = other.m_idNotes;
         return *this;
     }
-    RecordLink& operator =(RecordLink&& other) {
+    RecordLink& operator =(RecordLink&& other) noexcept {
         if (this == &other) {
             return *this;
         }
 
-        swap(other);
+        QReadWriteLock* first  = &m_lock;
+        QReadWriteLock* second = &other.m_lock;
+        if (second < first) std::swap(first, second);
 
-        QWriteLocker otherLocker(&other.m_lock);
+        QWriteLocker l1(first);
+        QWriteLocker l2(second);
+
+        m_idDate = other.m_idDate;
+        m_idDrawing = other.m_idDrawing;
+        m_idAmount = other.m_idAmount;
+        m_idExecutors = std::move(other.m_idExecutors);
+        m_idAuthors = std::move(other.m_idAuthors);
+        m_idCastingMaterials = std::move(other.m_idCastingMaterials);
+        m_idModelMaterials = std::move(other.m_idModelMaterials);
+        m_idMachines = std::move(other.m_idMachines);
+        m_idNotes = std::move(other.m_idNotes);
 
         other.m_idDate = 0;
         other.m_idDrawing = 0;
         other.m_idAmount = 0;
-        other.m_idExecutors.clear();
-        other.m_idAuthors.clear();
-        other.m_idCastingMaterials.clear();
-        other.m_idModelMaterials.clear();
-        other.m_idMachines.clear();
-        other.m_idNotes.clear();
+
         return *this;
     }
 
     bool operator ==(const RecordLink& other) const {
-        QReadLocker locker(&m_lock);
-        QReadLocker otherLocker(&other.m_lock);
+        if (this == &other) {
+            return true;
+        }
+
+        QReadWriteLock* first  = &m_lock;
+        QReadWriteLock* second = &other.m_lock;
+        if (second < first) std::swap(first, second);
+
+        QReadLocker l1(first);
+        QReadLocker l2(second);
+
         return m_idDate == other.m_idDate && m_idDrawing == other.m_idDrawing &&
                m_idAmount == other.m_idAmount && m_idExecutors == other.m_idExecutors &&
                m_idAuthors == other.m_idAuthors &&
@@ -140,6 +307,106 @@ public:
         m_idMachines.swap(other.m_idMachines);
         m_idNotes.swap(other.m_idNotes);
     }
+
+    [[nodiscard]] Setter set() { return Setter(*this); }
+    [[nodiscard]] Adder add() { return Adder(*this); }
+    [[nodiscard]] Remover remove() { return Remover(*this); }
+    [[nodiscard]] Getter get() const { return Getter(*this); }
+
+    void serialize(QDataStream& out) const {
+        QReadLocker locker(&m_lock);
+
+        out << REQUIRED_SERIALIZATION_VERSION;
+
+        out << m_idDate;
+        out << m_idDrawing;
+        out << m_idAmount;
+
+        out << static_cast<qint32>(m_idExecutors.size());
+        for (auto it = m_idExecutors.begin(); it != m_idExecutors.end(); ++it) {
+            out << *it;
+        }
+
+        out << static_cast<qint32>(m_idAuthors.size());
+        for (auto it = m_idAuthors.begin(); it != m_idAuthors.end(); ++it) {
+            out << *it;
+        }
+
+        out << static_cast<qint32>(m_idCastingMaterials.size());
+        for (auto it = m_idCastingMaterials.begin(); it != m_idCastingMaterials.end(); ++it) {
+            out << *it;
+        }
+
+        out << static_cast<qint32>(m_idModelMaterials.size());
+        for (auto it = m_idModelMaterials.begin(); it != m_idModelMaterials.end(); ++it) {
+            out << *it;
+        }
+
+        out << static_cast<qint32>(m_idMachines.size());
+        for (auto it = m_idMachines.begin(); it != m_idMachines.end(); ++it) {
+            out << *it;
+        }
+
+        out << static_cast<qint32>(m_idNotes.size());
+        for (auto it = m_idNotes.begin(); it != m_idNotes.end(); ++it) {
+            out << *it;
+        }
+
+        if (out.status() != QDataStream::Ok) {
+            throwStreamError(out.status());
+        }
+    }
+
+    void deserialize(QDataStream& in) {
+        QWriteLocker locker(&m_lock);
+
+        deserializeVersion(in);
+
+        qint32 tmpDate = deserializeId(in);
+        qint32 tmpDrawing = deserializeId(in);
+        qint32 tmpAmount = deserializeId(in);
+        QSet<qint32> tmpExecutors = deserializeIds(in);
+        QSet<qint32> tmpAuthors = deserializeIds(in);
+        QSet<qint32> tmpCastingMaterials = deserializeIds(in);
+        QSet<qint32> tmpModelMaterials = deserializeIds(in);
+        QSet<qint32> tmpMachines = deserializeIds(in);
+        QSet<qint32> tmpNotes = deserializeIds(in);
+
+        m_idDate = tmpDate;
+        m_idDrawing = tmpDrawing;
+        m_idAmount = tmpAmount;
+        m_idExecutors = tmpExecutors;
+        m_idAuthors = tmpAuthors;
+        m_idCastingMaterials = tmpCastingMaterials;
+        m_idModelMaterials = tmpModelMaterials;
+        m_idMachines = tmpMachines;
+        m_idNotes = tmpNotes;
+    }
+
+    size_t hash(size_t seed = 0) const {
+        QReadLocker locker(&m_lock);
+        return qHash(m_idDate, seed) ^
+               qHash(m_idDrawing, seed) ^
+               qHash(m_idAmount, seed) ^
+               qHash(m_idExecutors, seed) ^
+               qHash(m_idAuthors, seed) ^
+               qHash(m_idCastingMaterials, seed) ^
+               qHash(m_idModelMaterials, seed) ^
+               qHash(m_idMachines, seed) ^
+               qHash(m_idNotes, seed);
+    }
+
+private:
+    qint32 m_idDate = 0;
+    qint32 m_idDrawing = 0;
+    qint32 m_idAmount = 0;
+    QSet<qint32> m_idExecutors;
+    QSet<qint32> m_idAuthors;
+    QSet<qint32> m_idCastingMaterials;
+    QSet<qint32> m_idModelMaterials;
+    QSet<qint32> m_idMachines;
+    QSet<qint32> m_idNotes;
+    mutable QReadWriteLock m_lock;
 
     void setIdDate(qint32 idDate) {
         QWriteLocker locker(&m_lock);
@@ -261,90 +528,6 @@ public:
         return m_idNotes;
     }
 
-    void serialize(QDataStream& out) const {
-        QReadLocker locker(&m_lock);
-
-        out << REQUIRED_SERIALIZATION_VERSION;
-
-        out << m_idDate;
-        out << m_idDrawing;
-        out << m_idAmount;
-
-        out << static_cast<qint32>(m_idExecutors.size());
-        for (auto it = m_idExecutors.begin(); it != m_idExecutors.end(); ++it) {
-            out << *it;
-        }
-
-        out << static_cast<qint32>(m_idAuthors.size());
-        for (auto it = m_idAuthors.begin(); it != m_idAuthors.end(); ++it) {
-            out << *it;
-        }
-
-        out << static_cast<qint32>(m_idCastingMaterials.size());
-        for (auto it = m_idCastingMaterials.begin(); it != m_idCastingMaterials.end(); ++it) {
-            out << *it;
-        }
-
-        out << static_cast<qint32>(m_idModelMaterials.size());
-        for (auto it = m_idModelMaterials.begin(); it != m_idModelMaterials.end(); ++it) {
-            out << *it;
-        }
-
-        out << static_cast<qint32>(m_idMachines.size());
-        for (auto it = m_idMachines.begin(); it != m_idMachines.end(); ++it) {
-            out << *it;
-        }
-
-        out << static_cast<qint32>(m_idNotes.size());
-        for (auto it = m_idNotes.begin(); it != m_idNotes.end(); ++it) {
-            out << *it;
-        }
-
-        if (out.status() != QDataStream::Ok) {
-            throwStreamError(out.status());
-        }
-    }
-
-    void deserialize(QDataStream& in) {
-        QWriteLocker locker(&m_lock);
-
-        deserializeVersion(in);
-
-        qint32 tmpDate = deserializeId(in);
-        qint32 tmpDrawing = deserializeId(in);
-        qint32 tmpAmount = deserializeId(in);
-        QSet<qint32> tmpExecutors = deserializeIds(in);
-        QSet<qint32> tmpAuthors = deserializeIds(in);
-        QSet<qint32> tmpCastingMaterials = deserializeIds(in);
-        QSet<qint32> tmpModelMaterials = deserializeIds(in);
-        QSet<qint32> tmpMachines = deserializeIds(in);
-        QSet<qint32> tmpNotes = deserializeIds(in);
-
-        m_idDate = tmpDate;
-        m_idDrawing = tmpDrawing;
-        m_idAmount = tmpAmount;
-        m_idExecutors = tmpExecutors;
-        m_idAuthors = tmpAuthors;
-        m_idCastingMaterials = tmpCastingMaterials;
-        m_idModelMaterials = tmpModelMaterials;
-        m_idMachines = tmpMachines;
-        m_idNotes = tmpNotes;
-    }
-
-private:
-    qint32 m_idDate = 0;
-    qint32 m_idDrawing = 0;
-    qint32 m_idAmount = 0;
-    QSet<qint32> m_idExecutors;
-    QSet<qint32> m_idAuthors;
-    QSet<qint32> m_idCastingMaterials;
-    QSet<qint32> m_idModelMaterials;
-    QSet<qint32> m_idMachines;
-    QSet<qint32> m_idNotes;
-    mutable QReadWriteLock m_lock;
-
-    friend uint qHash(const RecordLink& recordLink, uint seed);
-
     void throwStreamError(QDataStream::Status status) const {
         throw RuntimeError(
             QObject::tr("QDataStream error. Error code: '%1'.").arg(static_cast<int>(status)));
@@ -401,12 +584,8 @@ private:
     }
 };
 
-inline uint qHash(const RecordLink& recordLink, uint seed = 0) {
-    return qHash(recordLink.m_idDate, seed) ^ qHash(recordLink.m_idDrawing, seed) ^
-           qHash(recordLink.m_idAmount, seed) ^ qHash(recordLink.m_idExecutors, seed) ^
-           qHash(recordLink.m_idAuthors, seed) ^ qHash(recordLink.m_idCastingMaterials, seed) ^
-           qHash(recordLink.m_idModelMaterials, seed) ^ qHash(recordLink.m_idMachines, seed) ^
-           qHash(recordLink.m_idNotes, seed);
+inline size_t qHash(const RecordLink& recordLink, size_t seed = 0) {
+    return recordLink.hash(seed);
 }
 
 #endif // RECORDLINK_H

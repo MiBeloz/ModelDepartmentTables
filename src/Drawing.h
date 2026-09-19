@@ -6,12 +6,48 @@
 
 class Drawing final {
 public:
+    Drawing() = default;
+    ~Drawing() = default;
+
     explicit Drawing(const QString& number, const QString& title)
         : m_number(number)
         , m_title(title) { }
 
+    Drawing(const Drawing& other) {
+        m_number = other.m_number;
+        m_title = other.m_title;
+    }
+
+    Drawing(Drawing&& other) noexcept {
+        m_number = std::move(other.m_number);
+        m_title = std::move(other.m_title);
+    }
+
+    Drawing& operator =(const Drawing& other) {
+        if (this == &other) {
+            return *this;
+        }
+
+        m_number = other.m_number;
+        m_title = other.m_title;
+        return *this;
+    }
+    Drawing& operator =(Drawing&& other) noexcept {
+        if (this == &other) {
+            return *this;
+        }
+
+        m_number = std::move(other.m_number);
+        m_title = std::move(other.m_title);
+        return *this;
+    }
+
     bool operator ==(const Drawing& other) const {
         return m_number == other.m_number && m_title == other.m_title;
+    }
+
+    bool operator !=(const Drawing& other) const {
+        return !(*this == other);
     }
 
     bool operator <(const Drawing& other) const {
