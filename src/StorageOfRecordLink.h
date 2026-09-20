@@ -167,9 +167,9 @@
 //         QWriteLocker locker(&m_lock);
 
 //         deserializeVersion(in);
-//         QSet<RecordLink> TmpRecordsLinks = deserializeRecordsLinks(in);
+//         QSet<RecordLink> recordsLinks = deserializeRecordsLinks(in);
 
-//         m_storageOfRecordLink = TmpRecordsLinks;
+//         m_storageOfRecordLink = recordsLinks;
 //         m_storageOfRecordLinkTmp = m_storageOfRecordLink;
 //         m_commit = true;
 //     }

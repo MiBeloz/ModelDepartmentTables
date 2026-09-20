@@ -32,8 +32,20 @@ public:
         return m_list->getAllValues();
     }
 
+    void reset() {
+        m_list->reset();
+    }
+
+    void commit() {
+        m_list->commit();
+    }
+
     qsizetype count() const {
         return m_list->size();
+    }
+
+    qsizetype countNotCommitted() const {
+        return m_list->sizeNotCommitted();
     }
 
     void clear() {
@@ -45,10 +57,6 @@ public:
     }
     void deserialize(QDataStream& in) {
         m_list->deserialize(in);
-    }
-
-    void printState() const {
-        m_list->printState();
     }
 
 protected:

@@ -7,40 +7,10 @@
 class Drawing final {
 public:
     Drawing() = default;
-    ~Drawing() = default;
 
     explicit Drawing(const QString& number, const QString& title)
-        : m_number(number)
-        , m_title(title) { }
-
-    Drawing(const Drawing& other) {
-        m_number = other.m_number;
-        m_title = other.m_title;
-    }
-
-    Drawing(Drawing&& other) noexcept {
-        m_number = std::move(other.m_number);
-        m_title = std::move(other.m_title);
-    }
-
-    Drawing& operator =(const Drawing& other) {
-        if (this == &other) {
-            return *this;
-        }
-
-        m_number = other.m_number;
-        m_title = other.m_title;
-        return *this;
-    }
-    Drawing& operator =(Drawing&& other) noexcept {
-        if (this == &other) {
-            return *this;
-        }
-
-        m_number = std::move(other.m_number);
-        m_title = std::move(other.m_title);
-        return *this;
-    }
+        : m_number(number.trimmed())
+        , m_title(title.trimmed()) { }
 
     bool operator ==(const Drawing& other) const {
         return m_number == other.m_number && m_title == other.m_title;
@@ -57,38 +27,40 @@ public:
         return m_title < other.m_title;
     }
 
-    QString getNumber() const {
+    const QString& getNumber() const {
         return m_number;
     }
 
-    QString getTitle() const {
+    const QString& getTitle() const {
         return m_title;
     }
 
     void setNumber(const QString& number) {
-        m_number = number;
+        m_number = number.trimmed();
     }
 
     void setTitle(const QString& title) {
-        m_title = title;
+        m_title = title.trimmed();
     }
 
-    friend QDebug& operator <<(QDebug& deb, const Drawing& dr) {
-        deb << dr.m_number << " - " << dr.m_title;
-        return deb;
+    bool isValid() const {
+        return !m_number.isEmpty() && !m_title.isEmpty();
     }
+
+    static const Drawing Null;
 
 private:
     QString m_number;
     QString m_title;
 
-    friend uint qHash(const Drawing& drawing, uint seed);
     friend QDataStream& operator <<(QDataStream& out, const Drawing& drawing);
     friend QDataStream& operator >>(QDataStream& in, Drawing& drawing);
 };
 
-inline uint qHash(const Drawing& drawing, uint seed = 0) {
-    return qHash(drawing.m_number, seed) ^ qHash(drawing.m_title, seed << 1);
+inline const Drawing Drawing::Null { };
+
+inline size_t qHash(const Drawing& drawing, size_t seed = 0) {
+    return qHashMulti(seed, drawing.getNumber(), drawing.getTitle());
 }
 
 inline QDataStream& operator <<(QDataStream& out, const Drawing& drawing) {
@@ -98,6 +70,12 @@ inline QDataStream& operator <<(QDataStream& out, const Drawing& drawing) {
 inline QDataStream& operator >>(QDataStream& in, Drawing& drawing) {
     in >> drawing.m_number >> drawing.m_title;
     return in;
+}
+
+inline QDebug operator <<(QDebug dbg, const Drawing& d) {
+    QDebugStateSaver saver(dbg);
+    dbg.nospace() << d.getNumber() << " - " << d.getTitle();
+    return dbg;
 }
 
 #endif // DRAWING_H

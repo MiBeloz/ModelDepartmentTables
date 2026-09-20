@@ -1,7 +1,8 @@
 ﻿#ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-constexpr const int START_EXCEL_DATE = 2415019;
+constexpr const int START_EXCEL_DATE = 2415019; // 30.12.1899
+constexpr const int END_EXCEL_DATE = 2958465;   // 31.12.9999
 constexpr const unsigned int REQUIRED_SERIALIZATION_VERSION = 1;
 constexpr const char* STORAGE_SAVER_FILENAME = "data.mdt";
 constexpr const char* STORAGE_SAVER_FILENAME_TMP = "data.mdt.tmp";
