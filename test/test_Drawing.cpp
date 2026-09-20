@@ -2,7 +2,7 @@
 #include <QSet>
 #include <QtTest>
 
-#include "drawing.h"
+#include "Drawing.h"
 
 class TestDrawing : public QObject {
     Q_OBJECT

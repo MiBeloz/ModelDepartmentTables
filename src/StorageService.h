@@ -1,8 +1,8 @@
 ﻿#ifndef STORAGESERVICE_H
 #define STORAGESERVICE_H
 
-#include "CustomStorage.h"
-#include "DatesStorage.h"
+#include "StorageCustomList.h"
+#include "StorageDatesList.h"
 #include "Drawing.h"
 
 class StorageService final {

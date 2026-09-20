@@ -1,14 +1,14 @@
-﻿#ifndef DATESSTORAGE_H
-#define DATESSTORAGE_H
+#ifndef STORAGEDATESLIST_H
+#define STORAGEDATESLIST_H
 
-#include "CustomStorage.h"
+#include "StorageCustomList.h"
 #include "DatesList.h"
 
-class DatesStorage final : public CustomStorage<qint32, DatesList> {
+class StorageDatesList final : public StorageCustomList<qint32, DatesList> {
 public:
-    DatesStorage() : CustomStorage() { }
+    StorageDatesList() : StorageCustomList() { }
 
-    virtual ~DatesStorage() = default;
+    virtual ~StorageDatesList() = default;
 
     std::optional<qint32> add(const QString& date) {
         return m_list->insert(date);
@@ -39,4 +39,4 @@ public:
     }
 };
 
-#endif // DATESSTORAGE_H
+#endif // STORAGEDATESLIST_H

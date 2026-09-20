@@ -283,7 +283,7 @@ void TestCustomList::insertExistingDoesNotDuplicateItem() {
     auto allValues = list.getAllValues();
     QCOMPARE(list.size(), 1);
     QCOMPARE(allValues.size(), 1);
-    QCOMPARE(allValues.at(0), 7);
+    QCOMPARE(allValues.first(), 7);
 }
 
 void TestCustomList::insertExistingAfterCommitReturnsSameId() {
@@ -339,7 +339,7 @@ void TestCustomList::insertDuplicateManyTimesKeepsSingleEntry() {
     list.commit();
     auto allValues = list.getAllValues();
     QCOMPARE(allValues.size(), 1);
-    QCOMPARE(allValues.at(0), 12345);
+    QCOMPARE(allValues.first(), 12345);
 }
 
 void TestCustomList::insertDuplicateOfRemovedItemCreatesNewId() {
