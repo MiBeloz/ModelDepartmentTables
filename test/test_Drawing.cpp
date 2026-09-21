@@ -39,7 +39,7 @@ private slots:
     void qHash_worksInQHash();
     void qHash_worksInQSet();
 
-    // ---------- QDataStream ----------
+    // ---------- serialize / deserialize ----------
     void serialization_roundTrip_data();
     void serialization_roundTrip();
     void serialization_defaultConstructed();

@@ -122,9 +122,11 @@ inline CustomList<T>& CustomList<T>::operator =(CustomList&& other) noexcept {
         return *this;
     }
 
-    QReadWriteLock* first  = &m_lock;
+    QReadWriteLock* first = &m_lock;
     QReadWriteLock* second = &other.m_lock;
-    if (second < first) std::swap(first, second);
+    if (second < first) {
+        std::swap(first, second);
+    }
 
     QWriteLocker l1(first);
     QWriteLocker l2(second);
@@ -150,9 +152,11 @@ inline bool CustomList<T>::operator ==(const CustomList& other) const {
         return true;
     }
 
-    QReadWriteLock* first  = &m_lock;
+    QReadWriteLock* first = &m_lock;
     QReadWriteLock* second = &other.m_lock;
-    if (second < first) std::swap(first, second);
+    if (second < first) {
+        std::swap(first, second);
+    }
 
     QReadLocker l1(first);
     QReadLocker l2(second);

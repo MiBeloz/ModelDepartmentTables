@@ -12,7 +12,7 @@ class RecordLink {
 public:
     class Setter {
     public:
-        explicit Setter(RecordLink& link) : m_link(link) {}
+        explicit Setter(RecordLink& link) : m_link(link) { }
 
         Setter& idDate(qint32 id) {
             m_link.setIdDate(id);
@@ -35,7 +35,7 @@ public:
 
     class Adder {
     public:
-        explicit Adder(RecordLink& link) : m_link(link) {}
+        explicit Adder(RecordLink& link) : m_link(link) { }
 
         Adder& idExecutors(const QSet<qint32>& ids) {
             m_link.addExecutors(ids);
@@ -73,7 +73,7 @@ public:
 
     class Remover {
     public:
-        explicit Remover(RecordLink& link) : m_link(link) {}
+        explicit Remover(RecordLink& link) : m_link(link) { }
 
         Remover& removeExecutors(const QSet<qint32>& ids) {
             m_link.removeExecutors(ids);
@@ -111,7 +111,7 @@ public:
 
     class Getter {
     public:
-        explicit Getter(const RecordLink& link) : m_link(link) {}
+        explicit Getter(const RecordLink& link) : m_link(link) { }
 
         qint32 idDate() const {
             return m_link.getIdDate();
@@ -157,6 +157,8 @@ public:
     friend class Adder;
     friend class Remover;
     friend class Getter;
+
+    RecordLink() = default;
 
     explicit RecordLink(qint32 idDate,
                         qint32 idDrawing,
@@ -239,9 +241,11 @@ public:
             return *this;
         }
 
-        QReadWriteLock* first  = &m_lock;
+        QReadWriteLock* first = &m_lock;
         QReadWriteLock* second = &other.m_lock;
-        if (second < first) std::swap(first, second);
+        if (second < first) {
+            std::swap(first, second);
+        }
 
         QWriteLocker l1(first);
         QWriteLocker l2(second);
@@ -268,9 +272,11 @@ public:
             return true;
         }
 
-        QReadWriteLock* first  = &m_lock;
+        QReadWriteLock* first = &m_lock;
         QReadWriteLock* second = &other.m_lock;
-        if (second < first) std::swap(first, second);
+        if (second < first) {
+            std::swap(first, second);
+        }
 
         QReadLocker l1(first);
         QReadLocker l2(second);
@@ -288,6 +294,10 @@ public:
     }
 
     void swap(RecordLink& other) {
+        if (this == &other) {
+            return;
+        }
+
         QReadWriteLock* first = &m_lock;
         QReadWriteLock* second = &other.m_lock;
         if (second < first) {
@@ -308,10 +318,18 @@ public:
         m_idNotes.swap(other.m_idNotes);
     }
 
-    [[nodiscard]] Setter set() { return Setter(*this); }
-    [[nodiscard]] Adder add() { return Adder(*this); }
-    [[nodiscard]] Remover remove() { return Remover(*this); }
-    [[nodiscard]] Getter get() const { return Getter(*this); }
+    [[nodiscard]] Setter set() {
+        return Setter(*this);
+    }
+    [[nodiscard]] Adder add() {
+        return Adder(*this);
+    }
+    [[nodiscard]] Remover remove() {
+        return Remover(*this);
+    }
+    [[nodiscard]] Getter get() const {
+        return Getter(*this);
+    }
 
     void serialize(QDataStream& out) const {
         QReadLocker locker(&m_lock);
@@ -385,16 +403,13 @@ public:
 
     size_t hash(size_t seed = 0) const {
         QReadLocker locker(&m_lock);
-        return qHash(m_idDate, seed) ^
-               qHash(m_idDrawing, seed) ^
-               qHash(m_idAmount, seed) ^
-               qHash(m_idExecutors, seed) ^
-               qHash(m_idAuthors, seed) ^
-               qHash(m_idCastingMaterials, seed) ^
-               qHash(m_idModelMaterials, seed) ^
-               qHash(m_idMachines, seed) ^
-               qHash(m_idNotes, seed);
+        return qHash(m_idDate, seed) ^ qHash(m_idDrawing, seed) ^ qHash(m_idAmount, seed) ^
+               qHash(m_idExecutors, seed) ^ qHash(m_idAuthors, seed) ^
+               qHash(m_idCastingMaterials, seed) ^ qHash(m_idModelMaterials, seed) ^
+               qHash(m_idMachines, seed) ^ qHash(m_idNotes, seed);
     }
+
+    static const RecordLink Null;
 
 private:
     qint32 m_idDate = 0;
@@ -583,6 +598,8 @@ private:
         return ids;
     }
 };
+
+inline const RecordLink RecordLink::Null { };
 
 inline size_t qHash(const RecordLink& recordLink, size_t seed = 0) {
     return recordLink.hash(seed);

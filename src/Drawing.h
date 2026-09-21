@@ -8,44 +8,19 @@ class Drawing final {
 public:
     Drawing() = default;
 
-    explicit Drawing(const QString& number, const QString& title)
-        : m_number(number.trimmed())
-        , m_title(title.trimmed()) { }
+    explicit Drawing(const QString& number, const QString& title);
 
-    bool operator ==(const Drawing& other) const {
-        return m_number == other.m_number && m_title == other.m_title;
-    }
+    bool operator ==(const Drawing& other) const;
+    bool operator !=(const Drawing& other) const;
+    bool operator <(const Drawing& other) const;
 
-    bool operator !=(const Drawing& other) const {
-        return !(*this == other);
-    }
+    const QString& getNumber() const;
+    const QString& getTitle() const;
 
-    bool operator <(const Drawing& other) const {
-        if (m_number != other.m_number) {
-            return m_number < other.m_number;
-        }
-        return m_title < other.m_title;
-    }
+    void setNumber(const QString& number);
+    void setTitle(const QString& title);
 
-    const QString& getNumber() const {
-        return m_number;
-    }
-
-    const QString& getTitle() const {
-        return m_title;
-    }
-
-    void setNumber(const QString& number) {
-        m_number = number.trimmed();
-    }
-
-    void setTitle(const QString& title) {
-        m_title = title.trimmed();
-    }
-
-    bool isValid() const {
-        return !m_number.isEmpty() && !m_title.isEmpty();
-    }
+    bool isValid() const;
 
     static const Drawing Null;
 
