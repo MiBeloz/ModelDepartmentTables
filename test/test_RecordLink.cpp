@@ -76,7 +76,7 @@ static RecordLink makeSample() {
 // ---------- Constructors / Assignment ----------
 
 void TestRecordLink::defaultConstructor_createsNullLikeObject() {
-    RecordLink link;
+    RecordLink link = RecordLink::Null;
 
     QCOMPARE(link.get().idDate(), 0);
     QCOMPARE(link.get().idDrawing(), 0);
@@ -353,7 +353,7 @@ void TestRecordLink::deserialize_wrongVersion_throws() {
     RecordLink r = RecordLink::Null;
     QDataStream in(&data, QIODevice::ReadOnly);
 
-    QVERIFY_EXCEPTION_THROWN(r.deserialize(in), RuntimeError);
+    QVERIFY_THROWS_EXCEPTION(RuntimeError, r.deserialize(in));
 }
 
 void TestRecordLink::deserialize_negativeId_throws() {
@@ -367,7 +367,7 @@ void TestRecordLink::deserialize_negativeId_throws() {
     RecordLink r = RecordLink::Null;
     QDataStream in(&data, QIODevice::ReadOnly);
 
-    QVERIFY_EXCEPTION_THROWN(r.deserialize(in), RuntimeError);
+    QVERIFY_THROWS_EXCEPTION(RuntimeError, r.deserialize(in));
 }
 
 void TestRecordLink::deserialize_negativeSetSize_throws() {
@@ -382,7 +382,7 @@ void TestRecordLink::deserialize_negativeSetSize_throws() {
     RecordLink r = RecordLink::Null;
     QDataStream in(&data, QIODevice::ReadOnly);
 
-    QVERIFY_EXCEPTION_THROWN(r.deserialize(in), RuntimeError);
+    QVERIFY_THROWS_EXCEPTION(RuntimeError, r.deserialize(in));
 }
 
 void TestRecordLink::deserialize_truncatedStream_throws() {
@@ -396,7 +396,7 @@ void TestRecordLink::deserialize_truncatedStream_throws() {
     RecordLink r = RecordLink::Null;
     QDataStream in(&data, QIODevice::ReadOnly);
 
-    QVERIFY_EXCEPTION_THROWN(r.deserialize(in), RuntimeError);
+    QVERIFY_THROWS_EXCEPTION(RuntimeError, r.deserialize(in));
 }
 
 // ---------- Thread safety(basic check for crashes) ----------

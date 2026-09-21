@@ -23,6 +23,11 @@ private slots:
     void equalityOperator();
     void inequalityOperator();
 
+    // ---------- swap ----------
+
+    void swap_swapsAllFields();
+    void swap_selfSwap();
+
     // ---------- insert ----------
     void insertReturnsIncrementingIds();
     void insertReusesFreedIdsAfterCommit();
@@ -209,6 +214,28 @@ void TestCustomList::inequalityOperator() {
     b.insert(42);
     b.commit();
     QVERIFY(a == b);
+}
+
+// ---------- swap ----------
+
+void TestCustomList::swap_swapsAllFields() {
+    auto a = makeCommitted<int>({ 10, 20, 30 });
+    CustomList<int> b;
+
+    a.swap(b);
+
+    QCOMPARE(a.getAllValues(), QList<int>());
+    QCOMPARE(b.getValue(1), 10);
+    QCOMPARE(b.getValue(2), 20);
+    QCOMPARE(b.getValue(3), 30);
+}
+
+void TestCustomList::swap_selfSwap() {
+    auto list = makeCommitted<int>({ 10, 20, 30 });
+    list.swap(list);
+    QCOMPARE(list.getValue(1), 10);
+    QCOMPARE(list.getValue(2), 20);
+    QCOMPARE(list.getValue(3), 30);
 }
 
 // ---------- insert ----------

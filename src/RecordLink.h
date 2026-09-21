@@ -158,8 +158,6 @@ public:
     friend class Remover;
     friend class Getter;
 
-    RecordLink() = default;
-
     explicit RecordLink(qint32 idDate,
                         qint32 idDrawing,
                         qint32 idAmount,
@@ -422,6 +420,8 @@ private:
     QSet<qint32> m_idMachines;
     QSet<qint32> m_idNotes;
     mutable QReadWriteLock m_lock;
+
+    RecordLink() = default;
 
     void setIdDate(qint32 idDate) {
         QWriteLocker locker(&m_lock);

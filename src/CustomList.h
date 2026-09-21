@@ -25,6 +25,8 @@ public:
     bool operator ==(const CustomList& other) const;
     bool operator !=(const CustomList& other) const;
 
+    void swap(CustomList& other);
+
     virtual std::optional<qint32> insert(const T& data);
     virtual bool remove(const T& data);
     virtual std::optional<qint32> getId(const T& data) const;
@@ -167,6 +169,30 @@ inline bool CustomList<T>::operator ==(const CustomList& other) const {
 template<typename T>
 inline bool CustomList<T>::operator !=(const CustomList& other) const {
     return !(*this == other);
+}
+
+template<typename T>
+inline void CustomList<T>::swap(CustomList &other) {
+    if (this == &other) {
+        return;
+    }
+
+    QReadWriteLock* first = &m_lock;
+    QReadWriteLock* second = &other.m_lock;
+    if (second < first) {
+        std::swap(first, second);
+    }
+
+    QWriteLocker l1(first);
+    QWriteLocker l2(second);
+
+    m_list.swap(other.m_list);
+    m_listTmp.swap(other.m_listTmp);
+    std::swap(m_id, other.m_id);
+    std::swap(m_idTmp, other.m_idTmp);
+    m_emptyId.swap(other.m_emptyId);
+    m_emptyIdTmp.swap(other.m_emptyIdTmp);
+    std::swap(m_commit, other.m_commit);
 }
 
 template<typename T>
