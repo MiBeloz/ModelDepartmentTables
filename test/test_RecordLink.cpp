@@ -107,9 +107,8 @@ void TestRecordLink::constructor_initializesAllFields() {
 void TestRecordLink::copyConstructor_copiesAllFields() {
     const RecordLink original = makeSample();
     const RecordLink copy(original);
-
     QVERIFY(copy == original);
-    // Изменение копии не влияет на оригинал
+
     RecordLink mutableCopy(copy);
     mutableCopy.set().idDate(999);
     QCOMPARE(original.get().idDate(), 1);
@@ -124,11 +123,23 @@ void TestRecordLink::moveConstructor_movesAndResetsSource() {
     QCOMPARE(moved.get().idDrawing(), 2);
     QCOMPARE(moved.get().idAmount(), 3);
     QCOMPARE(moved.get().idExecutors(), (QSet<qint32> { 10, 11, 12 }));
+    QCOMPARE(moved.get().idAuthors(), (QSet<qint32> { 20, 21 }));
+    QCOMPARE(moved.get().idCastingMaterials(), (QSet<qint32> { 30 }));
+    QCOMPARE(moved.get().idModelMaterials(), (QSet<qint32> { 40, 41, 42, 43 }));
+    QCOMPARE(moved.get().idMachines(), (QSet<qint32> { 50, 51 }));
+    QCOMPARE(moved.get().idNotes(), (QSet<qint32> { 60 }));
 
-    // Источник должен быть сброшен (по контракту — только скалярные поля)
     QCOMPARE(source.get().idDate(), 0);
     QCOMPARE(source.get().idDrawing(), 0);
     QCOMPARE(source.get().idAmount(), 0);
+    QCOMPARE(source.get().idExecutors(), QSet<qint32>());
+    QCOMPARE(source.get().idAuthors(), QSet<qint32>());
+    QCOMPARE(source.get().idCastingMaterials(), QSet<qint32>());
+    QCOMPARE(source.get().idModelMaterials(), QSet<qint32>());
+    QCOMPARE(source.get().idMachines(), QSet<qint32>());
+    QCOMPARE(source.get().idNotes(), QSet<qint32>());
+
+    QCOMPARE(source, RecordLink::Null);
 }
 
 // ---------- Setter ----------
