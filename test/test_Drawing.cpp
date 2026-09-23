@@ -9,15 +9,15 @@ class TestDrawing : public QObject {
 
 private slots:
     // ---------- Constructors / Assignment ----------
-    void defaultConstructor_createsInvalidEmptyDrawing();
-    void parameterizedConstructor_setField();
-    void parameterizedConstructor_setsFields();
-    void parameterizedConstructor_acceptsEmptyStrings();
+    void defaultConstructorCreatesInvalidEmptyDrawing();
+    void parameterizedConstructorSetField();
+    void parameterizedConstructorSetsFields();
+    void parameterizedConstructorAcceptsEmptyStrings();
 
     // ---------- get / set ----------
-    void getters_returnInitialValues();
-    void setters_updateValues();
-    void setters_acceptEmptyStrings();
+    void gettersReturnInitialValues();
+    void settersUpdateValues();
+    void settersAcceptEmptyStrings();
 
     // ---------- isValid ----------
     void isValid_data();
@@ -32,29 +32,29 @@ private slots:
     // ---------- operator< ----------
     void lessThan_data();
     void lessThan();
-    void lessThan_isStrictWeakOrdering();
+    void lessThanIsStrictWeakOrdering();
 
     // ---------- qHash ----------
-    void qHash_equalObjectsHaveEqualHash();
-    void qHash_worksInQHash();
-    void qHash_worksInQSet();
+    void qHashEqualObjectsHaveEqualHash();
+    void qHashWorksInQHash();
+    void qHashWorksInQSet();
 
     // ---------- serialize / deserialize ----------
-    void serialization_roundTrip_data();
-    void serialization_roundTrip();
-    void serialization_defaultConstructed();
-    void serialization_multipleObjects();
+    void serializationRoundTrip_data();
+    void serializationRoundTrip();
+    void serializationDefaultConstructed();
+    void serializationMultipleObjects();
 
     // ---------- QDebug ----------
-    void debugOutput_containsNumberAndTitle();
-    void debugOutput_invalidDrawing();
+    void debugOutputContainsNumberAndTitle();
+    void debugOutputInvalidDrawing();
 };
 
 // =============== Implementation ===============
 
 // ---------- Constructors / Assignment ----------
 
-void TestDrawing::defaultConstructor_createsInvalidEmptyDrawing() {
+void TestDrawing::defaultConstructorCreatesInvalidEmptyDrawing() {
     Drawing d;
     QVERIFY(d.getNumber().isEmpty());
     QVERIFY(d.getTitle().isEmpty());
@@ -66,34 +66,34 @@ void TestDrawing::defaultConstructor_createsInvalidEmptyDrawing() {
     QVERIFY(!d2.isValid());
 }
 
-void TestDrawing::parameterizedConstructor_setField() {
+void TestDrawing::parameterizedConstructorSetField() {
     Drawing d("", "Корпус");
     QVERIFY(d.getNumber().isEmpty());
     QCOMPARE(d.getTitle(), QString("Корпус"));
     QVERIFY(!d.isValid());
 }
 
-void TestDrawing::parameterizedConstructor_setsFields() {
+void TestDrawing::parameterizedConstructorSetsFields() {
     Drawing d("A-001", "Корпус");
     QCOMPARE(d.getNumber(), QString("A-001"));
     QCOMPARE(d.getTitle(), QString("Корпус"));
     QVERIFY(d.isValid());
 }
 
-void TestDrawing::parameterizedConstructor_acceptsEmptyStrings() {
+void TestDrawing::parameterizedConstructorAcceptsEmptyStrings() {
     Drawing d("", "");
     QVERIFY(!d.isValid());
 }
 
 // ---------- get / set ----------
 
-void TestDrawing::getters_returnInitialValues() {
+void TestDrawing::gettersReturnInitialValues() {
     Drawing d("B-42", "Крышка");
     QCOMPARE(d.getNumber(), QString("B-42"));
     QCOMPARE(d.getTitle(), QString("Крышка"));
 }
 
-void TestDrawing::setters_updateValues() {
+void TestDrawing::settersUpdateValues() {
     Drawing d;
     d.setNumber("C-7");
     d.setTitle("Опора");
@@ -102,7 +102,7 @@ void TestDrawing::setters_updateValues() {
     QVERIFY(d.isValid());
 }
 
-void TestDrawing::setters_acceptEmptyStrings() {
+void TestDrawing::settersAcceptEmptyStrings() {
     Drawing d("X", "Y");
     d.setNumber("");
     QVERIFY(!d.isValid());
@@ -200,7 +200,7 @@ void TestDrawing::lessThan() {
     QCOMPARE(a < b, expected);
 }
 
-void TestDrawing::lessThan_isStrictWeakOrdering() {
+void TestDrawing::lessThanIsStrictWeakOrdering() {
     //  1) irreflexivity:  !(a < a)
     //  2) asymmetry:      a < b  =>  !(b < a)
     //  3) transitivity:   a < b && b < c  =>  a < c
@@ -232,7 +232,7 @@ void TestDrawing::lessThan_isStrictWeakOrdering() {
 
 // ---------- qHash ----------
 
-void TestDrawing::qHash_equalObjectsHaveEqualHash() {
+void TestDrawing::qHashEqualObjectsHaveEqualHash() {
     Drawing a("A-1", "T");
     Drawing b("A-1", "T");
     QCOMPARE(a, b);
@@ -244,7 +244,7 @@ void TestDrawing::qHash_equalObjectsHaveEqualHash() {
     QCOMPARE(qHash(aa), qHash(bb));
 }
 
-void TestDrawing::qHash_worksInQHash() {
+void TestDrawing::qHashWorksInQHash() {
     QHash<Drawing, int> map;
     map.insert(Drawing("A-1", "T1"), 1);
     map.insert(Drawing("A-2", "T2"), 2);
@@ -258,7 +258,7 @@ void TestDrawing::qHash_worksInQHash() {
     QCOMPARE(map.value(Drawing("A-1", "T1")), 10);
 }
 
-void TestDrawing::qHash_worksInQSet() {
+void TestDrawing::qHashWorksInQSet() {
     QSet<Drawing> set;
     set.insert(Drawing("A-1", "T"));
     set.insert(Drawing("A-1", "T"));
@@ -288,7 +288,7 @@ static Drawing deserialize(const QByteArray& data) {
     return d;
 }
 
-void TestDrawing::serialization_roundTrip_data() {
+void TestDrawing::serializationRoundTrip_data() {
     QTest::addColumn<Drawing>("drawing");
 
     QTest::newRow("regular") << Drawing("A-001", "Корпус");
@@ -300,7 +300,7 @@ void TestDrawing::serialization_roundTrip_data() {
     QTest::newRow("special chars") << Drawing("a\tb\nc", "x\"y\\z");
 }
 
-void TestDrawing::serialization_roundTrip() {
+void TestDrawing::serializationRoundTrip() {
     QFETCH(Drawing, drawing);
 
     const QByteArray data = serialize(drawing);
@@ -311,7 +311,7 @@ void TestDrawing::serialization_roundTrip() {
     QCOMPARE(restored.getTitle(), drawing.getTitle());
 }
 
-void TestDrawing::serialization_defaultConstructed() {
+void TestDrawing::serializationDefaultConstructed() {
     Drawing original;
     Drawing restored = deserialize(serialize(original));
     QCOMPARE(restored, original);
@@ -323,7 +323,7 @@ void TestDrawing::serialization_defaultConstructed() {
     QVERIFY(!restored2.isValid());
 }
 
-void TestDrawing::serialization_multipleObjects() {
+void TestDrawing::serializationMultipleObjects() {
     const QVector<Drawing> src = {
         Drawing("A-1", "Alpha"),
         Drawing("A-2", "Beta"),
@@ -364,7 +364,7 @@ static QString debugToString(const Drawing& d) {
     return s;
 }
 
-void TestDrawing::debugOutput_containsNumberAndTitle() {
+void TestDrawing::debugOutputContainsNumberAndTitle() {
     Drawing d("A-001", "Корпус");
     const QString out = debugToString(d);
 
@@ -373,7 +373,7 @@ void TestDrawing::debugOutput_containsNumberAndTitle() {
     QVERIFY2(out.contains("-"), qPrintable(out));
 }
 
-void TestDrawing::debugOutput_invalidDrawing() {
+void TestDrawing::debugOutputInvalidDrawing() {
     Drawing d;
     const QString out = debugToString(d);
     QVERIFY2(out.contains("-"), qPrintable(out));

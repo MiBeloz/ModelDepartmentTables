@@ -3,6 +3,9 @@
 
 #include "CustomList.h"
 
+constexpr const int START_EXCEL_DATE = 2415019; // 30.12.1899
+constexpr const int END_EXCEL_DATE = 5373484;   // 31.12.9999
+
 class DatesList final : public CustomList<qint32> {
 public:
     enum ErrorType {

@@ -7,7 +7,6 @@
 #include <QReadWriteLock>
 #include <QStack>
 
-#include "Constants.h"
 #include "Exceptions.h"
 
 template<typename T>
@@ -262,6 +261,7 @@ inline QList<T> CustomList<T>::getAllValues() const {
 
 template<typename T>
 inline void CustomList<T>::reset() {
+    const QWriteLocker locker(&m_lock);
     m_listTmp = m_list;
     m_idTmp = m_id;
     m_emptyIdTmp = m_emptyId;
@@ -270,6 +270,7 @@ inline void CustomList<T>::reset() {
 
 template<typename T>
 inline void CustomList<T>::commit() {
+    const QWriteLocker locker(&m_lock);
     m_list = m_listTmp;
     m_id = m_idTmp;
     m_emptyId = m_emptyIdTmp;
@@ -304,7 +305,7 @@ template<typename T>
 inline void CustomList<T>::serialize(QDataStream& out) const {
     QReadLocker locker(&m_lock);
 
-    out << REQUIRED_SERIALIZATION_VERSION;
+    out << out.version();
     out << static_cast<qint32>(m_list.size());
     for (auto it = m_list.begin(); it != m_list.end(); ++it) {
         out << it.key() << it.value();
@@ -346,16 +347,16 @@ inline void CustomList<T>::throwStreamError(QDataStream::Status status) const {
 
 template<typename T>
 inline void CustomList<T>::deserializeVersion(QDataStream& in) const {
-    quint32 version { };
+    int version { };
     in >> version;
     if (in.status() != QDataStream::Ok) {
         throwStreamError(in.status());
     }
-    if (version != REQUIRED_SERIALIZATION_VERSION) {
+    if (version != in.version()) {
         in.setStatus(QDataStream::Status::ReadCorruptData);
         throw RuntimeError(
             QObject::tr("Version error. Required version: '%1', Current version: '%2'")
-                .arg(QString::number(REQUIRED_SERIALIZATION_VERSION), QString::number(version)));
+                .arg(QString::number(in.version()), QString::number(version)));
     }
 }
 

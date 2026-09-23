@@ -92,11 +92,18 @@ private slots:
     void serializeDeserializeEmpty();
     void serializeDeserializePreservesFreeIds();
     void serializeIgnoresDraft();
+    void serializeDeserializeRoundTrip2();
+    void deserializeWrongVersionThrows();
+    void deserializeNegativeSetSizeThrows();
+    void deserializeTruncatedStreamThrows();
 
     // ---------- Different types ----------
     void workWithInt();
     void workWithQString();
     void workWithDrawing();
+
+    // ---------- Thread safety(basic check for crashes) ----------
+    void concurrentReadsAndWritesDoNotCrash();
 
 private:
     QByteArray toBytes(const CustomList<int>& list);
@@ -770,7 +777,7 @@ void TestCustomList::draftAccumulatesMultipleOperations() {
 QByteArray TestCustomList::toBytes(const CustomList<int>& list) {
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_0);
+    out.setVersion(QDataStream::Qt_6_11);
     list.serialize(out);
     return data;
 }
@@ -778,7 +785,7 @@ QByteArray TestCustomList::toBytes(const CustomList<int>& list) {
 CustomList<int> TestCustomList::fromBytes(const QByteArray& bytes) {
     CustomList<int> list;
     QDataStream in(bytes);
-    in.setVersion(QDataStream::Qt_6_0);
+    in.setVersion(QDataStream::Qt_6_11);
     list.deserialize(in);
     return list;
 }
@@ -843,6 +850,72 @@ void TestCustomList::serializeIgnoresDraft() {
     QVERIFY(!restored.getId(4).has_value());
 }
 
+void TestCustomList::serializeDeserializeRoundTrip2() {
+    const CustomList<int> original = makeCommitted<int>({ 10, 20, 30 });
+
+    QByteArray data;
+    {
+        QDataStream out(&data, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Version::Qt_6_11);
+        original.serialize(out);
+    }
+
+    CustomList<int> restored;
+    {
+        QDataStream in(&data, QIODevice::ReadOnly);
+        in.setVersion(QDataStream::Version::Qt_6_11);
+        restored.deserialize(in);
+    }
+
+    QVERIFY(original == restored);
+}
+
+void TestCustomList::deserializeWrongVersionThrows() {
+    QByteArray data;
+    {
+        QDataStream out(&data, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Version::Qt_4_0);
+    }
+
+    CustomList<int> cl;
+    QDataStream in(&data, QIODevice::ReadOnly);
+    in.setVersion(QDataStream::Version::Qt_6_11);
+
+    QVERIFY_THROWS_EXCEPTION(RuntimeError, cl.deserialize(in));
+}
+
+void TestCustomList::deserializeNegativeSetSizeThrows() {
+    QByteArray data;
+    {
+        QDataStream out(&data, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Version::Qt_6_11);
+        out << out.version();
+        out << static_cast<qint32>(-5);
+    }
+
+    CustomList<int> cl;
+    QDataStream in(&data, QIODevice::ReadOnly);
+    in.setVersion(QDataStream::Version::Qt_6_11);
+
+    QVERIFY_THROWS_EXCEPTION(RuntimeError, cl.deserialize(in));
+}
+
+void TestCustomList::deserializeTruncatedStreamThrows() {
+    QByteArray data;
+    {
+        QDataStream out(&data, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Version::Qt_6_11);
+        out << out.version();
+        out << static_cast<qint32>(1);
+    }
+
+    CustomList<int> cl;
+    QDataStream in(&data, QIODevice::ReadOnly);
+    in.setVersion(QDataStream::Version::Qt_6_11);
+
+    QVERIFY_THROWS_EXCEPTION(RuntimeError, cl.deserialize(in));
+}
+
 // ---------- Different types ----------
 
 void TestCustomList::workWithInt() {
@@ -890,6 +963,137 @@ void TestCustomList::workWithDrawing() {
     QVERIFY(list.remove(Drawing("105-02", "Крышка")));
     list.commit();
     QCOMPARE(list.size(), 1);
+}
+
+// ---------- Thread safety(basic check for crashes) ----------
+
+void TestCustomList::concurrentReadsAndWritesDoNotCrash() {
+    constexpr int threadCount = 8;
+    constexpr int opsPerThread = 2000;
+    constexpr int timeoutMs = 60000;
+
+    CustomList<qint32> list;
+
+    QMutex startMutex;
+    QWaitCondition startCondition;
+    bool startFlag = false;
+
+    QMutex statsMutex;
+    QSet<qint32> insertedIds;
+    int insertFailures = 0;
+    int removeFailures = 0;
+
+    QVector<QThread*> threads;
+    threads.reserve(threadCount);
+
+    for (int t = 0; t < threadCount; ++t) {
+        QThread* thread = QThread::create([&, t]() {
+            {
+                QMutexLocker locker(&startMutex);
+                while (!startFlag) {
+                    startCondition.wait(&startMutex);
+                }
+            }
+
+            QRandomGenerator rng(static_cast<quint32>(0xC0FFEE + t));
+
+            for (int i = 0; i < opsPerThread; ++i) {
+                const int op = rng.bounded(100);
+
+                if (op < 40) {
+                    // insert
+                    const qint32 value = static_cast<qint32>(rng.bounded(1000));
+                    auto id = list.insert(value);
+                    if (id.has_value()) {
+                        QMutexLocker locker(&statsMutex);
+                        insertedIds.insert(*id);
+                    } else {
+                        QMutexLocker locker(&statsMutex);
+                        ++insertFailures;
+                    }
+                } else if (op < 60) {
+                    // remove
+                    const qint32 value = static_cast<qint32>(rng.bounded(1000));
+                    if (!list.remove(value)) {
+                        QMutexLocker locker(&statsMutex);
+                        ++removeFailures;
+                    }
+                } else if (op < 75) {
+                    // getId
+                    const qint32 value = static_cast<qint32>(rng.bounded(1000));
+                    (void)list.getId(value);
+                } else if (op < 85) {
+                    // getValue
+                    const qint32 id = static_cast<qint32>(rng.bounded(1000));
+                    (void)list.getValue(id);
+                } else if (op < 90) {
+                    // getAllValues
+                    (void)list.getAllValues();
+                } else if (op < 93) {
+                    // size / sizeNotCommitted
+                    (void)list.size();
+                    (void)list.sizeNotCommitted();
+                } else if (op < 96) {
+                    // reset
+                    list.reset();
+                } else if (op < 99) {
+                    // commit
+                    list.commit();
+                } else {
+                    // clear
+                    list.clear();
+                }
+            }
+            list.commit();
+        });
+        threads.append(thread);
+    }
+
+    QElapsedTimer timer;
+    timer.start();
+
+    {
+        QMutexLocker locker(&startMutex);
+        startFlag = true;
+        startCondition.wakeAll();
+    }
+
+    for (QThread* thread : threads) {
+        thread->start();
+    }
+
+    for (QThread* thread : threads) {
+        QVERIFY2(thread->wait(timeoutMs),
+                 "Поток не завершился за отведённое время — возможен дедлок");
+        delete thread;
+    }
+
+    list.commit();
+
+    const qsizetype finalSize = list.size();
+    const qsizetype finalSizeTmp = list.sizeNotCommitted();
+
+    QCOMPARE(finalSize, finalSizeTmp);
+
+    const QList<qint32> values = list.getAllValues();
+    QCOMPARE(values.size(), finalSize);
+
+    for (const qint32& v : values) {
+        auto id = list.getId(v);
+        QVERIFY2(id.has_value(), "Значение из getAllValues() не найдено через getId()");
+        auto restored = list.getValue(*id);
+        QVERIFY2(restored.has_value(), "getId() вернул id, но getValue() не нашёл значение");
+        QCOMPARE(*restored, v);
+    }
+
+    QVERIFY2(finalSize <= static_cast<qsizetype>(threadCount) * opsPerThread,
+             "Размер списка превышает общее число операций вставки");
+
+    qInfo() << "Final size:" << finalSize << "insertFailures:" << insertFailures
+            << "removeFailures:" << removeFailures << "elapsed ms:" << timer.elapsed();
+
+    list.clear();
+    list.commit();
 }
 
 QTEST_MAIN(TestCustomList)

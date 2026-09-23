@@ -12,49 +12,49 @@ private slots:
     void cleanup();
 
     // ---------- insert ----------
-    void insertByString_valid();
-    void insertByString_invalidFormat();
-    void insertByString_sameValueReturnsSameId();
-    void insertByExcelFormat_valid();
-    void insertByExcelFormat_invalid();
+    void insertByStringValid();
+    void insertByStringInvalidFormat();
+    void insertByStringSameValueReturnsSameId();
+    void insertByExcelFormatValid();
+    void insertByExcelFormatInvalid();
 
     // ---------- remove ----------
-    void removeByString_valid();
-    void removeByString_notFound();
-    void removeByString_invalidFormat();
-    void removeByExcelFormat_valid();
-    void removeByExcelFormat_notFound();
-    void removeByExcelFormat_invalid();
+    void removeByStringValid();
+    void removeByStringNotFound();
+    void removeByStringInvalidFormat();
+    void removeByExcelFormatValid();
+    void removeByExcelFormatNotFound();
+    void removeByExcelFormatInvalid();
 
     // ---------- getId ----------
-    void getIdByString_valid();
-    void getIdByString_notFound();
-    void getIdByString_invalidFormat();
-    void getIdByExcelFormat_valid();
-    void getIdByExcelFormat_notFound();
+    void getIdByStringValid();
+    void getIdByStringNotFound();
+    void getIdByStringInvalidFormat();
+    void getIdByExcelFormatValid();
+    void getIdByExcelFormatNotFound();
 
     // ---------- getValue / getStrValue ----------
-    void getValue_valid();
-    void getValue_invalidId();
-    void getStrValue_valid();
-    void getStrValue_invalidId();
+    void getValueValid();
+    void getValueInvalidId();
+    void getStrValueValid();
+    void getStrValueInvalidId();
 
     // ---------- format ----------
     void setGetDateFormat();
-    void customFormat_roundTrip();
+    void customFormatRoundTrip();
 
     // ---------- static helpers ----------
-    void strToDate_valid();
-    void strToDate_invalid();
-    void dateToStr_valid();
-    void dateToStr_invalid();
-    void checkDate_valid();
-    void checkDate_invalid();
-    void checkDateStr_valid();
-    void checkDateStr_invalid();
+    void strToDateValid();
+    void strToDateInvalid();
+    void dateToStrValid();
+    void dateToStrInvalid();
+    void checkDateValid();
+    void checkDateInvalid();
+    void checkDateStrValid();
+    void checkDateStrInvalid();
 
     // ---------- lastError ----------
-    void lastError_resetOnSuccess();
+    void lastErrorResetOnSuccess();
 
 private:
     DatesList m_list;
@@ -81,7 +81,7 @@ void TestDatesList::cleanup() {
 
 // ---------- insert ----------
 
-void TestDatesList::insertByString_valid() {
+void TestDatesList::insertByStringValid() {
     auto id = m_list.insert(kDateStr1);
     QVERIFY(id.has_value());
     QCOMPARE(m_list.lastError(), DatesList::NoError);
@@ -92,14 +92,14 @@ void TestDatesList::insertByString_valid() {
     QCOMPARE(m_list.size(), 1);
 }
 
-void TestDatesList::insertByString_invalidFormat() {
+void TestDatesList::insertByStringInvalidFormat() {
     auto id = m_list.insert("not-a-date");
     QVERIFY(!id.has_value());
     QCOMPARE(m_list.lastError(), DatesList::FormatError);
     QCOMPARE(m_list.sizeNotCommitted(), 0);
 }
 
-void TestDatesList::insertByString_sameValueReturnsSameId() {
+void TestDatesList::insertByStringSameValueReturnsSameId() {
     auto id1 = m_list.insert(kDateStr1);
     auto id2 = m_list.insert(kDateStr1);
     QVERIFY(id1.has_value());
@@ -108,7 +108,7 @@ void TestDatesList::insertByString_sameValueReturnsSameId() {
     QCOMPARE(m_list.sizeNotCommitted(), 1);
 }
 
-void TestDatesList::insertByExcelFormat_valid() {
+void TestDatesList::insertByExcelFormatValid() {
     auto excel = DatesList::strToDate(kDateStr1);
     QVERIFY(excel.has_value());
 
@@ -118,7 +118,7 @@ void TestDatesList::insertByExcelFormat_valid() {
     QCOMPARE(m_list.sizeNotCommitted(), 1);
 }
 
-void TestDatesList::insertByExcelFormat_invalid() {
+void TestDatesList::insertByExcelFormatInvalid() {
     auto id = m_list.insert(qint32(-100000));
     QVERIFY(!id.has_value());
     QCOMPARE(m_list.lastError(), DatesList::FormatError);
@@ -126,7 +126,7 @@ void TestDatesList::insertByExcelFormat_invalid() {
 
 // ---------- remove ----------
 
-void TestDatesList::removeByString_valid() {
+void TestDatesList::removeByStringValid() {
     m_list.insert(kDateStr1);
     m_list.commit();
     QVERIFY(m_list.remove(kDateStr1));
@@ -134,17 +134,17 @@ void TestDatesList::removeByString_valid() {
     QCOMPARE(m_list.sizeNotCommitted(), 0);
 }
 
-void TestDatesList::removeByString_notFound() {
+void TestDatesList::removeByStringNotFound() {
     QVERIFY(!m_list.remove(kDateStr1));
     QCOMPARE(m_list.lastError(), DatesList::DateError);
 }
 
-void TestDatesList::removeByString_invalidFormat() {
+void TestDatesList::removeByStringInvalidFormat() {
     QVERIFY(!m_list.remove("bad-date"));
     QCOMPARE(m_list.lastError(), DatesList::FormatError);
 }
 
-void TestDatesList::removeByExcelFormat_valid() {
+void TestDatesList::removeByExcelFormatValid() {
     auto excel = DatesList::strToDate(kDateStr1);
     QVERIFY(excel.has_value());
     m_list.insert(excel.value());
@@ -154,19 +154,19 @@ void TestDatesList::removeByExcelFormat_valid() {
     QCOMPARE(m_list.lastError(), DatesList::NoError);
 }
 
-void TestDatesList::removeByExcelFormat_notFound() {
+void TestDatesList::removeByExcelFormatNotFound() {
     QVERIFY(!m_list.remove(qint32(12345)));
     QCOMPARE(m_list.lastError(), DatesList::FormatError);
 }
 
-void TestDatesList::removeByExcelFormat_invalid() {
+void TestDatesList::removeByExcelFormatInvalid() {
     QVERIFY(!m_list.remove(qint32(-1)));
     QCOMPARE(m_list.lastError(), DatesList::FormatError);
 }
 
 // ---------- getId ----------
 
-void TestDatesList::getIdByString_valid() {
+void TestDatesList::getIdByStringValid() {
     auto id = m_list.insert(kDateStr1);
     QVERIFY(id.has_value());
     m_list.commit();
@@ -177,19 +177,19 @@ void TestDatesList::getIdByString_valid() {
     QCOMPARE(m_list.lastError(), DatesList::NoError);
 }
 
-void TestDatesList::getIdByString_notFound() {
+void TestDatesList::getIdByStringNotFound() {
     auto got = m_list.getId(kDateStr1);
     QVERIFY(!got.has_value());
     QCOMPARE(m_list.lastError(), DatesList::DateError);
 }
 
-void TestDatesList::getIdByString_invalidFormat() {
+void TestDatesList::getIdByStringInvalidFormat() {
     auto got = m_list.getId("bad-date");
     QVERIFY(!got.has_value());
     QCOMPARE(m_list.lastError(), DatesList::FormatError);
 }
 
-void TestDatesList::getIdByExcelFormat_valid() {
+void TestDatesList::getIdByExcelFormatValid() {
     auto excel = DatesList::strToDate(kDateStr2);
     QVERIFY(excel.has_value());
 
@@ -203,7 +203,7 @@ void TestDatesList::getIdByExcelFormat_valid() {
     QCOMPARE(m_list.lastError(), DatesList::NoError);
 }
 
-void TestDatesList::getIdByExcelFormat_notFound() {
+void TestDatesList::getIdByExcelFormatNotFound() {
     auto got = m_list.getId(qint32(999999));
     QVERIFY(!got.has_value());
     QCOMPARE(m_list.lastError(), DatesList::DateError);
@@ -211,7 +211,7 @@ void TestDatesList::getIdByExcelFormat_notFound() {
 
 // ---------- getValue / getStrValue ----------
 
-void TestDatesList::getValue_valid() {
+void TestDatesList::getValueValid() {
     auto id = m_list.insert(kDateStr1);
     QVERIFY(id.has_value());
     m_list.commit();
@@ -222,13 +222,13 @@ void TestDatesList::getValue_valid() {
     QCOMPARE(m_list.lastError(), DatesList::NoError);
 }
 
-void TestDatesList::getValue_invalidId() {
+void TestDatesList::getValueInvalidId() {
     auto value = m_list.getValue(qint32(42));
     QVERIFY(!value.has_value());
     QCOMPARE(m_list.lastError(), DatesList::IdError);
 }
 
-void TestDatesList::getStrValue_valid() {
+void TestDatesList::getStrValueValid() {
     auto id = m_list.insert(kDateStr1);
     QVERIFY(id.has_value());
     m_list.commit();
@@ -239,7 +239,7 @@ void TestDatesList::getStrValue_valid() {
     QCOMPARE(m_list.lastError(), DatesList::NoError);
 }
 
-void TestDatesList::getStrValue_invalidId() {
+void TestDatesList::getStrValueInvalidId() {
     auto str = m_list.getStrValue(qint32(42));
     QVERIFY(!str.has_value());
     QCOMPARE(m_list.lastError(), DatesList::IdError);
@@ -253,7 +253,7 @@ void TestDatesList::setGetDateFormat() {
     QCOMPARE(m_list.getDateFormat(), newFormat);
 }
 
-void TestDatesList::customFormat_roundTrip() {
+void TestDatesList::customFormatRoundTrip() {
     const QString newFormat = "yyyy-MM-dd";
     m_list.setDateFormat(newFormat);
 
@@ -274,7 +274,7 @@ void TestDatesList::customFormat_roundTrip() {
 
 // ---------- static helpers ----------
 
-void TestDatesList::strToDate_valid() {
+void TestDatesList::strToDateValid() {
     auto excel = DatesList::strToDate(kDateStr1, kDefaultFormat);
     QVERIFY(excel.has_value());
 
@@ -283,12 +283,12 @@ void TestDatesList::strToDate_valid() {
     QCOMPARE(excel.value(), qint32(expected.toJulianDay() - base.toJulianDay()));
 }
 
-void TestDatesList::strToDate_invalid() {
+void TestDatesList::strToDateInvalid() {
     QVERIFY(!DatesList::strToDate("bad-date").has_value());
     QVERIFY(!DatesList::strToDate("2020-13-45").has_value());
 }
 
-void TestDatesList::dateToStr_valid() {
+void TestDatesList::dateToStrValid() {
     auto excel = DatesList::strToDate(kDateStr2);
     QVERIFY(excel.has_value());
 
@@ -297,12 +297,12 @@ void TestDatesList::dateToStr_valid() {
     QCOMPARE(str.value(), kDateStr2);
 }
 
-void TestDatesList::dateToStr_invalid() {
+void TestDatesList::dateToStrInvalid() {
     auto str = DatesList::dateToStr(std::numeric_limits<qint32>::max());
     Q_UNUSED(str);
 }
 
-void TestDatesList::checkDate_valid() {
+void TestDatesList::checkDateValid() {
     qint32 excel1 = 0;
     qint32 excel2 = 543446;
     qint32 excel3 = 2958465;
@@ -312,7 +312,7 @@ void TestDatesList::checkDate_valid() {
     QVERIFY(DatesList::checkDate(excel3));
 }
 
-void TestDatesList::checkDate_invalid() {
+void TestDatesList::checkDateInvalid() {
     qint32 excel1 = -1;
     qint32 excel2 = 2958466;
 
@@ -320,7 +320,7 @@ void TestDatesList::checkDate_invalid() {
     QVERIFY(!DatesList::checkDate(excel2));
 }
 
-void TestDatesList::checkDateStr_valid() {
+void TestDatesList::checkDateStrValid() {
     auto str1 = QString("30.12.1899");
     auto str2 = QString("31.12.9999");
     auto str3 = QString("20.06.2072");
@@ -330,7 +330,7 @@ void TestDatesList::checkDateStr_valid() {
     QVERIFY(DatesList::checkDate(str3));
 }
 
-void TestDatesList::checkDateStr_invalid() {
+void TestDatesList::checkDateStrInvalid() {
     auto str1 = QString("29.12.1899");
     auto str2 = QString("32.12.9999");
     auto str3 = QString("15.15.1935");
@@ -342,7 +342,7 @@ void TestDatesList::checkDateStr_invalid() {
 
 // ---------- lastError ----------
 
-void TestDatesList::lastError_resetOnSuccess() {
+void TestDatesList::lastErrorResetOnSuccess() {
     m_list.insert("bad-date");
     QCOMPARE(m_list.lastError(), DatesList::FormatError);
 
