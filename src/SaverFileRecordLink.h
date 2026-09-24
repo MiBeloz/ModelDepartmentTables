@@ -3,8 +3,8 @@
 
 #include <QFile>
 
+#include "RecordLink.h"
 #include "SaverFile.h"
-#include "StorageOfRecord.h"
 
 class SaverFileRecordLink final : public SaverFile<RecordLink> {
 public:
@@ -12,8 +12,6 @@ public:
                         const QString &tempFileName,
                         const QString &backupFileName)
         : SaverFile(fileName, tempFileName, backupFileName) { }
-
-    ~SaverFileRecordLink() override = default;
 
     bool save(const RecordLink &recordLink) override {
         if (m_tempFile.open(QIODeviceBase::WriteOnly)) {

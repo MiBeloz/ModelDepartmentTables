@@ -1,5 +1,5 @@
-﻿// #ifndef STORAGEOFRECORD_H
-// #define STORAGEOFRECORD_H
+#ifndef STORAGERECORD_H
+#define STORAGERECORD_H
 
 // #include "SaverFileStorage.h"
 // #include "StorageOfRecordLink.h"
@@ -242,4 +242,4 @@
 //     }
 // };
 
-// #endif // STORAGEOFRECORD_H
+#endif // STORAGERECORD_H

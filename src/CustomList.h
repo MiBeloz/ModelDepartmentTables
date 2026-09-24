@@ -65,7 +65,7 @@ private:
 
 template<typename T>
 inline CustomList<T>::CustomList(const CustomList& other) {
-    QReadLocker otherLocker(&other.m_lock);
+    const QReadLocker otherLocker(&other.m_lock);
 
     m_list = other.m_list;
     m_listTmp = other.m_listTmp;
@@ -78,7 +78,7 @@ inline CustomList<T>::CustomList(const CustomList& other) {
 
 template<typename T>
 inline CustomList<T>::CustomList(CustomList&& other) noexcept {
-    QWriteLocker otherLocker(&other.m_lock);
+    const QWriteLocker otherLocker(&other.m_lock);
 
     m_list = std::move(other.m_list);
     m_listTmp = std::move(other.m_listTmp);
@@ -105,8 +105,8 @@ inline CustomList<T>& CustomList<T>::operator =(const CustomList& other) {
         std::swap(first, second);
     }
 
-    QWriteLocker l1(first);
-    QWriteLocker l2(second);
+    const QWriteLocker l1(first);
+    const QWriteLocker l2(second);
 
     m_list = other.m_list;
     m_listTmp = other.m_listTmp;
@@ -130,8 +130,8 @@ inline CustomList<T>& CustomList<T>::operator =(CustomList&& other) noexcept {
         std::swap(first, second);
     }
 
-    QWriteLocker l1(first);
-    QWriteLocker l2(second);
+    const QWriteLocker l1(first);
+    const QWriteLocker l2(second);
 
     m_list = std::move(other.m_list);
     m_listTmp = std::move(other.m_listTmp);
@@ -160,8 +160,8 @@ inline bool CustomList<T>::operator ==(const CustomList& other) const {
         std::swap(first, second);
     }
 
-    QReadLocker l1(first);
-    QReadLocker l2(second);
+    const QReadLocker l1(first);
+    const QReadLocker l2(second);
 
     return m_list == other.m_list && m_listTmp == other.m_listTmp && m_id == other.m_id &&
            m_idTmp == other.m_idTmp && m_emptyId == other.m_emptyId &&
@@ -185,8 +185,8 @@ inline void CustomList<T>::swap(CustomList &other) {
         std::swap(first, second);
     }
 
-    QWriteLocker l1(first);
-    QWriteLocker l2(second);
+    const QWriteLocker l1(first);
+    const QWriteLocker l2(second);
 
     m_list.swap(other.m_list);
     m_listTmp.swap(other.m_listTmp);
@@ -306,7 +306,7 @@ inline void CustomList<T>::clear() {
 
 template<typename T>
 inline void CustomList<T>::serialize(QDataStream& out) const {
-    QReadLocker locker(&m_lock);
+    const QReadLocker locker(&m_lock);
 
     out << out.version();
 
@@ -339,7 +339,7 @@ inline void CustomList<T>::serialize(QDataStream& out) const {
 
 template<typename T>
 inline void CustomList<T>::deserialize(QDataStream& in) {
-    QWriteLocker locker(&m_lock);
+    const QWriteLocker locker(&m_lock);
 
     deserializeVersion(in);
     QHash<qint32, T> list = deserializeList(in);
