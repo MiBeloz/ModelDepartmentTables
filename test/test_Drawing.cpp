@@ -44,10 +44,6 @@ private slots:
     void serializationRoundTrip();
     void serializationDefaultConstructed();
     void serializationMultipleObjects();
-
-    // ---------- QDebug ----------
-    void debugOutputContainsNumberAndTitle();
-    void debugOutputInvalidDrawing();
 };
 
 // =============== Implementation ===============
@@ -353,30 +349,6 @@ void TestDrawing::serializationMultipleObjects() {
     }
 
     QCOMPARE(restored, src);
-}
-
-// ---------- QDebug ----------
-
-static QString debugToString(const Drawing& d) {
-    QString s;
-    QDebug dbg(&s);
-    dbg << d;
-    return s;
-}
-
-void TestDrawing::debugOutputContainsNumberAndTitle() {
-    Drawing d("A-001", "Корпус");
-    const QString out = debugToString(d);
-
-    QVERIFY2(out.contains("A-001"), qPrintable(out));
-    QVERIFY2(out.contains("Корпус"), qPrintable(out));
-    QVERIFY2(out.contains("-"), qPrintable(out));
-}
-
-void TestDrawing::debugOutputInvalidDrawing() {
-    Drawing d;
-    const QString out = debugToString(d);
-    QVERIFY2(out.contains("-"), qPrintable(out));
 }
 
 QTEST_APPLESS_MAIN(TestDrawing)

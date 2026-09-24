@@ -36,7 +36,7 @@ public:
     void commit();
 
     qsizetype size() const;
-    qsizetype sizeNotCommitted() const;
+    qsizetype sizeCommitted() const;
     void clear();
 
     void serialize(QDataStream& out) const;
@@ -60,6 +60,7 @@ private:
     QHash<qint32, T> deserializeList(QDataStream& in) const;
     qint32 deserializeId(QDataStream& in) const;
     QStack<qint32> deserializeEmptyId(QDataStream& in) const;
+    bool deserializeCommit(QDataStream& in) const;
 };
 
 template<typename T>
@@ -162,7 +163,9 @@ inline bool CustomList<T>::operator ==(const CustomList& other) const {
     QReadLocker l1(first);
     QReadLocker l2(second);
 
-    return m_list == other.m_list && m_id == other.m_id && m_emptyId == other.m_emptyId;
+    return m_list == other.m_list && m_listTmp == other.m_listTmp && m_id == other.m_id &&
+           m_idTmp == other.m_idTmp && m_emptyId == other.m_emptyId &&
+           m_emptyIdTmp == other.m_emptyIdTmp && m_commit == other.m_commit;
 }
 
 template<typename T>
@@ -237,7 +240,7 @@ template<typename T>
 inline std::optional<qint32> CustomList<T>::getId(const T& data) const {
     const QReadLocker locker(&m_lock);
 
-    if (auto id = m_list.key(data, -1); id != -1) {
+    if (auto id = m_listTmp.key(data, -1); id != -1) {
         return id;
     }
     return std::nullopt;
@@ -247,7 +250,7 @@ template<typename T>
 inline std::optional<T> CustomList<T>::getValue(qint32 id) const {
     const QReadLocker locker(&m_lock);
 
-    if (auto it = m_list.find(id); it != m_list.end()) {
+    if (auto it = m_listTmp.find(id); it != m_listTmp.end()) {
         return *it;
     }
     return std::nullopt;
@@ -256,7 +259,7 @@ inline std::optional<T> CustomList<T>::getValue(qint32 id) const {
 template<typename T>
 inline QList<T> CustomList<T>::getAllValues() const {
     const QReadLocker locker(&m_lock);
-    return m_list.values();
+    return m_listTmp.values();
 }
 
 template<typename T>
@@ -281,14 +284,14 @@ template<typename T>
 inline qsizetype CustomList<T>::size() const {
     const QReadLocker locker(&m_lock);
 
-    return m_list.size();
+    return m_listTmp.size();
 }
 
 template<typename T>
-inline qsizetype CustomList<T>::sizeNotCommitted() const {
+inline qsizetype CustomList<T>::sizeCommitted() const {
     const QReadLocker locker(&m_lock);
 
-    return m_listTmp.size();
+    return m_list.size();
 }
 
 template<typename T>
@@ -306,6 +309,7 @@ inline void CustomList<T>::serialize(QDataStream& out) const {
     QReadLocker locker(&m_lock);
 
     out << out.version();
+
     out << static_cast<qint32>(m_list.size());
     for (auto it = m_list.begin(); it != m_list.end(); ++it) {
         out << it.key() << it.value();
@@ -315,6 +319,18 @@ inline void CustomList<T>::serialize(QDataStream& out) const {
     for (auto id : m_emptyId) {
         out << id;
     }
+
+    out << static_cast<qint32>(m_listTmp.size());
+    for (auto it = m_listTmp.begin(); it != m_listTmp.end(); ++it) {
+        out << it.key() << it.value();
+    }
+    out << m_idTmp;
+    out << static_cast<qint32>(m_emptyIdTmp.size());
+    for (auto id : m_emptyIdTmp) {
+        out << id;
+    }
+
+    out << m_commit;
 
     if (out.status() != QDataStream::Ok) {
         throwStreamError(out.status());
@@ -329,14 +345,18 @@ inline void CustomList<T>::deserialize(QDataStream& in) {
     QHash<qint32, T> list = deserializeList(in);
     qint32 id = deserializeId(in);
     QStack<qint32> emptyId = deserializeEmptyId(in);
+    QHash<qint32, T> listTmp = deserializeList(in);
+    qint32 idTmp = deserializeId(in);
+    QStack<qint32> emptyIdTmp = deserializeEmptyId(in);
+    bool commit = deserializeCommit(in);
 
     m_list = list;
-    m_listTmp = m_list;
     m_id = id;
-    m_idTmp = m_id;
     m_emptyId = emptyId;
-    m_emptyIdTmp = m_emptyId;
-    m_commit = true;
+    m_listTmp = listTmp;
+    m_idTmp = idTmp;
+    m_emptyIdTmp = emptyIdTmp;
+    m_commit = commit;
 }
 
 template<typename T>
@@ -422,6 +442,16 @@ inline QStack<qint32> CustomList<T>::deserializeEmptyId(QDataStream& in) const {
         ids.push(id);
     }
     return ids;
+}
+
+template<typename T>
+inline bool CustomList<T>::deserializeCommit(QDataStream& in) const {
+    bool commit { };
+    in >> commit;
+    if (in.status() != QDataStream::Ok) {
+        throwStreamError(in.status());
+    }
+    return commit;
 }
 
 #endif // CUSTOMLIST_H

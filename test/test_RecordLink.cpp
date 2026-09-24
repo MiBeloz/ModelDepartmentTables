@@ -5,6 +5,7 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QtTest>
 
+#include "Exceptions.h"
 #include "RecordLink.h"
 
 class TestRecordLink : public QObject {

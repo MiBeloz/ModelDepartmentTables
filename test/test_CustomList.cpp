@@ -24,7 +24,6 @@ private slots:
     void inequalityOperator();
 
     // ---------- swap ----------
-
     void swap_swapsAllFields();
     void swap_selfSwap();
 
@@ -56,13 +55,13 @@ private slots:
     void insertSwitchesToDraftMode();
     void removeSwitchesToDraftMode();
     void clearSwitchesToDraftMode();
-    void readersIgnoreDraftMode();
-    void readersSeeCommittedData();
+    void readersSeeDraftData(); // ← переименовано и переписано
+    void readersSeeCommittedAfterCommit();
 
-    // ---------- size / sizeNotCommitted ----------
-    void sizeReflectsMainOnly();
-    void sizeNotCommittedReflectsDraftOnly();
-    void sizeNotCommittedIsZeroInMainMode();
+    // ---------- size / sizeCommitted ----------
+    void sizeReflectsDraft();         // ← переписано
+    void sizeCommittedReflectsMain(); // ← переписано
+    void sizeEqualsSizeCommittedAfterCommit();
 
     // ---------- clear ----------
     void clearInDraftModeAffectsOnlyDraft();
@@ -91,7 +90,8 @@ private slots:
     void serializeDeserializeRoundTrip();
     void serializeDeserializeEmpty();
     void serializeDeserializePreservesFreeIds();
-    void serializeIgnoresDraft();
+    void serializePreservesDraft(); // ← переписано (раньше "IgnoresDraft")
+    void serializeDeserializePreservesDraft();
     void serializeDeserializeRoundTrip2();
     void deserializeWrongVersionThrows();
     void deserializeNegativeSetSizeThrows();
@@ -102,14 +102,13 @@ private slots:
     void workWithQString();
     void workWithDrawing();
 
-    // ---------- Thread safety(basic check for crashes) ----------
+    // ---------- Thread safety (basic check for crashes) ----------
     void concurrentReadsAndWritesDoNotCrash();
 
 private:
-    QByteArray toBytes(const CustomList<int>& list);
+    QByteArray toBytes(CustomList<int>& list);
     CustomList<int> fromBytes(const QByteArray& bytes);
 
-    // Helper
     template<typename T>
     CustomList<T> makeCommitted(const QList<T>& values) {
         CustomList<T> list;
@@ -131,7 +130,7 @@ void TestCustomList::cleanup() { }
 void TestCustomList::defaultConstructor() {
     CustomList<int> list;
     QCOMPARE(list.size(), 0);
-    QCOMPARE(list.sizeNotCommitted(), 0);
+    QCOMPARE(list.sizeCommitted(), 0);
     QVERIFY(list.getAllValues().isEmpty());
 }
 
@@ -190,9 +189,13 @@ void TestCustomList::equalityOperator() {
     QVERIFY(a == b);
 
     a.insert(1);
-    QVERIFY(a == b);
+    // После insert у a черновик непустой, m_commit = false.
+    // У b всё ещё пусто и m_commit = true. Значит, объекты не равны.
+    QVERIFY(a != b);
 
     a.commit();
+    // После commit у a m_list == m_listTmp, но у b пусто.
+    // Всё ещё не равны.
     QVERIFY(a != b);
 
     b.insert(1);
@@ -258,8 +261,14 @@ void TestCustomList::insertReturnsIncrementingIds() {
     QCOMPARE(*id2, 2);
     QCOMPARE(*id3, 3);
 
+    // size() — это размер черновика. После insert'ов он равен 3.
+    QCOMPARE(list.size(), 3);
+    // sizeCommitted() — размер m_list. Пока 0.
+    QCOMPARE(list.sizeCommitted(), 0);
+
     list.commit();
     QCOMPARE(list.size(), 3);
+    QCOMPARE(list.sizeCommitted(), 3);
 }
 
 void TestCustomList::insertReusesFreedIdsAfterCommit() {
@@ -347,11 +356,14 @@ void TestCustomList::insertDuplicateInDraftReturnsSameId() {
     QCOMPARE(*second, *first);
     QCOMPARE(*third, *first);
 
-    QCOMPARE(list.sizeNotCommitted(), 1);
-    QCOMPARE(list.size(), 0);
+    // size() — размер черновика. После трёх insert одного значения — 1.
+    QCOMPARE(list.size(), 1);
+    // sizeCommitted() — размер m_list. Пока 0.
+    QCOMPARE(list.sizeCommitted(), 0);
 
     list.commit();
     QCOMPARE(list.size(), 1);
+    QCOMPARE(list.sizeCommitted(), 1);
 }
 
 void TestCustomList::insertDuplicateManyTimesKeepsSingleEntry() {
@@ -368,7 +380,9 @@ void TestCustomList::insertDuplicateManyTimesKeepsSingleEntry() {
         }
     }
 
-    QCOMPARE(list.sizeNotCommitted(), 1);
+    // size() — черновик, sizeCommitted() — m_list.
+    QCOMPARE(list.size(), 1);
+    QCOMPARE(list.sizeCommitted(), 0);
 
     list.commit();
     auto allValues = list.getAllValues();
@@ -385,7 +399,7 @@ void TestCustomList::insertDuplicateOfRemovedItemCreatesNewId() {
 
     auto newId = list.insert(10);
     QVERIFY(newId.has_value());
-    QVERIFY(*newId == oldId);
+    QCOMPARE(*newId, oldId);
 
     list.commit();
     QCOMPARE(list.size(), 3);
@@ -470,93 +484,113 @@ void TestCustomList::getAllValuesMultipleAfterCommit() {
     QCOMPARE(values, QList<int>({ 1, 2, 3 }));
 }
 
-// ---------- Режимы ----------
+// ---------- Modes ----------
 
 void TestCustomList::insertSwitchesToDraftMode() {
     CustomList<int> list;
-    QCOMPARE(list.sizeNotCommitted(), 0);
+    QCOMPARE(list.size(), 0);
+    QCOMPARE(list.sizeCommitted(), 0);
 
     list.insert(1);
-    QCOMPARE(list.sizeNotCommitted(), 1);
-    QCOMPARE(list.size(), 0);
+    // size() — размер черновика, теперь 1.
+    QCOMPARE(list.size(), 1);
+    // sizeCommitted() — размер m_list, пока 0.
+    QCOMPARE(list.sizeCommitted(), 0);
 }
 
 void TestCustomList::removeSwitchesToDraftMode() {
     auto list = makeCommitted<int>({ 1, 2, 3 });
 
-    QCOMPARE(list.sizeNotCommitted(), 3);
+    QCOMPARE(list.size(), 3);
+    QCOMPARE(list.sizeCommitted(), 3);
 
     list.remove(2);
-    QCOMPARE(list.sizeNotCommitted(), 2);
-    QCOMPARE(list.size(), 3);
+    // Черновик теперь содержит {1, 3}, m_list всё ещё {1, 2, 3}.
+    QCOMPARE(list.size(), 2);
+    QCOMPARE(list.sizeCommitted(), 3);
 }
 
 void TestCustomList::clearSwitchesToDraftMode() {
     auto list = makeCommitted<int>({ 1, 2, 3 });
 
     list.clear();
-    QCOMPARE(list.sizeNotCommitted(), 0);
-    QCOMPARE(list.size(), 3);
+    // Черновик пуст, m_list нетронут.
+    QCOMPARE(list.size(), 0);
+    QCOMPARE(list.sizeCommitted(), 3);
 }
 
-void TestCustomList::readersIgnoreDraftMode() {
+void TestCustomList::readersSeeDraftData() {
     auto list = makeCommitted<int>({ 10 });
 
     list.insert(20);
-    QCOMPARE(list.sizeNotCommitted(), 2);
 
+    // read-методы смотрят в m_listTmp, то есть видят и 10, и 20.
     QVERIFY(list.getId(10).has_value());
-    QVERIFY(!list.getId(20).has_value());
+    QVERIFY(list.getId(20).has_value());
 
     auto values = list.getAllValues();
-    QCOMPARE(values, QList<int>({ 10 }));
+    std::sort(values.begin(), values.end());
+    QCOMPARE(values, QList<int>({ 10, 20 }));
 
-    list.commit();
-    QVERIFY(list.getId(20).has_value());
+    QCOMPARE(list.size(), 2);
+    QCOMPARE(list.sizeCommitted(), 1);
 }
 
-void TestCustomList::readersSeeCommittedData() {
+void TestCustomList::readersSeeCommittedAfterCommit() {
     auto list = makeCommitted<int>({ 10 });
 
+    list.insert(20);
+    list.commit();
+
     QVERIFY(list.getId(10).has_value());
-    QVERIFY(!list.getId(20).has_value());
+    QVERIFY(list.getId(20).has_value());
 
     auto values = list.getAllValues();
-    QCOMPARE(values, QList<int>({ 10 }));
+    std::sort(values.begin(), values.end());
+    QCOMPARE(values, QList<int>({ 10, 20 }));
+
+    QCOMPARE(list.size(), 2);
+    QCOMPARE(list.sizeCommitted(), 2);
 }
 
-// ---------- size / sizeNotCommitted ----------
+// ---------- size / sizeCommitted ----------
 
-void TestCustomList::sizeReflectsMainOnly() {
+void TestCustomList::sizeReflectsDraft() {
     CustomList<int> list;
     list.insert(1);
     list.insert(2);
     list.insert(3);
 
-    QCOMPARE(list.size(), 0);
-    QCOMPARE(list.sizeNotCommitted(), 3);
+    // size() — размер черновика.
+    QCOMPARE(list.size(), 3);
+    QCOMPARE(list.sizeCommitted(), 0);
 
     list.commit();
     QCOMPARE(list.size(), 3);
-    QCOMPARE(list.sizeNotCommitted(), 3);
+    QCOMPARE(list.sizeCommitted(), 3);
 }
 
-void TestCustomList::sizeNotCommittedReflectsDraftOnly() {
+void TestCustomList::sizeCommittedReflectsMain() {
     CustomList<int> list;
     list.insert(1);
     list.insert(2);
 
-    QCOMPARE(list.sizeNotCommitted(), 2);
-    QCOMPARE(list.size(), 0);
+    QCOMPARE(list.sizeCommitted(), 0);
+    QCOMPARE(list.size(), 2);
+
+    list.commit();
+    QCOMPARE(list.sizeCommitted(), 2);
+    QCOMPARE(list.size(), 2);
 }
 
-void TestCustomList::sizeNotCommittedIsZeroInMainMode() {
+void TestCustomList::sizeEqualsSizeCommittedAfterCommit() {
     CustomList<int> list;
-    QCOMPARE(list.sizeNotCommitted(), 0);
+    QCOMPARE(list.size(), list.sizeCommitted());
 
     auto committed = makeCommitted<int>({ 1, 2, 3 });
-    QCOMPARE(committed.sizeNotCommitted(), 3);
     QCOMPARE(committed.size(), 3);
+    QCOMPARE(committed.sizeCommitted(), 3);
+    QCOMPARE(committed.size(), committed.sizeCommitted());
 }
 
 // ---------- clear ----------
@@ -565,10 +599,13 @@ void TestCustomList::clearInDraftModeAffectsOnlyDraft() {
     auto list = makeCommitted<int>({ 1, 2, 3 });
 
     list.clear();
-    QCOMPARE(list.sizeNotCommitted(), 0);
-    QCOMPARE(list.size(), 3);
 
-    QCOMPARE(list.getAllValues().size(), 3);
+    // Черновик пуст, m_list нетронут.
+    QCOMPARE(list.size(), 0);
+    QCOMPARE(list.sizeCommitted(), 3);
+
+    // getAllValues смотрит в m_listTmp, то есть пусто.
+    QCOMPARE(list.getAllValues().size(), 0);
 }
 
 void TestCustomList::clearAfterCommitEmptiesMain() {
@@ -578,6 +615,7 @@ void TestCustomList::clearAfterCommitEmptiesMain() {
     list.commit();
 
     QCOMPARE(list.size(), 0);
+    QCOMPARE(list.sizeCommitted(), 0);
     QVERIFY(list.getAllValues().isEmpty());
     QVERIFY(!list.getId(1).has_value());
 }
@@ -589,21 +627,23 @@ void TestCustomList::resetRollsBackDraft() {
 
     list.insert(3);
     list.insert(4);
-    QCOMPARE(list.sizeNotCommitted(), 4);
+    QCOMPARE(list.size(), 4);
 
     list.reset();
 
-    QCOMPARE(list.sizeNotCommitted(), list.size());
+    QCOMPARE(list.size(), list.sizeCommitted());
+    QCOMPARE(list.size(), 2);
 }
 
 void TestCustomList::resetReturnsToMainMode() {
     auto list = makeCommitted<int>({ 1 });
 
     list.insert(2);
-    QCOMPARE(list.sizeNotCommitted(), 2);
+    QCOMPARE(list.size(), 2);
 
     list.reset();
-    QCOMPARE(list.sizeNotCommitted(), 1);
+    QCOMPARE(list.size(), 1);
+    QCOMPARE(list.sizeCommitted(), 1);
 
     QVERIFY(list.getId(1).has_value());
     QVERIFY(!list.getId(2).has_value());
@@ -612,13 +652,14 @@ void TestCustomList::resetReturnsToMainMode() {
 void TestCustomList::resetOnCleanStateIsNoop() {
     auto list = makeCommitted<int>({ 1, 2 });
 
+    // insert(2) — дубликат, ничего не меняет.
     list.insert(2);
-    QCOMPARE(list.sizeNotCommitted(), 2);
+    QCOMPARE(list.size(), 2);
 
     list.reset();
 
     QCOMPARE(list.size(), 2);
-    QCOMPARE(list.sizeNotCommitted(), 2);
+    QCOMPARE(list.sizeCommitted(), 2);
     QVERIFY(list.getId(1).has_value());
     QVERIFY(list.getId(2).has_value());
 }
@@ -630,8 +671,8 @@ void TestCustomList::resetThenInsertStartsNewDraft() {
     list.reset();
 
     list.insert(3);
-    QCOMPARE(list.sizeNotCommitted(), 2);
-    QVERIFY(!list.getId(3).has_value());
+    QCOMPARE(list.size(), 2);
+    QCOMPARE(list.sizeCommitted(), 1);
 
     list.commit();
     QCOMPARE(list.size(), 2);
@@ -647,12 +688,13 @@ void TestCustomList::commitAppliesDraftInsert() {
     list.insert(1);
     list.insert(2);
 
-    QCOMPARE(list.size(), 0);
-    QCOMPARE(list.sizeNotCommitted(), 2);
+    QCOMPARE(list.size(), 2);
+    QCOMPARE(list.sizeCommitted(), 0);
 
     list.commit();
 
-    QCOMPARE(list.size(), list.sizeNotCommitted());
+    QCOMPARE(list.size(), list.sizeCommitted());
+    QCOMPARE(list.size(), 2);
     QVERIFY(list.getId(1).has_value());
     QVERIFY(list.getId(2).has_value());
 }
@@ -661,11 +703,13 @@ void TestCustomList::commitAppliesDraftRemove() {
     auto list = makeCommitted<int>({ 10, 20, 30 });
 
     list.remove(20);
-    QCOMPARE(list.sizeNotCommitted(), 2);
+    QCOMPARE(list.size(), 2);
+    QCOMPARE(list.sizeCommitted(), 3);
 
     list.commit();
 
     QCOMPARE(list.size(), 2);
+    QCOMPARE(list.sizeCommitted(), 2);
     QVERIFY(list.getId(10).has_value());
     QVERIFY(!list.getId(20).has_value());
     QVERIFY(list.getId(30).has_value());
@@ -678,6 +722,7 @@ void TestCustomList::commitAppliesDraftClear() {
     list.commit();
 
     QCOMPARE(list.size(), 0);
+    QCOMPARE(list.sizeCommitted(), 0);
     QVERIFY(list.getAllValues().isEmpty());
 }
 
@@ -710,11 +755,12 @@ void TestCustomList::commitThenInsertStartsNewDraft() {
     list.commit();
 
     list.insert(2);
-    QCOMPARE(list.sizeNotCommitted(), 2);
-    QCOMPARE(list.size(), 1);
+    QCOMPARE(list.size(), 2);
+    QCOMPARE(list.sizeCommitted(), 1);
 
     list.commit();
     QCOMPARE(list.size(), 2);
+    QCOMPARE(list.sizeCommitted(), 2);
 }
 
 // ---------- Combined scenarios ----------
@@ -760,11 +806,14 @@ void TestCustomList::draftAccumulatesMultipleOperations() {
     list.remove(2);
     list.insert(5);
 
-    QCOMPARE(list.sizeNotCommitted(), 4);
-    QCOMPARE(list.size(), 3);
+    // Черновик: {1, 3, 4, 5} → size() == 4
+    // m_list:    {1, 2, 3}    → sizeCommitted() == 3
+    QCOMPARE(list.size(), 4);
+    QCOMPARE(list.sizeCommitted(), 3);
 
     list.commit();
     QCOMPARE(list.size(), 4);
+    QCOMPARE(list.sizeCommitted(), 4);
     QVERIFY(list.getId(1).has_value());
     QVERIFY(!list.getId(2).has_value());
     QVERIFY(list.getId(3).has_value());
@@ -774,7 +823,7 @@ void TestCustomList::draftAccumulatesMultipleOperations() {
 
 // ---------- serialize / deserialize ----------
 
-QByteArray TestCustomList::toBytes(const CustomList<int>& list) {
+QByteArray TestCustomList::toBytes(CustomList<int>& list) {
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_6_11);
@@ -800,10 +849,7 @@ void TestCustomList::serializeDeserializeRoundTrip() {
 
     QCOMPARE(restored, original);
     QCOMPARE(restored.size(), 2);
-
-    auto reused = restored.insert(99);
-    QVERIFY(reused.has_value());
-    QCOMPARE(*reused, 2);
+    QCOMPARE(restored.sizeCommitted(), 2);
 }
 
 void TestCustomList::serializeDeserializeEmpty() {
@@ -812,6 +858,7 @@ void TestCustomList::serializeDeserializeEmpty() {
     auto restored = fromBytes(bytes);
 
     QCOMPARE(restored.size(), 0);
+    QCOMPARE(restored.sizeCommitted(), 0);
     QCOMPARE(restored, empty);
 }
 
@@ -834,24 +881,44 @@ void TestCustomList::serializeDeserializePreservesFreeIds() {
     QVERIFY(*id == 1 || *id == 3);
 }
 
-void TestCustomList::serializeIgnoresDraft() {
+void TestCustomList::serializePreservesDraft() {
     auto original = makeCommitted<int>({ 1, 2 });
 
+    // Создаём черновик: insert(3) без commit.
     original.insert(3);
     original.insert(4);
 
     auto bytes = toBytes(original);
     auto restored = fromBytes(bytes);
 
-    QCOMPARE(restored.size(), 2);
+    // Теперь serialize пишет полное состояние, включая m_listTmp.
+    // Значит, у restored тоже будет черновик с {1, 2, 3, 4}.
+    QCOMPARE(restored.size(), 4);
+    QCOMPARE(restored.sizeCommitted(), 2);
     QVERIFY(restored.getId(1).has_value());
     QVERIFY(restored.getId(2).has_value());
-    QVERIFY(!restored.getId(3).has_value());
-    QVERIFY(!restored.getId(4).has_value());
+    QVERIFY(restored.getId(3).has_value());
+    QVERIFY(restored.getId(4).has_value());
+}
+
+void TestCustomList::serializeDeserializePreservesDraft() {
+    auto original = makeCommitted<int>({ 1, 2 });
+    original.insert(3);
+    original.insert(4);
+    original.remove(1);
+
+    auto bytes = toBytes(original);
+    auto restored = fromBytes(bytes);
+
+    // Round-trip должен сохранить даже несохранённые изменения
+    // (потому что serialize теперь пишет полное состояние).
+    QCOMPARE(restored, original);
+    QCOMPARE(restored.size(), original.size());
+    QCOMPARE(restored.sizeCommitted(), original.sizeCommitted());
 }
 
 void TestCustomList::serializeDeserializeRoundTrip2() {
-    const CustomList<int> original = makeCommitted<int>({ 10, 20, 30 });
+    CustomList<int> original = makeCommitted<int>({ 10, 20, 30 });
 
     QByteArray data;
     {
@@ -965,7 +1032,7 @@ void TestCustomList::workWithDrawing() {
     QCOMPARE(list.size(), 1);
 }
 
-// ---------- Thread safety(basic check for crashes) ----------
+// ---------- Thread safety (basic check for crashes) ----------
 
 void TestCustomList::concurrentReadsAndWritesDoNotCrash() {
     constexpr int threadCount = 8;
@@ -1001,7 +1068,6 @@ void TestCustomList::concurrentReadsAndWritesDoNotCrash() {
                 const int op = rng.bounded(100);
 
                 if (op < 40) {
-                    // insert
                     const qint32 value = static_cast<qint32>(rng.bounded(1000));
                     auto id = list.insert(value);
                     if (id.has_value()) {
@@ -1012,35 +1078,27 @@ void TestCustomList::concurrentReadsAndWritesDoNotCrash() {
                         ++insertFailures;
                     }
                 } else if (op < 60) {
-                    // remove
                     const qint32 value = static_cast<qint32>(rng.bounded(1000));
                     if (!list.remove(value)) {
                         QMutexLocker locker(&statsMutex);
                         ++removeFailures;
                     }
                 } else if (op < 75) {
-                    // getId
                     const qint32 value = static_cast<qint32>(rng.bounded(1000));
                     (void)list.getId(value);
                 } else if (op < 85) {
-                    // getValue
                     const qint32 id = static_cast<qint32>(rng.bounded(1000));
                     (void)list.getValue(id);
                 } else if (op < 90) {
-                    // getAllValues
                     (void)list.getAllValues();
                 } else if (op < 93) {
-                    // size / sizeNotCommitted
                     (void)list.size();
-                    (void)list.sizeNotCommitted();
+                    (void)list.sizeCommitted();
                 } else if (op < 96) {
-                    // reset
                     list.reset();
                 } else if (op < 99) {
-                    // commit
                     list.commit();
                 } else {
-                    // clear
                     list.clear();
                 }
             }
@@ -1071,9 +1129,9 @@ void TestCustomList::concurrentReadsAndWritesDoNotCrash() {
     list.commit();
 
     const qsizetype finalSize = list.size();
-    const qsizetype finalSizeTmp = list.sizeNotCommitted();
+    const qsizetype finalSizeCommitted = list.sizeCommitted();
 
-    QCOMPARE(finalSize, finalSizeTmp);
+    QCOMPARE(finalSize, finalSizeCommitted);
 
     const QList<qint32> values = list.getAllValues();
     QCOMPARE(values.size(), finalSize);

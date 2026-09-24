@@ -2,8 +2,6 @@
 
 #include <QDate>
 
-#include "Constants.h"
-
 std::optional<qint32> DatesList::insert(const QString &date) {
     setError(ErrorType::NoError);
     if (!checkDate(date, m_format)) {

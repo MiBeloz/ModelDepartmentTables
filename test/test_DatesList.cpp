@@ -56,6 +56,14 @@ private slots:
     // ---------- lastError ----------
     void lastErrorResetOnSuccess();
 
+    // ---------- draft / committed semantics ----------
+    void insertLivesInDraftUntilCommit();
+    void readersSeeDraft();
+    void removeLivesInDraftUntilCommit();
+    void resetRollsBackDraft();
+    void clearAffectsOnlyDraft();
+    void commitMakesDraftVisibleAsCommitted();
+
 private:
     DatesList m_list;
 };
@@ -85,18 +93,26 @@ void TestDatesList::insertByStringValid() {
     auto id = m_list.insert(kDateStr1);
     QVERIFY(id.has_value());
     QCOMPARE(m_list.lastError(), DatesList::NoError);
-    QCOMPARE(m_list.sizeNotCommitted(), 1);
+
+    // До commit: size() — размер черновика, sizeCommitted() — размер m_list.
+    QCOMPARE(m_list.size(), 1);
+    QCOMPARE(m_list.sizeCommitted(), 0);
 
     m_list.commit();
-    QCOMPARE(m_list.getId(kDateStr1), id);
     QCOMPARE(m_list.size(), 1);
+    QCOMPARE(m_list.sizeCommitted(), 1);
+
+    auto got = m_list.getId(kDateStr1);
+    QVERIFY(got.has_value());
+    QCOMPARE(got.value(), id.value());
 }
 
 void TestDatesList::insertByStringInvalidFormat() {
     auto id = m_list.insert("not-a-date");
     QVERIFY(!id.has_value());
     QCOMPARE(m_list.lastError(), DatesList::FormatError);
-    QCOMPARE(m_list.sizeNotCommitted(), 0);
+    QCOMPARE(m_list.size(), 0);
+    QCOMPARE(m_list.sizeCommitted(), 0);
 }
 
 void TestDatesList::insertByStringSameValueReturnsSameId() {
@@ -105,7 +121,10 @@ void TestDatesList::insertByStringSameValueReturnsSameId() {
     QVERIFY(id1.has_value());
     QVERIFY(id2.has_value());
     QCOMPARE(id1.value(), id2.value());
-    QCOMPARE(m_list.sizeNotCommitted(), 1);
+
+    // Оба insert'а в черновике, значит size() == 1, sizeCommitted() == 0.
+    QCOMPARE(m_list.size(), 1);
+    QCOMPARE(m_list.sizeCommitted(), 0);
 }
 
 void TestDatesList::insertByExcelFormatValid() {
@@ -115,7 +134,9 @@ void TestDatesList::insertByExcelFormatValid() {
     auto id = m_list.insert(excel.value());
     QVERIFY(id.has_value());
     QCOMPARE(m_list.lastError(), DatesList::NoError);
-    QCOMPARE(m_list.sizeNotCommitted(), 1);
+
+    QCOMPARE(m_list.size(), 1);
+    QCOMPARE(m_list.sizeCommitted(), 0);
 }
 
 void TestDatesList::insertByExcelFormatInvalid() {
@@ -129,9 +150,19 @@ void TestDatesList::insertByExcelFormatInvalid() {
 void TestDatesList::removeByStringValid() {
     m_list.insert(kDateStr1);
     m_list.commit();
+    QCOMPARE(m_list.size(), 1);
+    QCOMPARE(m_list.sizeCommitted(), 1);
+
     QVERIFY(m_list.remove(kDateStr1));
     QCOMPARE(m_list.lastError(), DatesList::NoError);
-    QCOMPARE(m_list.sizeNotCommitted(), 0);
+
+    // После remove черновик пуст, m_list ещё содержит значение.
+    QCOMPARE(m_list.size(), 0);
+    QCOMPARE(m_list.sizeCommitted(), 1);
+
+    m_list.commit();
+    QCOMPARE(m_list.size(), 0);
+    QCOMPARE(m_list.sizeCommitted(), 0);
 }
 
 void TestDatesList::removeByStringNotFound() {
@@ -152,6 +183,10 @@ void TestDatesList::removeByExcelFormatValid() {
 
     QVERIFY(m_list.remove(excel.value()));
     QCOMPARE(m_list.lastError(), DatesList::NoError);
+
+    m_list.commit();
+    QCOMPARE(m_list.size(), 0);
+    QCOMPARE(m_list.sizeCommitted(), 0);
 }
 
 void TestDatesList::removeByExcelFormatNotFound() {
@@ -349,6 +384,119 @@ void TestDatesList::lastErrorResetOnSuccess() {
     auto id = m_list.insert(kDateStr1);
     QVERIFY(id.has_value());
     QCOMPARE(m_list.lastError(), DatesList::NoError);
+}
+
+// ---------- draft / committed semantics ----------
+
+void TestDatesList::insertLivesInDraftUntilCommit() {
+    m_list.insert(kDateStr1);
+    m_list.insert(kDateStr2);
+    m_list.insert(kDateStr3);
+
+    // Черновик содержит 3 значения, m_list ещё пуст.
+    QCOMPARE(m_list.size(), 3);
+    QCOMPARE(m_list.sizeCommitted(), 0);
+
+    m_list.commit();
+
+    QCOMPARE(m_list.size(), 3);
+    QCOMPARE(m_list.sizeCommitted(), 3);
+}
+
+void TestDatesList::readersSeeDraft() {
+    m_list.insert(kDateStr1);
+    m_list.commit();
+
+    m_list.insert(kDateStr2);
+
+    // getId/getValue/getStrValue смотрят в m_listTmp → видят и первое, и второе.
+    QVERIFY(m_list.getId(kDateStr1).has_value());
+    QVERIFY(m_list.getId(kDateStr2).has_value());
+
+    QCOMPARE(m_list.getAllValues().size(), 2);
+    QCOMPARE(m_list.size(), 2);
+    QCOMPARE(m_list.sizeCommitted(), 1);
+}
+
+void TestDatesList::removeLivesInDraftUntilCommit() {
+    m_list.insert(kDateStr1);
+    m_list.insert(kDateStr2);
+    m_list.commit();
+
+    QVERIFY(m_list.remove(kDateStr1));
+
+    // Черновик: без kDateStr1. m_list: с обоими.
+    QCOMPARE(m_list.size(), 1);
+    QCOMPARE(m_list.sizeCommitted(), 2);
+
+    // getId ищет в m_listTmp — kDateStr1 уже нет.
+    QVERIFY(!m_list.getId(kDateStr1).has_value());
+    QVERIFY(m_list.getId(kDateStr2).has_value());
+
+    m_list.commit();
+    QCOMPARE(m_list.size(), 1);
+    QCOMPARE(m_list.sizeCommitted(), 1);
+}
+
+void TestDatesList::resetRollsBackDraft() {
+    m_list.insert(kDateStr1);
+    m_list.commit();
+
+    m_list.insert(kDateStr2);
+    m_list.insert(kDateStr3);
+
+    QCOMPARE(m_list.size(), 3);
+    QCOMPARE(m_list.sizeCommitted(), 1);
+
+    m_list.reset();
+
+    QCOMPARE(m_list.size(), 1);
+    QCOMPARE(m_list.sizeCommitted(), 1);
+    QVERIFY(m_list.getId(kDateStr1).has_value());
+    QVERIFY(!m_list.getId(kDateStr2).has_value());
+    QVERIFY(!m_list.getId(kDateStr3).has_value());
+}
+
+void TestDatesList::clearAffectsOnlyDraft() {
+    m_list.insert(kDateStr1);
+    m_list.insert(kDateStr2);
+    m_list.commit();
+
+    m_list.clear();
+
+    // Черновик пуст, m_list нетронут.
+    QCOMPARE(m_list.size(), 0);
+    QCOMPARE(m_list.sizeCommitted(), 2);
+
+    // read-методы смотрят в m_listTmp → ничего не видят.
+    QVERIFY(!m_list.getId(kDateStr1).has_value());
+    QVERIFY(!m_list.getId(kDateStr2).has_value());
+    QCOMPARE(m_list.getAllValues().size(), 0);
+}
+
+void TestDatesList::commitMakesDraftVisibleAsCommitted() {
+    m_list.insert(kDateStr1);
+    m_list.insert(kDateStr2);
+
+    QCOMPARE(m_list.size(), 2);
+    QCOMPARE(m_list.sizeCommitted(), 0);
+
+    m_list.commit();
+
+    QCOMPARE(m_list.size(), 2);
+    QCOMPARE(m_list.sizeCommitted(), 2);
+
+    auto id1 = m_list.getId(kDateStr1);
+    auto id2 = m_list.getId(kDateStr2);
+    QVERIFY(id1.has_value());
+    QVERIFY(id2.has_value());
+
+    auto v1 = m_list.getStrValue(id1.value());
+    auto v2 = m_list.getStrValue(id2.value());
+    QVERIFY(v1.has_value());
+    QVERIFY(v2.has_value());
+    QCOMPARE(v1.value(), kDateStr1);
+    QCOMPARE(v2.value(), kDateStr2);
 }
 
 QTEST_APPLESS_MAIN(TestDatesList)

@@ -1,7 +1,6 @@
 ﻿#ifndef DRAWING_H
 #define DRAWING_H
 
-#include <QDebug>
 #include <QHash>
 
 class Drawing final {
@@ -45,12 +44,6 @@ inline QDataStream& operator <<(QDataStream& out, const Drawing& drawing) {
 inline QDataStream& operator >>(QDataStream& in, Drawing& drawing) {
     in >> drawing.m_number >> drawing.m_title;
     return in;
-}
-
-inline QDebug operator <<(QDebug dbg, const Drawing& d) {
-    QDebugStateSaver saver(dbg);
-    dbg.nospace() << d.getNumber() << " - " << d.getTitle();
-    return dbg;
 }
 
 #endif // DRAWING_H
