@@ -3,30 +3,22 @@
 
 #include <QFile>
 
-#include "RecordLink.h"
 #include "SaverFile.h"
+#include "StorageRecordLink.h"
 
-class SaverFileRecordLink final : public SaverFile<RecordLink> {
+class SaverFileRecordLink final : public SaverFile<StorageRecordLink> {
 public:
     SaverFileRecordLink(const QString &fileName,
                         const QString &tempFileName,
                         const QString &backupFileName)
         : SaverFile(fileName, tempFileName, backupFileName) { }
 
-    bool save(const RecordLink &recordLink) override {
+    bool save(const StorageRecordLink &storage) override {
         if (m_tempFile.open(QIODeviceBase::WriteOnly)) {
             QDataStream stream(&m_tempFile);
             stream.setVersion(QDataStream::Qt_6_11);
 
-            storage.dates().serialize(stream);
-            storage.drawings().serialize(stream);
-            storage.executors().serialize(stream);
-            storage.authors().serialize(stream);
-            storage.amounts().serialize(stream);
-            storage.castingMaterials().serialize(stream);
-            storage.modelMaterials().serialize(stream);
-            storage.machines().serialize(stream);
-            storage.notes().serialize(stream);
+            storage.serialize(stream);
 
             m_tempFile.close();
 
@@ -42,20 +34,12 @@ public:
         }
     }
 
-    bool load(RecordLink &storage) override {
+    bool load(StorageRecordLink &storage) override {
         if (m_file.open(QIODeviceBase::ReadOnly)) {
             QDataStream stream(&m_file);
             stream.setVersion(QDataStream::Qt_6_11);
 
-            storage.dates().deserialize(stream);
-            storage.drawings().deserialize(stream);
-            storage.executors().deserialize(stream);
-            storage.authors().deserialize(stream);
-            storage.amounts().deserialize(stream);
-            storage.castingMaterials().deserialize(stream);
-            storage.modelMaterials().deserialize(stream);
-            storage.machines().deserialize(stream);
-            storage.notes().deserialize(stream);
+            storage.deserialize(stream);
 
             m_file.close();
 

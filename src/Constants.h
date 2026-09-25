@@ -1,9 +1,13 @@
 ﻿#ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-constexpr const char* STORAGE_SAVER_FILENAME = "data.mdt";
-constexpr const char* STORAGE_SAVER_FILENAME_TMP = "data.mdt.tmp";
-constexpr const char* STORAGE_SAVER_FILENAME_BACKUP = "data.mdt.backup";
+constexpr const char* SAVER_STORAGE_FILENAME = "dataStorage.mdt";
+constexpr const char* SAVER_STORAGE_FILENAME_TMP = "dataStorage.mdt.tmp";
+constexpr const char* SAVER_STORAGE_FILENAME_BACKUP = "dataStorage.mdt.backup";
+
+constexpr const char* SAVER_RECORDLINK_FILENAME = "dataRecordLink.mdt";
+constexpr const char* SAVER_RECORDLINK_FILENAME_TMP = "dataRecordLink.mdt.tmp";
+constexpr const char* SAVER_RECORDLINK_FILENAME_BACKUP = "dataRecordLink.mdt.backup";
 
 namespace mdt {
 #define STRINGIZE(x) #x

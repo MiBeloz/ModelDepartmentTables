@@ -1,96 +1,96 @@
 ﻿#ifndef STORAGESERVICE_H
 #define STORAGESERVICE_H
 
-#include "StorageCustomList.h"
-#include "StorageDatesList.h"
+#include "ServiceCustomList.h"
+#include "ServiceDatesList.h"
 #include "Drawing.h"
 
 class StorageService final {
 public:
     StorageService()
-        : m_dateStorage(std::make_unique<DatesStorage>())
-        , m_drawingStorage(std::make_unique<CustomStorage<Drawing>>())
-        , m_executorStorage(std::make_unique<CustomStorage<QString>>())
-        , m_authorStorage(std::make_unique<CustomStorage<QString>>())
-        , m_castingMaterialStorage(std::make_unique<CustomStorage<QString>>())
-        , m_modelMaterialStorage(std::make_unique<CustomStorage<QString>>())
-        , m_machineStorage(std::make_unique<CustomStorage<QString>>())
-        , m_noteStorage(std::make_unique<CustomStorage<QString>>())
-        , m_amountStorage(std::make_unique<CustomStorage<qint32>>()) { }
+        : m_dateStorage(std::make_unique<ServiceDatesList>())
+        , m_drawingStorage(std::make_unique<ServiceCustomList<Drawing>>())
+        , m_executorStorage(std::make_unique<ServiceCustomList<QString>>())
+        , m_authorStorage(std::make_unique<ServiceCustomList<QString>>())
+        , m_castingMaterialStorage(std::make_unique<ServiceCustomList<QString>>())
+        , m_modelMaterialStorage(std::make_unique<ServiceCustomList<QString>>())
+        , m_machineStorage(std::make_unique<ServiceCustomList<QString>>())
+        , m_noteStorage(std::make_unique<ServiceCustomList<QString>>())
+        , m_amountStorage(std::make_unique<ServiceCustomList<qint32>>()) { }
 
-    DatesStorage& dates() {
+    ServiceDatesList& dates() {
         return *m_dateStorage;
     }
-    const DatesStorage& dates() const {
+    const ServiceDatesList& dates() const {
         return *m_dateStorage;
     }
 
-    CustomStorage<Drawing>& drawings() {
+    ServiceCustomList<Drawing>& drawings() {
         return *m_drawingStorage;
     }
-    const CustomStorage<Drawing>& drawings() const {
+    const ServiceCustomList<Drawing>& drawings() const {
         return *m_drawingStorage;
     }
 
-    CustomStorage<QString>& executors() {
+    ServiceCustomList<QString>& executors() {
         return *m_executorStorage;
     }
-    const CustomStorage<QString>& executors() const {
+    const ServiceCustomList<QString>& executors() const {
         return *m_executorStorage;
     }
 
-    CustomStorage<QString>& authors() {
+    ServiceCustomList<QString>& authors() {
         return *m_authorStorage;
     }
-    const CustomStorage<QString>& authors() const {
+    const ServiceCustomList<QString>& authors() const {
         return *m_authorStorage;
     }
 
-    CustomStorage<QString>& castingMaterials() {
+    ServiceCustomList<QString>& castingMaterials() {
         return *m_castingMaterialStorage;
     }
-    const CustomStorage<QString>& castingMaterials() const {
+    const ServiceCustomList<QString>& castingMaterials() const {
         return *m_castingMaterialStorage;
     }
 
-    CustomStorage<QString>& modelMaterials() {
+    ServiceCustomList<QString>& modelMaterials() {
         return *m_modelMaterialStorage;
     }
-    const CustomStorage<QString>& modelMaterials() const {
+    const ServiceCustomList<QString>& modelMaterials() const {
         return *m_modelMaterialStorage;
     }
 
-    CustomStorage<QString>& machines() {
+    ServiceCustomList<QString>& machines() {
         return *m_machineStorage;
     }
-    const CustomStorage<QString>& machines() const {
+    const ServiceCustomList<QString>& machines() const {
         return *m_machineStorage;
     }
 
-    CustomStorage<QString>& notes() {
+    ServiceCustomList<QString>& notes() {
         return *m_noteStorage;
     }
-    const CustomStorage<QString>& notes() const {
+    const ServiceCustomList<QString>& notes() const {
         return *m_noteStorage;
     }
 
-    CustomStorage<qint32>& amounts() {
+    ServiceCustomList<qint32>& amounts() {
         return *m_amountStorage;
     }
-    const CustomStorage<qint32>& amounts() const {
+    const ServiceCustomList<qint32>& amounts() const {
         return *m_amountStorage;
     }
 
 private:
-    std::unique_ptr<DatesStorage> m_dateStorage;
-    std::unique_ptr<CustomStorage<Drawing>> m_drawingStorage;
-    std::unique_ptr<CustomStorage<QString>> m_executorStorage;
-    std::unique_ptr<CustomStorage<QString>> m_authorStorage;
-    std::unique_ptr<CustomStorage<QString>> m_castingMaterialStorage;
-    std::unique_ptr<CustomStorage<QString>> m_modelMaterialStorage;
-    std::unique_ptr<CustomStorage<QString>> m_machineStorage;
-    std::unique_ptr<CustomStorage<QString>> m_noteStorage;
-    std::unique_ptr<CustomStorage<qint32>> m_amountStorage;
+    std::unique_ptr<ServiceDatesList> m_dateStorage;
+    std::unique_ptr<ServiceCustomList<Drawing>> m_drawingStorage;
+    std::unique_ptr<ServiceCustomList<QString>> m_executorStorage;
+    std::unique_ptr<ServiceCustomList<QString>> m_authorStorage;
+    std::unique_ptr<ServiceCustomList<QString>> m_castingMaterialStorage;
+    std::unique_ptr<ServiceCustomList<QString>> m_modelMaterialStorage;
+    std::unique_ptr<ServiceCustomList<QString>> m_machineStorage;
+    std::unique_ptr<ServiceCustomList<QString>> m_noteStorage;
+    std::unique_ptr<ServiceCustomList<qint32>> m_amountStorage;
 };
 
 #endif // STORAGESERVICE_H

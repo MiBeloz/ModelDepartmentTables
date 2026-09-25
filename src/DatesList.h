@@ -26,8 +26,8 @@ public:
 
     ErrorType lastError() const;
 
-    void setDateFormat(const QString &format);
-    QString getDateFormat() const;
+    static void setDateFormat(const QString &format);
+    static QString getDateFormat();
 
     static std::optional<QString> dateToStr(qint32 date, const QString &format = "dd.MM.yyyy");
     static std::optional<qint32> strToDate(const QString &date,
@@ -37,7 +37,7 @@ public:
     static bool checkDate(const QString &date, const QString &format = "dd.MM.yyyy");
 
 private:
-    QString m_format = "dd.MM.yyyy";
+    static inline QString m_format = "dd.MM.yyyy";
     mutable ErrorType m_error { ErrorType::NoError };
 
     void setError(ErrorType error) const {

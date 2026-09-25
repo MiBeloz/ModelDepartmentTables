@@ -1,19 +1,19 @@
-﻿#ifndef STORAGECUSTOMLIST_H
-#define STORAGECUSTOMLIST_H
+﻿#ifndef SERVICECUSTOMLIST_H
+#define SERVICECUSTOMLIST_H
 
 #include "CustomList.h"
 
 template<typename ValueType, typename CustomListType = CustomList<ValueType>>
-class StorageCustomList {
+class ServiceCustomList {
 public:
-    StorageCustomList() {
+    ServiceCustomList() {
         m_list = std::make_unique<CustomListType>();
     }
 
-    virtual ~StorageCustomList() { }
+    virtual ~ServiceCustomList() { }
 
-    StorageCustomList(StorageCustomList&) = delete;
-    StorageCustomList& operator=(StorageCustomList&) = delete;
+    ServiceCustomList(ServiceCustomList&) = delete;
+    ServiceCustomList& operator=(ServiceCustomList&) = delete;
 
     virtual std::optional<qint32> add(const ValueType& value) {
         return m_list->insert(value);
@@ -66,4 +66,4 @@ protected:
     std::unique_ptr<CustomListType> m_list;
 };
 
-#endif // STORAGECUSTOMLIST_H
+#endif // SERVICECUSTOMLIST_H
