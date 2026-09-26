@@ -15,7 +15,7 @@ public:
 
     ~SaverFileStorage() override = default;
 
-    bool save(const StorageService &storage) override {
+    bool write(const StorageService &storage) override {
         if (m_tempFile.open(QIODeviceBase::WriteOnly)) {
             QDataStream stream(&m_tempFile);
             stream.setVersion(QDataStream::Qt_6_11);
@@ -37,14 +37,14 @@ public:
                 return false;
             }
 
-            m_saved = true;
+            m_save = true;
             return true;
         } else {
             return false;
         }
     }
 
-    bool load(StorageService &storage) override {
+    bool read(StorageService &storage) override {
         if (m_file.open(QIODeviceBase::ReadOnly)) {
             QDataStream stream(&m_file);
             stream.setVersion(QDataStream::Qt_6_11);

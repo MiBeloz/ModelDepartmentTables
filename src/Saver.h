@@ -6,9 +6,9 @@ class Saver {
 public:
     virtual ~Saver() = default;
 
-    virtual bool save(const T& storage) = 0;
-    virtual bool load(T& storage) = 0;
-    virtual bool commit() = 0;
+    virtual bool write(const T& storage) = 0;
+    virtual bool read(T& storage) = 0;
+    virtual bool save() = 0;
 };
 
 #endif // SAVER_H

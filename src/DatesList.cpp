@@ -95,7 +95,7 @@ void DatesList::setDateFormat(const QString &format) {
     m_format = format;
 }
 
-QString DatesList::getDateFormat() const {
+QString DatesList::getDateFormat() {
     return m_format;
 }
 

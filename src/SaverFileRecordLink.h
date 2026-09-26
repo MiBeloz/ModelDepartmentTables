@@ -13,7 +13,7 @@ public:
                         const QString &backupFileName)
         : SaverFile(fileName, tempFileName, backupFileName) { }
 
-    bool save(const StorageRecordLink &storage) override {
+    bool write(const StorageRecordLink &storage) override {
         if (m_tempFile.open(QIODeviceBase::WriteOnly)) {
             QDataStream stream(&m_tempFile);
             stream.setVersion(QDataStream::Qt_6_11);
@@ -27,14 +27,14 @@ public:
                 return false;
             }
 
-            m_saved = true;
+            m_save = false;
             return true;
         } else {
             return false;
         }
     }
 
-    bool load(StorageRecordLink &storage) override {
+    bool read(StorageRecordLink &storage) override {
         if (m_file.open(QIODeviceBase::ReadOnly)) {
             QDataStream stream(&m_file);
             stream.setVersion(QDataStream::Qt_6_11);

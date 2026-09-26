@@ -83,7 +83,6 @@ public:
                               idNotes);
         m_StorageRecordLink.add(recordLink);
 
-        m_saverFileStorage.save(m_storageService);
         return true;
     }
 
@@ -122,7 +121,6 @@ public:
         m_StorageRecordLink.remove(recordLink);
 
         if (oldSize > m_StorageRecordLink.count()) {
-            m_saverFileStorage.save(m_storageService);
             return true;
         }
         return false;
@@ -136,6 +134,7 @@ public:
 
     void reset() {
         m_StorageRecordLink.reset();
+
         m_storageService.dates().reset();
         m_storageService.drawings().reset();
         m_storageService.amounts().reset();
@@ -145,10 +144,14 @@ public:
         m_storageService.modelMaterials().reset();
         m_storageService.machines().reset();
         m_storageService.notes().reset();
+
+        // m_saverFileRecordLink.reset();
+        // m_saverFileStorage.reset();
     }
 
-    void commit() {
+    bool commit() {
         m_StorageRecordLink.commit();
+
         m_storageService.dates().commit();
         m_storageService.drawings().commit();
         m_storageService.amounts().commit();
@@ -158,12 +161,16 @@ public:
         m_storageService.modelMaterials().commit();
         m_storageService.machines().commit();
         m_storageService.notes().commit();
+
+        if (m_saverFileRecordLink.write(m_StorageRecordLink) &&
+            m_saverFileStorage.write(m_storageService)) {
+            return true;
+        }
+        return false;
     }
 
     bool save() {
-        if (m_saverFileStorage.save(m_storageService) &&
-            m_saverFileRecordLink.save(m_StorageRecordLink) && m_saverFileStorage.commit() &&
-            m_saverFileRecordLink.commit()) {
+        if (m_saverFileRecordLink.save() && m_saverFileStorage.save()) {
             return true;
         }
         return false;

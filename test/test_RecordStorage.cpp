@@ -1,7 +1,7 @@
 ﻿#include <QObject>
 #include <QTest>
 
-// #include "StorageOfRecord.h"
+#include "StorageRecord.h"
 
 // RecordStorage storage;
 
@@ -35,12 +35,12 @@
 //                    { "Пластик красный" },
 //                    { "Китаец" });
 
-class TestRecordStorage final : public QObject {
+class TestStorageRecord final : public QObject {
     Q_OBJECT
-    Q_DISABLE_COPY_MOVE(TestRecordStorage)
+    Q_DISABLE_COPY_MOVE(TestStorageRecord)
 
 public:
-    TestRecordStorage() = default;
+    TestStorageRecord() = default;
 
 private slots:
 //     void testAdd() {
@@ -137,5 +137,5 @@ private slots:
 //     // }
 };
 
-QTEST_APPLESS_MAIN(TestRecordStorage)
-#include "test_RecordStorage.moc"
+QTEST_APPLESS_MAIN(TestStorageRecord)
+#include "test_StorageRecord.moc"

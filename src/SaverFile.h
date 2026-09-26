@@ -12,13 +12,12 @@ public:
         m_file.setFileName(fileName);
         m_tempFile.setFileName(tempFileName);
         m_backupFile.setFileName(backupFileName);
-        m_saved = false;
     }
 
     ~SaverFile() override = default;
 
-    bool commit() override {
-        if (!m_saved) {
+    bool save() override {
+        if (m_save) {
             return true;
         }
 
@@ -43,7 +42,7 @@ public:
             return false;
         }
 
-        m_saved = false;
+        m_save = true;
         return true;
     }
 
@@ -51,7 +50,7 @@ protected:
     QFile m_file;
     QFile m_tempFile;
     QFile m_backupFile;
-    bool m_saved;
+    bool m_save = true;
 };
 
 #endif // SAVERFILE_H
