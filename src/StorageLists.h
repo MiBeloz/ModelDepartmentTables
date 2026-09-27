@@ -1,13 +1,13 @@
-﻿#ifndef STORAGESERVICE_H
-#define STORAGESERVICE_H
+﻿#ifndef STORAGELISTS_H
+#define STORAGELISTS_H
 
 #include "ServiceCustomList.h"
 #include "ServiceDatesList.h"
 #include "Drawing.h"
 
-class StorageService final {
+class StorageLists final {
 public:
-    StorageService()
+    StorageLists()
         : m_dateStorage(std::make_unique<ServiceDatesList>())
         , m_drawingStorage(std::make_unique<ServiceCustomList<Drawing>>())
         , m_executorStorage(std::make_unique<ServiceCustomList<QString>>())
@@ -93,4 +93,4 @@ private:
     std::unique_ptr<ServiceCustomList<qint32>> m_amountStorage;
 };
 
-#endif // STORAGESERVICE_H
+#endif // STORAGELISTS_H

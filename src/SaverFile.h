@@ -21,11 +21,18 @@ public:
             return true;
         }
 
+        if (m_tempFile.isOpen()) {
+            m_tempFile.flush();
+            m_tempFile.close();
+        }
+
         if (!m_tempFile.exists()) {
             return false;
         }
 
-        QString nameOfFile = m_file.fileName();
+        const QString mainName = m_file.fileName();
+        const QString tempName = m_tempFile.fileName();
+
         if (m_file.exists()) {
             if (m_backupFile.exists() && !m_backupFile.remove()) {
                 return false;
@@ -35,12 +42,15 @@ public:
             }
         }
 
-        if (!m_tempFile.rename(nameOfFile)) {
+        if (!m_tempFile.rename(mainName)) {
             if (m_backupFile.exists()) {
-                m_backupFile.rename(nameOfFile);
+                m_backupFile.rename(mainName);
             }
             return false;
         }
+
+        m_file.setFileName(mainName);
+        m_tempFile.setFileName(tempName);
 
         m_save = true;
         return true;
