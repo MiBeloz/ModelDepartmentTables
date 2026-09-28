@@ -82,12 +82,12 @@ void TestRecordLink::defaultConstructorCreatesNullLikeObject() {
     QCOMPARE(link.get().idDate(), 0);
     QCOMPARE(link.get().idDrawing(), 0);
     QCOMPARE(link.get().idAmount(), 0);
-    QVERIFY(link.get().idExecutors().isEmpty());
-    QVERIFY(link.get().idAuthors().isEmpty());
-    QVERIFY(link.get().idCastingMaterials().isEmpty());
-    QVERIFY(link.get().idModelMaterials().isEmpty());
-    QVERIFY(link.get().idMachines().isEmpty());
-    QVERIFY(link.get().idNotes().isEmpty());
+    QVERIFY(link.get().idsExecutors().isEmpty());
+    QVERIFY(link.get().idsAuthors().isEmpty());
+    QVERIFY(link.get().idsCastingMaterials().isEmpty());
+    QVERIFY(link.get().idsModelMaterials().isEmpty());
+    QVERIFY(link.get().idsMachines().isEmpty());
+    QVERIFY(link.get().idsNotes().isEmpty());
 }
 
 void TestRecordLink::constructorInitializesAllFields() {
@@ -97,12 +97,12 @@ void TestRecordLink::constructorInitializesAllFields() {
     QCOMPARE(g.idDate(), 1);
     QCOMPARE(g.idDrawing(), 2);
     QCOMPARE(g.idAmount(), 3);
-    QCOMPARE(g.idExecutors(), (QSet<qint32> { 10, 11, 12 }));
-    QCOMPARE(g.idAuthors(), (QSet<qint32> { 20, 21 }));
-    QCOMPARE(g.idCastingMaterials(), (QSet<qint32> { 30 }));
-    QCOMPARE(g.idModelMaterials(), (QSet<qint32> { 40, 41, 42, 43 }));
-    QCOMPARE(g.idMachines(), (QSet<qint32> { 50, 51 }));
-    QCOMPARE(g.idNotes(), (QSet<qint32> { 60 }));
+    QCOMPARE(g.idsExecutors(), (QSet<qint32> { 10, 11, 12 }));
+    QCOMPARE(g.idsAuthors(), (QSet<qint32> { 20, 21 }));
+    QCOMPARE(g.idsCastingMaterials(), (QSet<qint32> { 30 }));
+    QCOMPARE(g.idsModelMaterials(), (QSet<qint32> { 40, 41, 42, 43 }));
+    QCOMPARE(g.idsMachines(), (QSet<qint32> { 50, 51 }));
+    QCOMPARE(g.idsNotes(), (QSet<qint32> { 60 }));
 }
 
 void TestRecordLink::copyConstructorCopiesAllFields() {
@@ -123,22 +123,22 @@ void TestRecordLink::moveConstructorMovesAndResetsSource() {
     QCOMPARE(moved.get().idDate(), 1);
     QCOMPARE(moved.get().idDrawing(), 2);
     QCOMPARE(moved.get().idAmount(), 3);
-    QCOMPARE(moved.get().idExecutors(), (QSet<qint32> { 10, 11, 12 }));
-    QCOMPARE(moved.get().idAuthors(), (QSet<qint32> { 20, 21 }));
-    QCOMPARE(moved.get().idCastingMaterials(), (QSet<qint32> { 30 }));
-    QCOMPARE(moved.get().idModelMaterials(), (QSet<qint32> { 40, 41, 42, 43 }));
-    QCOMPARE(moved.get().idMachines(), (QSet<qint32> { 50, 51 }));
-    QCOMPARE(moved.get().idNotes(), (QSet<qint32> { 60 }));
+    QCOMPARE(moved.get().idsExecutors(), (QSet<qint32> { 10, 11, 12 }));
+    QCOMPARE(moved.get().idsAuthors(), (QSet<qint32> { 20, 21 }));
+    QCOMPARE(moved.get().idsCastingMaterials(), (QSet<qint32> { 30 }));
+    QCOMPARE(moved.get().idsModelMaterials(), (QSet<qint32> { 40, 41, 42, 43 }));
+    QCOMPARE(moved.get().idsMachines(), (QSet<qint32> { 50, 51 }));
+    QCOMPARE(moved.get().idsNotes(), (QSet<qint32> { 60 }));
 
     QCOMPARE(source.get().idDate(), 0);
     QCOMPARE(source.get().idDrawing(), 0);
     QCOMPARE(source.get().idAmount(), 0);
-    QCOMPARE(source.get().idExecutors(), QSet<qint32>());
-    QCOMPARE(source.get().idAuthors(), QSet<qint32>());
-    QCOMPARE(source.get().idCastingMaterials(), QSet<qint32>());
-    QCOMPARE(source.get().idModelMaterials(), QSet<qint32>());
-    QCOMPARE(source.get().idMachines(), QSet<qint32>());
-    QCOMPARE(source.get().idNotes(), QSet<qint32>());
+    QCOMPARE(source.get().idsExecutors(), QSet<qint32>());
+    QCOMPARE(source.get().idsAuthors(), QSet<qint32>());
+    QCOMPARE(source.get().idsCastingMaterials(), QSet<qint32>());
+    QCOMPARE(source.get().idsModelMaterials(), QSet<qint32>());
+    QCOMPARE(source.get().idsMachines(), QSet<qint32>());
+    QCOMPARE(source.get().idsNotes(), QSet<qint32>());
 
     QCOMPARE(source, RecordLink::Null);
 }
@@ -170,31 +170,31 @@ void TestRecordLink::adderUnitesSets() {
     RecordLink r = RecordLink::Null;
 
     r.add()
-        .idExecutors({ 1, 2 })
-        .idAuthors({ 3, 4 })
-        .idCastingMaterials({ 5 })
-        .idModelMaterials({ 6, 7 })
-        .idMachines({ 8 })
-        .idNotes({ 9 });
+        .idsExecutors({ 1, 2 })
+        .idsAuthors({ 3, 4 })
+        .idsCastingMaterials({ 5 })
+        .idsModelMaterials({ 6, 7 })
+        .idsMachines({ 8 })
+        .idsNotes({ 9 });
 
-    QCOMPARE(r.get().idExecutors(), (QSet<qint32> { 1, 2 }));
-    QCOMPARE(r.get().idAuthors(), (QSet<qint32> { 3, 4 }));
-    QCOMPARE(r.get().idCastingMaterials(), (QSet<qint32> { 5 }));
-    QCOMPARE(r.get().idModelMaterials(), (QSet<qint32> { 6, 7 }));
-    QCOMPARE(r.get().idMachines(), (QSet<qint32> { 8 }));
-    QCOMPARE(r.get().idNotes(), (QSet<qint32> { 9 }));
+    QCOMPARE(r.get().idsExecutors(), (QSet<qint32> { 1, 2 }));
+    QCOMPARE(r.get().idsAuthors(), (QSet<qint32> { 3, 4 }));
+    QCOMPARE(r.get().idsCastingMaterials(), (QSet<qint32> { 5 }));
+    QCOMPARE(r.get().idsModelMaterials(), (QSet<qint32> { 6, 7 }));
+    QCOMPARE(r.get().idsMachines(), (QSet<qint32> { 8 }));
+    QCOMPARE(r.get().idsNotes(), (QSet<qint32> { 9 }));
 
-    r.add().idExecutors({ 2, 3 });
-    QCOMPARE(r.get().idExecutors(), QSet<qint32>({ 1, 2, 3 }));
+    r.add().idsExecutors({ 2, 3 });
+    QCOMPARE(r.get().idsExecutors(), QSet<qint32>({ 1, 2, 3 }));
 }
 
 void TestRecordLink::adderChaining() {
     RecordLink r = RecordLink::Null;
     RecordLink::Adder a = r.add();
-    a.idExecutors({ 1 }).idAuthors({ 2 }).idNotes({ 3, 4 });
-    QCOMPARE(r.get().idExecutors(), (QSet<qint32> { 1 }));
-    QCOMPARE(r.get().idAuthors(), (QSet<qint32> { 2 }));
-    QCOMPARE(r.get().idNotes(), (QSet<qint32> { 3, 4 }));
+    a.idsExecutors({ 1 }).idsAuthors({ 2 }).idsNotes({ 3, 4 });
+    QCOMPARE(r.get().idsExecutors(), (QSet<qint32> { 1 }));
+    QCOMPARE(r.get().idsAuthors(), (QSet<qint32> { 2 }));
+    QCOMPARE(r.get().idsNotes(), (QSet<qint32> { 3, 4 }));
 }
 
 // ---------- Remover ----------
@@ -203,30 +203,30 @@ void TestRecordLink::removerSubtractsSets() {
     RecordLink r = makeSample();
 
     r.remove()
-        .removeExecutors({ 10 })
-        .removeAuthors({ 20 })
-        .removeCastingMaterials({ 30 })
-        .removeModelMaterials({ 40, 41 })
-        .removeMachines({ 50 })
-        .removeNotes({ 60 });
+        .idsExecutors({ 10 })
+        .idsAuthors({ 20 })
+        .idsCastingMaterials({ 30 })
+        .idsModelMaterials({ 40, 41 })
+        .idsMachines({ 50 })
+        .idsNotes({ 60 });
 
-    QCOMPARE(r.get().idExecutors(), (QSet<qint32> { 11, 12 }));
-    QCOMPARE(r.get().idAuthors(), (QSet<qint32> { 21 }));
-    QCOMPARE(r.get().idCastingMaterials(), (QSet<qint32> { }));
-    QCOMPARE(r.get().idModelMaterials(), (QSet<qint32> { 42, 43 }));
-    QCOMPARE(r.get().idMachines(), (QSet<qint32> { 51 }));
-    QCOMPARE(r.get().idNotes(), (QSet<qint32> { }));
+    QCOMPARE(r.get().idsExecutors(), (QSet<qint32> { 11, 12 }));
+    QCOMPARE(r.get().idsAuthors(), (QSet<qint32> { 21 }));
+    QCOMPARE(r.get().idsCastingMaterials(), (QSet<qint32> { }));
+    QCOMPARE(r.get().idsModelMaterials(), (QSet<qint32> { 42, 43 }));
+    QCOMPARE(r.get().idsMachines(), (QSet<qint32> { 51 }));
+    QCOMPARE(r.get().idsNotes(), (QSet<qint32> { }));
 
-    r.remove().removeExecutors({ 999 });
-    QCOMPARE(r.get().idExecutors(), (QSet<qint32> { 11, 12 }));
+    r.remove().idsExecutors({ 999 });
+    QCOMPARE(r.get().idsExecutors(), (QSet<qint32> { 11, 12 }));
 }
 
 void TestRecordLink::removerChaining() {
     RecordLink r = makeSample();
     RecordLink::Remover rm = r.remove();
-    rm.removeExecutors({ 10, 11, 12 }).removeAuthors({ 20, 21 });
-    QVERIFY(r.get().idExecutors().isEmpty());
-    QVERIFY(r.get().idAuthors().isEmpty());
+    rm.idsExecutors({ 10, 11, 12 }).idsAuthors({ 20, 21 });
+    QVERIFY(r.get().idsExecutors().isEmpty());
+    QVERIFY(r.get().idsAuthors().isEmpty());
 }
 
 // ---------- Getter ----------
@@ -238,12 +238,12 @@ void TestRecordLink::getterReturnsAllFields() {
     QCOMPARE(g.idDate(), 1);
     QCOMPARE(g.idDrawing(), 2);
     QCOMPARE(g.idAmount(), 3);
-    QCOMPARE(g.idExecutors(), (QSet<qint32> { 10, 11, 12 }));
-    QCOMPARE(g.idAuthors(), (QSet<qint32> { 20, 21 }));
-    QCOMPARE(g.idCastingMaterials(), (QSet<qint32> { 30 }));
-    QCOMPARE(g.idModelMaterials(), (QSet<qint32> { 40, 41, 42, 43 }));
-    QCOMPARE(g.idMachines(), (QSet<qint32> { 50, 51 }));
-    QCOMPARE(g.idNotes(), (QSet<qint32> { 60 }));
+    QCOMPARE(g.idsExecutors(), (QSet<qint32> { 10, 11, 12 }));
+    QCOMPARE(g.idsAuthors(), (QSet<qint32> { 20, 21 }));
+    QCOMPARE(g.idsCastingMaterials(), (QSet<qint32> { 30 }));
+    QCOMPARE(g.idsModelMaterials(), (QSet<qint32> { 40, 41, 42, 43 }));
+    QCOMPARE(g.idsMachines(), (QSet<qint32> { 50, 51 }));
+    QCOMPARE(g.idsNotes(), (QSet<qint32> { 60 }));
 }
 
 // ---------- Comparison operators ----------
@@ -266,7 +266,7 @@ void TestRecordLink::operatorEqualDifferentObjects() {
 void TestRecordLink::operatorNotEqual() {
     RecordLink a = makeSample();
     RecordLink b = makeSample();
-    b.add().idExecutors({ 999 });
+    b.add().idsExecutors({ 999 });
     QVERIFY(a != b);
 }
 
@@ -288,7 +288,7 @@ void TestRecordLink::operatorAssignMove() {
     b = std::move(a);
 
     QCOMPARE(b.get().idDate(), 1);
-    QCOMPARE(b.get().idExecutors(), (QSet<qint32> { 10, 11, 12 }));
+    QCOMPARE(b.get().idsExecutors(), (QSet<qint32> { 10, 11, 12 }));
     QCOMPARE(a, RecordLink::Null);
 }
 
@@ -296,7 +296,7 @@ void TestRecordLink::operatorAssignSelfAssignment() {
     RecordLink a = makeSample();
     a = a;
     QCOMPARE(a.get().idDate(), 1);
-    QCOMPARE(a.get().idExecutors(), (QSet<qint32> { 10, 11, 12 }));
+    QCOMPARE(a.get().idsExecutors(), (QSet<qint32> { 10, 11, 12 }));
 }
 
 // ---------- swap ----------
@@ -317,7 +317,7 @@ void TestRecordLink::swapSelfSwap() {
     RecordLink a = makeSample();
     a.swap(a);
     QCOMPARE(a.get().idDate(), 1);
-    QCOMPARE(a.get().idExecutors(), (QSet<qint32> { 10, 11, 12 }));
+    QCOMPARE(a.get().idsExecutors(), (QSet<qint32> { 10, 11, 12 }));
 }
 
 // ---------- qHash ----------
@@ -467,32 +467,32 @@ void TestRecordLink::concurrentReadsAndWritesDoNotCrash() {
                 } else if (op < 30) {
                     // add
                     link.add()
-                        .idExecutors(ids)
-                        .idAuthors(ids)
-                        .idCastingMaterials(ids)
-                        .idModelMaterials(ids)
-                        .idMachines(ids)
-                        .idNotes(ids);
+                        .idsExecutors(ids)
+                        .idsAuthors(ids)
+                        .idsCastingMaterials(ids)
+                        .idsModelMaterials(ids)
+                        .idsMachines(ids)
+                        .idsNotes(ids);
                 } else if (op < 45) {
                     // remove
                     link.remove()
-                        .removeExecutors(ids)
-                        .removeAuthors(ids)
-                        .removeCastingMaterials(ids)
-                        .removeModelMaterials(ids)
-                        .removeMachines(ids)
-                        .removeNotes(ids);
+                        .idsExecutors(ids)
+                        .idsAuthors(ids)
+                        .idsCastingMaterials(ids)
+                        .idsModelMaterials(ids)
+                        .idsMachines(ids)
+                        .idsNotes(ids);
                 } else if (op < 60) {
                     // get
                     (void)link.get().idDate();
                     (void)link.get().idDrawing();
                     (void)link.get().idAmount();
-                    (void)link.get().idExecutors();
-                    (void)link.get().idAuthors();
-                    (void)link.get().idCastingMaterials();
-                    (void)link.get().idModelMaterials();
-                    (void)link.get().idMachines();
-                    (void)link.get().idNotes();
+                    (void)link.get().idsExecutors();
+                    (void)link.get().idsAuthors();
+                    (void)link.get().idsCastingMaterials();
+                    (void)link.get().idsModelMaterials();
+                    (void)link.get().idsMachines();
+                    (void)link.get().idsNotes();
                 } else if (op < 70) {
                     RecordLink other(1, 2, 3, ids, ids, ids, ids, ids, ids);
                     (void)(link == other);

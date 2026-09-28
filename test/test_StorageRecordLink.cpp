@@ -1,7 +1,7 @@
 ﻿#include <QObject>
 #include <QTest>
 
-#include "StorageRecordLink.h"
+#include "StorageRecordsLinks.h"
 
 class TestStorageRecordLink final : public QObject {
     Q_OBJECT

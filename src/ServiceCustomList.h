@@ -47,8 +47,8 @@ public:
         return m_list->size();
     }
 
-    qsizetype countNotCommitted() const {
-        return m_list->sizeNotCommitted();
+    qsizetype countCommitted() const {
+        return m_list->sizeCommitted();
     }
 
     void clear() {

@@ -1,22 +1,22 @@
-﻿#ifndef STORAGERECORDLINK_H
-#define STORAGERECORDLINK_H
+﻿#ifndef STORAGERECORDSLINKS_H
+#define STORAGERECORDSLINKS_H
 
 #include "RecordLink.h"
 
-class StorageRecordLink final {
+class StorageRecordsLinks final {
 public:
-    StorageRecordLink() = default;
+    StorageRecordsLinks() = default;
 
-    StorageRecordLink(const StorageRecordLink& other);
-    StorageRecordLink(StorageRecordLink&& other) noexcept;
+    StorageRecordsLinks(const StorageRecordsLinks& other);
+    StorageRecordsLinks(StorageRecordsLinks&& other) noexcept;
 
-    StorageRecordLink& operator =(const StorageRecordLink& other);
-    StorageRecordLink& operator =(StorageRecordLink&& other) noexcept;
+    StorageRecordsLinks& operator =(const StorageRecordsLinks& other);
+    StorageRecordsLinks& operator =(StorageRecordsLinks&& other) noexcept;
 
-    bool operator ==(const StorageRecordLink& other) const;
-    bool operator !=(const StorageRecordLink& other) const;
+    bool operator ==(const StorageRecordsLinks& other) const;
+    bool operator !=(const StorageRecordsLinks& other) const;
 
-    void swap(StorageRecordLink& other);
+    void swap(StorageRecordsLinks& other);
 
     void add(const RecordLink& recordLink);
     void remove(const RecordLink& recordLink);
@@ -46,4 +46,4 @@ private:
     bool deserializeCommit(QDataStream& in) const;
 };
 
-#endif // STORAGERECORDLINK_H
+#endif // STORAGERECORDSLINKS_H

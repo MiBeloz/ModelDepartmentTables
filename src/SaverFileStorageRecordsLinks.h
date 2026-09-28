@@ -1,19 +1,19 @@
-﻿#ifndef SAVERFILERECORDLINK_H
-#define SAVERFILERECORDLINK_H
+﻿#ifndef SAVERFILESTORAGERECORDSLINKS_H
+#define SAVERFILESTORAGERECORDSLINKS_H
 
 #include <QFile>
 
 #include "SaverFile.h"
-#include "StorageRecordLink.h"
+#include "StorageRecordsLinks.h"
 
-class SaverFileRecordLink final : public SaverFile<StorageRecordLink> {
+class SaverFileStorageRecordsLinks final : public SaverFile<StorageRecordsLinks> {
 public:
-    SaverFileRecordLink(const QString &fileName,
-                        const QString &tempFileName,
-                        const QString &backupFileName)
+    SaverFileStorageRecordsLinks(const QString &fileName,
+                                 const QString &tempFileName,
+                                 const QString &backupFileName)
         : SaverFile(fileName, tempFileName, backupFileName) { }
 
-    bool write(const StorageRecordLink &storage) override {
+    bool write(const StorageRecordsLinks &storage) override {
         if (m_tempFile.open(QIODeviceBase::WriteOnly)) {
             QDataStream stream(&m_tempFile);
             stream.setVersion(QDataStream::Qt_6_11);
@@ -34,7 +34,7 @@ public:
         }
     }
 
-    bool read(StorageRecordLink &storage) override {
+    bool read(StorageRecordsLinks &storage) override {
         if (m_file.open(QIODeviceBase::ReadOnly)) {
             QDataStream stream(&m_file);
             stream.setVersion(QDataStream::Qt_6_11);
@@ -53,4 +53,4 @@ public:
     }
 };
 
-#endif // SAVERFILERECORDLINK_H
+#endif // SAVERFILESTORAGERECORDSLINKS_H

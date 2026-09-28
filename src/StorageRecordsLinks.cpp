@@ -1,15 +1,15 @@
-﻿#include "StorageRecordLink.h"
+﻿#include "StorageRecordsLinks.h"
 
 #include "Exceptions.h"
 
-StorageRecordLink::StorageRecordLink(const StorageRecordLink &other) {
+StorageRecordsLinks::StorageRecordsLinks(const StorageRecordsLinks &other) {
     const QReadLocker otherLocker(&other.m_lock);
     m_SetRecordLink = other.m_SetRecordLink;
     m_SetRecordLinkTmp = other.m_SetRecordLinkTmp;
     m_commit = other.m_commit;
 }
 
-StorageRecordLink::StorageRecordLink(StorageRecordLink &&other) noexcept {
+StorageRecordsLinks::StorageRecordsLinks(StorageRecordsLinks &&other) noexcept {
     const QWriteLocker otherLocker(&other.m_lock);
 
     m_SetRecordLink = std::move(other.m_SetRecordLink);
@@ -18,7 +18,7 @@ StorageRecordLink::StorageRecordLink(StorageRecordLink &&other) noexcept {
     other.m_commit = true;
 }
 
-StorageRecordLink &StorageRecordLink::operator=(const StorageRecordLink &other) {
+StorageRecordsLinks &StorageRecordsLinks::operator =(const StorageRecordsLinks &other) {
     if (this == &other) {
         return *this;
     }
@@ -38,7 +38,7 @@ StorageRecordLink &StorageRecordLink::operator=(const StorageRecordLink &other) 
     return *this;
 }
 
-StorageRecordLink &StorageRecordLink::operator=(StorageRecordLink &&other) noexcept {
+StorageRecordsLinks &StorageRecordsLinks::operator =(StorageRecordsLinks &&other) noexcept {
     if (this == &other) {
         return *this;
     }
@@ -59,7 +59,7 @@ StorageRecordLink &StorageRecordLink::operator=(StorageRecordLink &&other) noexc
     return *this;
 }
 
-bool StorageRecordLink::operator==(const StorageRecordLink &other) const {
+bool StorageRecordsLinks::operator ==(const StorageRecordsLinks &other) const {
     if (this == &other) {
         return true;
     }
@@ -77,11 +77,11 @@ bool StorageRecordLink::operator==(const StorageRecordLink &other) const {
            m_SetRecordLinkTmp == other.m_SetRecordLinkTmp && m_commit == other.m_commit;
 }
 
-bool StorageRecordLink::operator!=(const StorageRecordLink &other) const {
+bool StorageRecordsLinks::operator !=(const StorageRecordsLinks &other) const {
     return !(*this == other);
 }
 
-void StorageRecordLink::swap(StorageRecordLink &other) {
+void StorageRecordsLinks::swap(StorageRecordsLinks &other) {
     if (this == &other) {
         return;
     }
@@ -100,52 +100,52 @@ void StorageRecordLink::swap(StorageRecordLink &other) {
     std::swap(m_commit, other.m_commit);
 }
 
-void StorageRecordLink::add(const RecordLink &recordLink) {
+void StorageRecordsLinks::add(const RecordLink &recordLink) {
     const QWriteLocker locker(&m_lock);
     m_SetRecordLinkTmp.insert(recordLink);
     m_commit = false;
 }
 
-void StorageRecordLink::remove(const RecordLink &recordLink) {
+void StorageRecordsLinks::remove(const RecordLink &recordLink) {
     const QWriteLocker locker(&m_lock);
     m_SetRecordLinkTmp.remove(recordLink);
     m_commit = false;
 }
 
-QSet<RecordLink> StorageRecordLink::get() const {
+QSet<RecordLink> StorageRecordsLinks::get() const {
     const QReadLocker locker(&m_lock);
     return m_SetRecordLinkTmp;
 }
 
-void StorageRecordLink::reset() {
+void StorageRecordsLinks::reset() {
     const QWriteLocker locker(&m_lock);
     m_SetRecordLinkTmp = m_SetRecordLink;
     m_commit = true;
 }
 
-void StorageRecordLink::commit() {
+void StorageRecordsLinks::commit() {
     const QWriteLocker locker(&m_lock);
     m_SetRecordLink = m_SetRecordLinkTmp;
     m_commit = true;
 }
 
-qsizetype StorageRecordLink::count() const {
+qsizetype StorageRecordsLinks::count() const {
     const QReadLocker locker(&m_lock);
     return m_SetRecordLinkTmp.count();
 }
 
-qsizetype StorageRecordLink::countCommitted() const {
+qsizetype StorageRecordsLinks::countCommitted() const {
     const QReadLocker locker(&m_lock);
     return m_SetRecordLink.count();
 }
 
-void StorageRecordLink::clear() {
+void StorageRecordsLinks::clear() {
     const QWriteLocker locker(&m_lock);
     m_SetRecordLinkTmp.clear();
     m_commit = false;
 }
 
-void StorageRecordLink::serialize(QDataStream &out) const {
+void StorageRecordsLinks::serialize(QDataStream &out) const {
     const QReadLocker locker(&m_lock);
 
     out << out.version();
@@ -167,7 +167,7 @@ void StorageRecordLink::serialize(QDataStream &out) const {
     }
 }
 
-void StorageRecordLink::deserialize(QDataStream &in) {
+void StorageRecordsLinks::deserialize(QDataStream &in) {
     const QWriteLocker locker(&m_lock);
 
     deserializeVersion(in);
@@ -180,12 +180,12 @@ void StorageRecordLink::deserialize(QDataStream &in) {
     m_commit = commit;
 }
 
-void StorageRecordLink::throwStreamError(QDataStream::Status status) const {
+void StorageRecordsLinks::throwStreamError(QDataStream::Status status) const {
     throw RuntimeError(
         QObject::tr("QDataStream error. Error code: '%1'.").arg(static_cast<int>(status)));
 }
 
-void StorageRecordLink::deserializeVersion(QDataStream &in) const {
+void StorageRecordsLinks::deserializeVersion(QDataStream &in) const {
     int version { };
     in >> version;
     if (in.status() != QDataStream::Ok) {
@@ -199,7 +199,7 @@ void StorageRecordLink::deserializeVersion(QDataStream &in) const {
     }
 }
 
-QSet<RecordLink> StorageRecordLink::deserializeRecordsLinks(QDataStream &in) const {
+QSet<RecordLink> StorageRecordsLinks::deserializeRecordsLinks(QDataStream &in) const {
     qint32 size;
     in >> size;
     if (in.status() != QDataStream::Ok) {
@@ -222,7 +222,7 @@ QSet<RecordLink> StorageRecordLink::deserializeRecordsLinks(QDataStream &in) con
     return setRecordLink;
 }
 
-bool StorageRecordLink::deserializeCommit(QDataStream &in) const {
+bool StorageRecordsLinks::deserializeCommit(QDataStream &in) const {
     bool commit { };
     in >> commit;
     if (in.status() != QDataStream::Ok) {

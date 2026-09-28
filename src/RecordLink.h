@@ -23,12 +23,12 @@ public:
     public:
         explicit Adder(RecordLink& link);
 
-        Adder& idExecutors(const QSet<qint32>& ids);
-        Adder& idAuthors(const QSet<qint32>& ids);
-        Adder& idCastingMaterials(const QSet<qint32>& ids);
-        Adder& idModelMaterials(const QSet<qint32>& ids);
-        Adder& idMachines(const QSet<qint32>& ids);
-        Adder& idNotes(const QSet<qint32>& ids);
+        Adder& idsExecutors(const QSet<qint32>& ids);
+        Adder& idsAuthors(const QSet<qint32>& ids);
+        Adder& idsCastingMaterials(const QSet<qint32>& ids);
+        Adder& idsModelMaterials(const QSet<qint32>& ids);
+        Adder& idsMachines(const QSet<qint32>& ids);
+        Adder& idsNotes(const QSet<qint32>& ids);
 
     private:
         RecordLink& m_link;
@@ -38,12 +38,12 @@ public:
     public:
         explicit Remover(RecordLink& link);
 
-        Remover& removeExecutors(const QSet<qint32>& ids);
-        Remover& removeAuthors(const QSet<qint32>& ids);
-        Remover& removeCastingMaterials(const QSet<qint32>& ids);
-        Remover& removeModelMaterials(const QSet<qint32>& ids);
-        Remover& removeMachines(const QSet<qint32>& ids);
-        Remover& removeNotes(const QSet<qint32>& ids);
+        Remover& idsExecutors(const QSet<qint32>& ids);
+        Remover& idsAuthors(const QSet<qint32>& ids);
+        Remover& idsCastingMaterials(const QSet<qint32>& ids);
+        Remover& idsModelMaterials(const QSet<qint32>& ids);
+        Remover& idsMachines(const QSet<qint32>& ids);
+        Remover& idsNotes(const QSet<qint32>& ids);
 
     private:
         RecordLink& m_link;
@@ -56,12 +56,12 @@ public:
         qint32 idDate() const;
         qint32 idDrawing() const;
         qint32 idAmount() const;
-        QSet<qint32> idExecutors() const;
-        QSet<qint32> idAuthors() const;
-        QSet<qint32> idCastingMaterials() const;
-        QSet<qint32> idModelMaterials() const;
-        QSet<qint32> idMachines() const;
-        QSet<qint32> idNotes() const;
+        QSet<qint32> idsExecutors() const;
+        QSet<qint32> idsAuthors() const;
+        QSet<qint32> idsCastingMaterials() const;
+        QSet<qint32> idsModelMaterials() const;
+        QSet<qint32> idsMachines() const;
+        QSet<qint32> idsNotes() const;
 
     private:
         const RecordLink& m_link;

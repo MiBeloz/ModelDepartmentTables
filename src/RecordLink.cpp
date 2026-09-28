@@ -21,64 +21,64 @@ RecordLink::Setter &RecordLink::Setter::idAmount(qint32 id) {
 
 RecordLink::Adder::Adder(RecordLink &link) : m_link(link) { }
 
-RecordLink::Adder &RecordLink::Adder::idExecutors(const QSet<qint32> &ids) {
+RecordLink::Adder &RecordLink::Adder::idsExecutors(const QSet<qint32> &ids) {
     m_link.addExecutors(ids);
     return *this;
 }
 
-RecordLink::Adder &RecordLink::Adder::idAuthors(const QSet<qint32> &ids) {
+RecordLink::Adder &RecordLink::Adder::idsAuthors(const QSet<qint32> &ids) {
     m_link.addAuthors(ids);
     return *this;
 }
 
-RecordLink::Adder &RecordLink::Adder::idCastingMaterials(const QSet<qint32> &ids) {
+RecordLink::Adder &RecordLink::Adder::idsCastingMaterials(const QSet<qint32> &ids) {
     m_link.addCastingMaterials(ids);
     return *this;
 }
 
-RecordLink::Adder &RecordLink::Adder::idModelMaterials(const QSet<qint32> &ids) {
+RecordLink::Adder &RecordLink::Adder::idsModelMaterials(const QSet<qint32> &ids) {
     m_link.addModelMaterials(ids);
     return *this;
 }
 
-RecordLink::Adder &RecordLink::Adder::idMachines(const QSet<qint32> &ids) {
+RecordLink::Adder &RecordLink::Adder::idsMachines(const QSet<qint32> &ids) {
     m_link.addMachines(ids);
     return *this;
 }
 
-RecordLink::Adder &RecordLink::Adder::idNotes(const QSet<qint32> &ids) {
+RecordLink::Adder &RecordLink::Adder::idsNotes(const QSet<qint32> &ids) {
     m_link.addNotes(ids);
     return *this;
 }
 
 RecordLink::Remover::Remover(RecordLink &link) : m_link(link) { }
 
-RecordLink::Remover &RecordLink::Remover::removeExecutors(const QSet<qint32> &ids) {
+RecordLink::Remover &RecordLink::Remover::idsExecutors(const QSet<qint32> &ids) {
     m_link.removeExecutors(ids);
     return *this;
 }
 
-RecordLink::Remover &RecordLink::Remover::removeAuthors(const QSet<qint32> &ids) {
+RecordLink::Remover &RecordLink::Remover::idsAuthors(const QSet<qint32> &ids) {
     m_link.removeAuthors(ids);
     return *this;
 }
 
-RecordLink::Remover &RecordLink::Remover::removeCastingMaterials(const QSet<qint32> &ids) {
+RecordLink::Remover &RecordLink::Remover::idsCastingMaterials(const QSet<qint32> &ids) {
     m_link.removeCastingMaterials(ids);
     return *this;
 }
 
-RecordLink::Remover &RecordLink::Remover::removeModelMaterials(const QSet<qint32> &ids) {
+RecordLink::Remover &RecordLink::Remover::idsModelMaterials(const QSet<qint32> &ids) {
     m_link.removeModelMaterials(ids);
     return *this;
 }
 
-RecordLink::Remover &RecordLink::Remover::removeMachines(const QSet<qint32> &ids) {
+RecordLink::Remover &RecordLink::Remover::idsMachines(const QSet<qint32> &ids) {
     m_link.removeMachines(ids);
     return *this;
 }
 
-RecordLink::Remover &RecordLink::Remover::removeNotes(const QSet<qint32> &ids) {
+RecordLink::Remover &RecordLink::Remover::idsNotes(const QSet<qint32> &ids) {
     m_link.removeNotes(ids);
     return *this;
 }
@@ -97,27 +97,27 @@ qint32 RecordLink::Getter::idAmount() const {
     return m_link.getIdAmount();
 }
 
-QSet<qint32> RecordLink::Getter::idExecutors() const {
+QSet<qint32> RecordLink::Getter::idsExecutors() const {
     return m_link.getIdExecutors();
 }
 
-QSet<qint32> RecordLink::Getter::idAuthors() const {
+QSet<qint32> RecordLink::Getter::idsAuthors() const {
     return m_link.getIdAuthors();
 }
 
-QSet<qint32> RecordLink::Getter::idCastingMaterials() const {
+QSet<qint32> RecordLink::Getter::idsCastingMaterials() const {
     return m_link.getIdCastingMaterials();
 }
 
-QSet<qint32> RecordLink::Getter::idModelMaterials() const {
+QSet<qint32> RecordLink::Getter::idsModelMaterials() const {
     return m_link.getIdModelMaterials();
 }
 
-QSet<qint32> RecordLink::Getter::idMachines() const {
+QSet<qint32> RecordLink::Getter::idsMachines() const {
     return m_link.getIdMachines();
 }
 
-QSet<qint32> RecordLink::Getter::idNotes() const {
+QSet<qint32> RecordLink::Getter::idsNotes() const {
     return m_link.getIdNotes();
 }
 
