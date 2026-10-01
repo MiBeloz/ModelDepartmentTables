@@ -13,7 +13,7 @@ public:
     virtual ~ServiceCustomList() { }
 
     ServiceCustomList(ServiceCustomList&) = delete;
-    ServiceCustomList& operator=(ServiceCustomList&) = delete;
+    ServiceCustomList& operator =(ServiceCustomList&) = delete;
 
     virtual std::optional<qint32> add(const ValueType& value) {
         return m_list->insert(value);

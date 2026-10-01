@@ -174,7 +174,7 @@ inline bool CustomList<T>::operator !=(const CustomList& other) const {
 }
 
 template<typename T>
-inline void CustomList<T>::swap(CustomList &other) {
+inline void CustomList<T>::swap(CustomList& other) {
     if (this == &other) {
         return;
     }

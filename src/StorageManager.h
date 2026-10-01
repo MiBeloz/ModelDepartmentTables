@@ -1,10 +1,8 @@
 ﻿#ifndef STORAGEMANAGER_H
 #define STORAGEMANAGER_H
 
-#include "Constants.h"
 #include "Record.h"
-#include "SaverFileStorageLists.h"
-#include "SaverFileStorageRecordsLinks.h"
+#include "Saver.h"
 #include "StorageLists.h"
 #include "StorageRecordsLinks.h"
 
@@ -79,13 +77,10 @@ public:
     friend class Adder;
     friend class Remover;
 
-    StorageManager()
-        : m_saverFileStorageLists(SAVER_STORAGE_FILENAME,
-                                  SAVER_STORAGE_FILENAME_TMP,
-                                  SAVER_STORAGE_FILENAME_BACKUP)
-        , m_saverStorageFileRecordsLinks(SAVER_RECORDLINK_FILENAME,
-                                         SAVER_RECORDLINK_FILENAME_TMP,
-                                         SAVER_RECORDLINK_FILENAME_BACKUP) { }
+    StorageManager(std::unique_ptr<Saver<StorageLists>>& saverLists,
+                   std::unique_ptr<Saver<StorageRecordsLinks>>& saverRecordsLinks)
+        : m_saverFileStorageLists(std::move(saverLists))
+        , m_saverStorageFileRecordsLinks(std::move(saverRecordsLinks)) { }
 
     ~StorageManager() { }
 
@@ -243,19 +238,10 @@ public:
 
     bool reset() {
         m_storageRecordsLinks.reset();
+        m_storageLists.reset();
 
-        m_storageLists.dates().reset();
-        m_storageLists.drawings().reset();
-        m_storageLists.amounts().reset();
-        m_storageLists.executors().reset();
-        m_storageLists.authors().reset();
-        m_storageLists.castingMaterials().reset();
-        m_storageLists.modelMaterials().reset();
-        m_storageLists.machines().reset();
-        m_storageLists.notes().reset();
-
-        if (m_saverStorageFileRecordsLinks.write(m_storageRecordsLinks) &&
-            m_saverFileStorageLists.write(m_storageLists)) {
+        if (m_saverStorageFileRecordsLinks->write(m_storageRecordsLinks) &&
+            m_saverFileStorageLists->write(m_storageLists)) {
             m_recordsIsValid = false;
             return true;
         }
@@ -264,34 +250,26 @@ public:
 
     bool commit() {
         m_storageRecordsLinks.commit();
+        m_storageLists.commit();
 
-        m_storageLists.dates().commit();
-        m_storageLists.drawings().commit();
-        m_storageLists.amounts().commit();
-        m_storageLists.executors().commit();
-        m_storageLists.authors().commit();
-        m_storageLists.castingMaterials().commit();
-        m_storageLists.modelMaterials().commit();
-        m_storageLists.machines().commit();
-        m_storageLists.notes().commit();
-
-        if (m_saverStorageFileRecordsLinks.write(m_storageRecordsLinks) &&
-            m_saverFileStorageLists.write(m_storageLists)) {
+        if (m_saverStorageFileRecordsLinks->write(m_storageRecordsLinks) &&
+            m_saverFileStorageLists->write(m_storageLists)) {
             return true;
         }
+
         return false;
     }
 
     bool save() {
-        if (m_saverStorageFileRecordsLinks.save() && m_saverFileStorageLists.save()) {
+        if (m_saverStorageFileRecordsLinks->save() && m_saverFileStorageLists->save()) {
             return true;
         }
         return false;
     }
 
     bool load() {
-        if (m_saverStorageFileRecordsLinks.read(m_storageRecordsLinks) &&
-            m_saverFileStorageLists.read(m_storageLists)) {
+        if (m_saverStorageFileRecordsLinks->read(m_storageRecordsLinks) &&
+            m_saverFileStorageLists->read(m_storageLists)) {
             return true;
         }
         return false;
@@ -303,16 +281,7 @@ public:
 
     void clear() {
         m_storageRecordsLinks.clear();
-
-        m_storageLists.dates().clear();
-        m_storageLists.drawings().clear();
-        m_storageLists.amounts().clear();
-        m_storageLists.executors().clear();
-        m_storageLists.authors().clear();
-        m_storageLists.castingMaterials().clear();
-        m_storageLists.modelMaterials().clear();
-        m_storageLists.machines().clear();
-        m_storageLists.notes().clear();
+        m_storageLists.clear();
 
         m_recordsIsValid = false;
     }
@@ -400,8 +369,8 @@ public:
 private:
     StorageRecordsLinks m_storageRecordsLinks;
     StorageLists m_storageLists;
-    SaverFileStorageLists m_saverFileStorageLists;
-    SaverFileStorageRecordsLinks m_saverStorageFileRecordsLinks;
+    std::unique_ptr<Saver<StorageLists>> m_saverFileStorageLists;
+    std::unique_ptr<Saver<StorageRecordsLinks>> m_saverStorageFileRecordsLinks;
     mutable QList<Record> m_records;
     mutable bool m_recordsIsValid = true;
 
