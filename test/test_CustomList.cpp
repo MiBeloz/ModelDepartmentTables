@@ -1154,5 +1154,5 @@ void TestCustomList::concurrentReadsAndWritesDoNotCrash() {
     list.commit();
 }
 
-QTEST_MAIN(TestCustomList)
+QTEST_APPLESS_MAIN(TestCustomList)
 #include "test_CustomList.moc"

@@ -552,5 +552,5 @@ void TestRecordLink::concurrentReadsAndWritesDoNotCrash() {
     }
 }
 
-QTEST_MAIN(TestRecordLink)
+QTEST_APPLESS_MAIN(TestRecordLink)
 #include "test_RecordLink.moc"
