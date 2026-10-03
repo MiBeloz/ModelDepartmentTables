@@ -104,50 +104,50 @@ QSet<qint32> RecordLink::Getter::idsNotes() const {
     return m_link.getIdsNotes();
 }
 
-RecordLink::Updater::Updater(RecordLink &link) : m_link(link) { }
+RecordLink::Replacer::Replacer(RecordLink &link) : m_link(link) { }
 
-RecordLink::Updater &RecordLink::Updater::idDate(qint32 newIdDate) {
+RecordLink::Replacer &RecordLink::Replacer::idDate(qint32 newIdDate) {
     m_link.setIdDate(newIdDate);
     return *this;
 }
 
-RecordLink::Updater &RecordLink::Updater::idDrawing(qint32 newIdDrawing) {
+RecordLink::Replacer &RecordLink::Replacer::idDrawing(qint32 newIdDrawing) {
     m_link.setIdDrawing(newIdDrawing);
     return *this;
 }
 
-RecordLink::Updater &RecordLink::Updater::idAmount(qint32 newIdAmount) {
+RecordLink::Replacer &RecordLink::Replacer::idAmount(qint32 newIdAmount) {
     m_link.setIdAmount(newIdAmount);
     return *this;
 }
 
-RecordLink::Updater &RecordLink::Updater::idsExecutors(const QSet<qint32> &ids) {
-    m_link.updateExecutors(ids);
+RecordLink::Replacer &RecordLink::Replacer::idsExecutors(const QSet<qint32> &ids) {
+    m_link.replaceExecutors(ids);
     return *this;
 }
 
-RecordLink::Updater &RecordLink::Updater::idsAuthors(const QSet<qint32> &ids) {
-    m_link.updateAuthors(ids);
+RecordLink::Replacer &RecordLink::Replacer::idsAuthors(const QSet<qint32> &ids) {
+    m_link.replaceAuthors(ids);
     return *this;
 }
 
-RecordLink::Updater &RecordLink::Updater::idsCastingMaterials(const QSet<qint32> &ids) {
-    m_link.updateCastingMaterials(ids);
+RecordLink::Replacer &RecordLink::Replacer::idsCastingMaterials(const QSet<qint32> &ids) {
+    m_link.replaceCastingMaterials(ids);
     return *this;
 }
 
-RecordLink::Updater &RecordLink::Updater::idsModelMaterials(const QSet<qint32> &ids) {
-    m_link.updateModelMaterials(ids);
+RecordLink::Replacer &RecordLink::Replacer::idsModelMaterials(const QSet<qint32> &ids) {
+    m_link.replaceModelMaterials(ids);
     return *this;
 }
 
-RecordLink::Updater &RecordLink::Updater::idsMachines(const QSet<qint32> &ids) {
-    m_link.updateMachines(ids);
+RecordLink::Replacer &RecordLink::Replacer::idsMachines(const QSet<qint32> &ids) {
+    m_link.replaceMachines(ids);
     return *this;
 }
 
-RecordLink::Updater &RecordLink::Updater::idsNotes(const QSet<qint32> &ids) {
-    m_link.updateNotes(ids);
+RecordLink::Replacer &RecordLink::Replacer::idsNotes(const QSet<qint32> &ids) {
+    m_link.replaceNotes(ids);
     return *this;
 }
 
@@ -322,8 +322,8 @@ RecordLink::Getter RecordLink::get() const {
     return Getter(*this);
 }
 
-RecordLink::Updater RecordLink::update() {
-    return Updater(*this);
+RecordLink::Replacer RecordLink::replace() {
+    return Replacer(*this);
 }
 
 void RecordLink::serialize(QDataStream &out) const {
@@ -481,32 +481,32 @@ void RecordLink::removeNotes(const QSet<qint32> &idNotes) {
     m_idsNotes.subtract(idNotes);
 }
 
-void RecordLink::updateExecutors(const QSet<qint32> &idExecutors) {
+void RecordLink::replaceExecutors(const QSet<qint32> &idExecutors) {
     const QWriteLocker locker(&m_lock);
     m_idsExecutors = idExecutors;
 }
 
-void RecordLink::updateAuthors(const QSet<qint32> &idAuthors) {
+void RecordLink::replaceAuthors(const QSet<qint32> &idAuthors) {
     const QWriteLocker locker(&m_lock);
     m_idsAuthors = idAuthors;
 }
 
-void RecordLink::updateCastingMaterials(const QSet<qint32> &idCastingMaterials) {
+void RecordLink::replaceCastingMaterials(const QSet<qint32> &idCastingMaterials) {
     const QWriteLocker locker(&m_lock);
     m_idsCastingMaterials = idCastingMaterials;
 }
 
-void RecordLink::updateModelMaterials(const QSet<qint32> &idModelMaterials) {
+void RecordLink::replaceModelMaterials(const QSet<qint32> &idModelMaterials) {
     const QWriteLocker locker(&m_lock);
     m_idsModelMaterials = idModelMaterials;
 }
 
-void RecordLink::updateMachines(const QSet<qint32> &idMachines) {
+void RecordLink::replaceMachines(const QSet<qint32> &idMachines) {
     const QWriteLocker locker(&m_lock);
     m_idsMachines = idMachines;
 }
 
-void RecordLink::updateNotes(const QSet<qint32> &idNotes) {
+void RecordLink::replaceNotes(const QSet<qint32> &idNotes) {
     const QWriteLocker locker(&m_lock);
     m_idsNotes = idNotes;
 }

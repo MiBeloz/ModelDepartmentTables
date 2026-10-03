@@ -2,7 +2,6 @@
 #define STORAGEMANAGER_H
 
 #include "Record.h"
-#include "Saver.h"
 #include "StorageLists.h"
 #include "StorageRecordsLinks.h"
 
@@ -507,7 +506,7 @@ private:
             }
 
             m_storageRecordsLinks.remove(link);
-            link.update()
+            link.replace()
                 .idsExecutors(executorsIdsNew)
                 .idsAuthors(authorsIdsNew)
                 .idsCastingMaterials(castingMaterialsIdsNew)

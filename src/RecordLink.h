@@ -55,19 +55,19 @@ public:
         const RecordLink& m_link;
     };
 
-    class Updater {
+    class Replacer {
     public:
-        explicit Updater(RecordLink& link);
+        explicit Replacer(RecordLink& link);
 
-        Updater& idDate(qint32 newIdDate);
-        Updater& idDrawing(qint32 newIdDrawing);
-        Updater& idAmount(qint32 newIdAmount);
-        Updater& idsExecutors(const QSet<qint32>& newIdsExecutors);
-        Updater& idsAuthors(const QSet<qint32>& newIdsAuthors);
-        Updater& idsCastingMaterials(const QSet<qint32>& newIdsCastingMaterials);
-        Updater& idsModelMaterials(const QSet<qint32>& newIdsModelMaterials);
-        Updater& idsMachines(const QSet<qint32>& newIdsMachines);
-        Updater& idsNotes(const QSet<qint32>& newIdsNotes);
+        Replacer& idDate(qint32 newIdDate);
+        Replacer& idDrawing(qint32 newIdDrawing);
+        Replacer& idAmount(qint32 newIdAmount);
+        Replacer& idsExecutors(const QSet<qint32>& newIdsExecutors);
+        Replacer& idsAuthors(const QSet<qint32>& newIdsAuthors);
+        Replacer& idsCastingMaterials(const QSet<qint32>& newIdsCastingMaterials);
+        Replacer& idsModelMaterials(const QSet<qint32>& newIdsModelMaterials);
+        Replacer& idsMachines(const QSet<qint32>& newIdsMachines);
+        Replacer& idsNotes(const QSet<qint32>& newIdsNotes);
 
     private:
         RecordLink& m_link;
@@ -76,7 +76,7 @@ public:
     friend class Adder;
     friend class Remover;
     friend class Getter;
-    friend class Updater;
+    friend class Replacer;
 
     explicit RecordLink(qint32 idDate,
                         qint32 idDrawing,
@@ -101,7 +101,7 @@ public:
     [[nodiscard]] Adder add();
     [[nodiscard]] Remover remove();
     [[nodiscard]] Getter get() const;
-    [[nodiscard]] Updater update();
+    [[nodiscard]] Replacer replace();
 
     void serialize(QDataStream& out) const;
     void deserialize(QDataStream& in);
@@ -142,12 +142,12 @@ private:
     void removeMachines(const QSet<qint32>& idsMachines);
     void removeNotes(const QSet<qint32>& idsNotes);
 
-    void updateExecutors(const QSet<qint32>& idsExecutors);
-    void updateAuthors(const QSet<qint32>& idsAuthors);
-    void updateCastingMaterials(const QSet<qint32>& idsCastingMaterials);
-    void updateModelMaterials(const QSet<qint32>& idsModelMaterials);
-    void updateMachines(const QSet<qint32>& idsMachines);
-    void updateNotes(const QSet<qint32>& idsNotes);
+    void replaceExecutors(const QSet<qint32>& idsExecutors);
+    void replaceAuthors(const QSet<qint32>& idsAuthors);
+    void replaceCastingMaterials(const QSet<qint32>& idsCastingMaterials);
+    void replaceModelMaterials(const QSet<qint32>& idsModelMaterials);
+    void replaceMachines(const QSet<qint32>& idsMachines);
+    void replaceNotes(const QSet<qint32>& idsNotes);
 
     qint32 getIdDate() const;
     qint32 getIdDrawing() const;
