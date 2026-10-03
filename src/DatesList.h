@@ -23,6 +23,7 @@ public:
     std::optional<qint32> getId(const qint32 &exelFormat) const override;
     std::optional<QString> getStrValue(qint32 id) const;
     std::optional<qint32> getValue(qint32 id) const override;
+    QList<QString> getAllStrValues() const;
 
     ErrorType lastError() const;
 

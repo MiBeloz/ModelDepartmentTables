@@ -6,6 +6,10 @@
 
 class ServiceDatesList final : public ServiceCustomList<qint32, DatesList> {
 public:
+    using ServiceCustomList<qint32, DatesList>::add;
+    using ServiceCustomList<qint32, DatesList>::remove;
+    using ServiceCustomList<qint32, DatesList>::findId;
+
     ServiceDatesList() : ServiceCustomList() { }
 
     virtual ~ServiceDatesList() = default;
@@ -24,6 +28,10 @@ public:
 
     std::optional<QString> findStrValue(qint32 id) const {
         return m_list.getStrValue(id);
+    }
+
+    QList<QString> findAllStrValues() const {
+        return m_list.getAllStrValues();
     }
 
     DatesList::ErrorType lastError() const {

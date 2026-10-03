@@ -111,7 +111,7 @@ void TestRecordLink::copyConstructorCopiesAllFields() {
     QVERIFY(copy == original);
 
     RecordLink mutableCopy(copy);
-    mutableCopy.set().idDate(999);
+    mutableCopy.update().idDate(999);
     QCOMPARE(original.get().idDate(), 1);
     QCOMPARE(mutableCopy.get().idDate(), 999);
 }
@@ -148,7 +148,7 @@ void TestRecordLink::moveConstructorMovesAndResetsSource() {
 void TestRecordLink::setterSetsIds() {
     RecordLink r = RecordLink::Null;
 
-    r.set().idDate(100).idDrawing(200).idAmount(300);
+    r.update().idDate(100).idDrawing(200).idAmount(300);
 
     QCOMPARE(r.get().idDate(), 100);
     QCOMPARE(r.get().idDrawing(), 200);
@@ -157,8 +157,8 @@ void TestRecordLink::setterSetsIds() {
 
 void TestRecordLink::setterChaining() {
     RecordLink r = RecordLink::Null;
-    RecordLink::Setter s = r.set();
-    s.idDate(7).idDrawing(8).idAmount(9);
+    RecordLink::Updater u = r.update();
+    u.idDate(7).idDrawing(8).idAmount(9);
     QCOMPARE(r.get().idDate(), 7);
     QCOMPARE(r.get().idDrawing(), 8);
     QCOMPARE(r.get().idAmount(), 9);
@@ -258,7 +258,7 @@ void TestRecordLink::operatorEqualEqualObjects() {
 void TestRecordLink::operatorEqualDifferentObjects() {
     RecordLink a = makeSample();
     RecordLink b = makeSample();
-    b.set().idDate(999);
+    b.update().idDate(999);
     QVERIFY(a != b);
     QVERIFY(!(a == b));
 }
@@ -277,7 +277,7 @@ void TestRecordLink::operatorAssignCopy() {
     b = a;
     QVERIFY(a == b);
 
-    b.set().idDate(777);
+    b.update().idDate(777);
     QCOMPARE(a.get().idDate(), 1);
 }
 
@@ -332,7 +332,7 @@ void TestRecordLink::qHashEqualObjectsHaveEqualHash() {
 void TestRecordLink::qHashDifferentObjectsHaveDifferentHash() {
     RecordLink a = makeSample();
     RecordLink b = makeSample();
-    b.set().idDate(12345);
+    b.update().idDate(12345);
     QVERIFY(a.hash() != b.hash());
 }
 
@@ -463,7 +463,7 @@ void TestRecordLink::concurrentReadsAndWritesDoNotCrash() {
 
                 if (op < 15) {
                     // set
-                    link.set().idDate(id).idDrawing(id2).idAmount(id3);
+                    link.update().idDate(id).idDrawing(id2).idAmount(id3);
                 } else if (op < 30) {
                     // add
                     link.add()

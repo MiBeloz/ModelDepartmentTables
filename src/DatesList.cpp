@@ -91,6 +91,15 @@ std::optional<qint32> DatesList::getValue(qint32 id) const {
     return std::nullopt;
 }
 
+QList<QString> DatesList::getAllStrValues() const {
+    QList<QString> strValues;
+    auto values = getAllValues();
+    for (auto &value : values) {
+        strValues.append(DatesList::dateToStr(value).value());
+    }
+    return strValues;
+}
+
 void DatesList::setDateFormat(const QString &format) {
     m_format = format;
 }

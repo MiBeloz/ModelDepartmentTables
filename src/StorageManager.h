@@ -12,46 +12,44 @@ public:
     public:
         explicit Adder(StorageManager& storageManager) : m_storageManager(storageManager) { }
 
+        Adder& date(const QString& date) {
+            m_storageManager.m_storageLists.dates().add(date);
+            return *this;
+        }
+        Adder& date(const qint32 exelFormat) {
+            m_storageManager.m_storageLists.dates().add(exelFormat);
+            return *this;
+        }
+        Adder& drawing(const Drawing& drawing) {
+            m_storageManager.m_storageLists.drawings().add(drawing);
+            return *this;
+        }
+        Adder& amount(const qint32 amount) {
+            m_storageManager.m_storageLists.amounts().add(amount);
+            return *this;
+        }
         Adder& executor(const QString& executor) {
             m_storageManager.m_storageLists.executors().add(executor);
-            m_storageManager.m_recordsIsValid = false;
-            Q_UNUSED(
-                m_storageManager.m_saverFileStorageLists->prepare(m_storageManager.m_storageLists));
             return *this;
         }
         Adder& author(const QString& author) {
             m_storageManager.m_storageLists.authors().add(author);
-            m_storageManager.m_recordsIsValid = false;
-            Q_UNUSED(
-                m_storageManager.m_saverFileStorageLists->prepare(m_storageManager.m_storageLists));
             return *this;
         }
         Adder& castingMaterial(const QString& castingMaterial) {
             m_storageManager.m_storageLists.castingMaterials().add(castingMaterial);
-            m_storageManager.m_recordsIsValid = false;
-            Q_UNUSED(
-                m_storageManager.m_saverFileStorageLists->prepare(m_storageManager.m_storageLists));
             return *this;
         }
         Adder& modelMaterial(const QString& modelMaterial) {
             m_storageManager.m_storageLists.modelMaterials().add(modelMaterial);
-            m_storageManager.m_recordsIsValid = false;
-            Q_UNUSED(
-                m_storageManager.m_saverFileStorageLists->prepare(m_storageManager.m_storageLists));
             return *this;
         }
         Adder& machine(const QString& machine) {
             m_storageManager.m_storageLists.machines().add(machine);
-            m_storageManager.m_recordsIsValid = false;
-            Q_UNUSED(
-                m_storageManager.m_saverFileStorageLists->prepare(m_storageManager.m_storageLists));
             return *this;
         }
         Adder& note(const QString& note) {
             m_storageManager.m_storageLists.notes().add(note);
-            m_storageManager.m_recordsIsValid = false;
-            Q_UNUSED(
-                m_storageManager.m_saverFileStorageLists->prepare(m_storageManager.m_storageLists));
             return *this;
         }
 
@@ -63,46 +61,54 @@ public:
     public:
         explicit Remover(StorageManager& storageManager) : m_storageManager(storageManager) { }
 
+        Remover& date(const QString& date) {
+            m_storageManager.m_storageLists.dates().remove(date);
+            m_storageManager.deleteBadLinks();
+            return *this;
+        }
+        Remover& date(const qint32 exelFormat) {
+            m_storageManager.m_storageLists.dates().remove(exelFormat);
+            m_storageManager.deleteBadLinks();
+            return *this;
+        }
+        Remover& drawing(const Drawing& drawing) {
+            m_storageManager.m_storageLists.drawings().remove(drawing);
+            m_storageManager.deleteBadLinks();
+            return *this;
+        }
+        Remover& amount(const qint32 amount) {
+            m_storageManager.m_storageLists.amounts().remove(amount);
+            m_storageManager.deleteBadLinks();
+            return *this;
+        }
         Remover& executor(const QString& executor) {
             m_storageManager.m_storageLists.executors().remove(executor);
-            m_storageManager.m_recordsIsValid = false;
-            Q_UNUSED(
-                m_storageManager.m_saverFileStorageLists->prepare(m_storageManager.m_storageLists));
+            m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& author(const QString& author) {
             m_storageManager.m_storageLists.authors().remove(author);
-            m_storageManager.m_recordsIsValid = false;
-            Q_UNUSED(
-                m_storageManager.m_saverFileStorageLists->prepare(m_storageManager.m_storageLists));
+            m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& castingMaterial(const QString& castingMaterial) {
             m_storageManager.m_storageLists.castingMaterials().remove(castingMaterial);
-            m_storageManager.m_recordsIsValid = false;
-            Q_UNUSED(
-                m_storageManager.m_saverFileStorageLists->prepare(m_storageManager.m_storageLists));
+            m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& modelMaterial(const QString& modelMaterial) {
             m_storageManager.m_storageLists.modelMaterials().remove(modelMaterial);
-            m_storageManager.m_recordsIsValid = false;
-            Q_UNUSED(
-                m_storageManager.m_saverFileStorageLists->prepare(m_storageManager.m_storageLists));
+            m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& machine(const QString& machine) {
             m_storageManager.m_storageLists.machines().remove(machine);
-            m_storageManager.m_recordsIsValid = false;
-            Q_UNUSED(
-                m_storageManager.m_saverFileStorageLists->prepare(m_storageManager.m_storageLists));
+            m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& note(const QString& note) {
             m_storageManager.m_storageLists.notes().remove(note);
-            m_storageManager.m_recordsIsValid = false;
-            Q_UNUSED(
-                m_storageManager.m_saverFileStorageLists->prepare(m_storageManager.m_storageLists));
+            m_storageManager.deleteBadLinks();
             return *this;
         }
 
@@ -110,18 +116,91 @@ public:
         StorageManager& m_storageManager;
     };
 
+    class Getter {
+    public:
+        explicit Getter(const StorageManager& storageManager) : m_storageManager(storageManager) { }
+
+        auto dates() const {
+            return m_storageManager.m_storageLists.dates().findAllValues();
+        }
+        auto datesStr() const {
+            return m_storageManager.m_storageLists.dates().findAllStrValues();
+        }
+        auto datesError() const {
+            return m_storageManager.m_storageLists.dates().lastError();
+        }
+        auto drawings() const {
+            return m_storageManager.m_storageLists.drawings().findAllValues();
+        }
+        auto amounts() const {
+            return m_storageManager.m_storageLists.amounts().findAllValues();
+        }
+        auto executors() const {
+            return m_storageManager.m_storageLists.executors().findAllValues();
+        }
+        auto authors() const {
+            return m_storageManager.m_storageLists.authors().findAllValues();
+        }
+        auto castingMaterials() const {
+            return m_storageManager.m_storageLists.castingMaterials().findAllValues();
+        }
+        auto modelMaterials() const {
+            return m_storageManager.m_storageLists.modelMaterials().findAllValues();
+        }
+        auto machines() const {
+            return m_storageManager.m_storageLists.machines().findAllValues();
+        }
+        auto notes() const {
+            return m_storageManager.m_storageLists.notes().findAllValues();
+        }
+
+    private:
+        const StorageManager& m_storageManager;
+    };
+
+    class Counter {
+    public:
+        explicit Counter(const StorageManager& storageManager)
+            : m_storageManager(storageManager) { }
+
+        auto dates() const {
+            return m_storageManager.m_storageLists.dates().count();
+        }
+        auto drawings() const {
+            return m_storageManager.m_storageLists.drawings().count();
+        }
+        auto amounts() const {
+            return m_storageManager.m_storageLists.amounts().count();
+        }
+        auto executors() const {
+            return m_storageManager.m_storageLists.executors().count();
+        }
+        auto authors() const {
+            return m_storageManager.m_storageLists.authors().count();
+        }
+        auto castingMaterials() const {
+            return m_storageManager.m_storageLists.castingMaterials().count();
+        }
+        auto modelMaterials() const {
+            return m_storageManager.m_storageLists.modelMaterials().count();
+        }
+        auto machines() const {
+            return m_storageManager.m_storageLists.machines().count();
+        }
+        auto notes() const {
+            return m_storageManager.m_storageLists.notes().count();
+        }
+
+    private:
+        const StorageManager& m_storageManager;
+    };
+
     friend class Adder;
     friend class Remover;
+    friend class Getter;
+    friend class Counter;
 
-    StorageManager(std::unique_ptr<Saver<StorageLists>>& saverLists,
-                   std::unique_ptr<Saver<StorageRecordsLinks>>& saverRecordsLinks)
-        : m_saverFileStorageLists(std::move(saverLists))
-        , m_saverStorageFileRecordsLinks(std::move(saverRecordsLinks)) { }
-
-    ~StorageManager() { }
-
-    StorageManager(const StorageManager&) = delete;
-    StorageManager& operator =(const StorageManager&) = delete;
+    StorageManager() = default;
 
     Adder add() {
         return Adder(*this);
@@ -131,7 +210,15 @@ public:
         return Remover(*this);
     }
 
-    bool add(const Record& record) {
+    Getter get() {
+        return Getter(*this);
+    }
+
+    Counter count() {
+        return Counter(*this);
+    }
+
+    bool addRecord(const Record& record) {
         if (!checkRecord(record)) {
             return false;
         }
@@ -161,19 +248,12 @@ public:
                               idMachines,
                               idNotes);
 
-        auto oldSize = m_storageRecordsLinks.count();
         m_storageRecordsLinks.add(recordLink);
-
-        if (oldSize < m_storageRecordsLinks.count() &&
-            m_saverStorageFileRecordsLinks->prepare(m_storageRecordsLinks) &&
-            m_saverFileStorageLists->prepare(m_storageLists)) {
-            m_recordsIsValid = false;
-            return true;
-        }
-        return false;
+        m_recordsIsValid = false;
+        return true;
     }
 
-    bool remove(const Record& record) {
+    bool removeRecord(const Record& record) {
         if (!checkRecord(record)) {
             return false;
         }
@@ -203,19 +283,12 @@ public:
                               idMachines,
                               idNotes);
 
-        auto oldSize = m_storageRecordsLinks.count();
         m_storageRecordsLinks.remove(recordLink);
-
-        if (oldSize > m_storageRecordsLinks.count() &&
-            m_saverStorageFileRecordsLinks->prepare(m_storageRecordsLinks) &&
-            m_saverFileStorageLists->prepare(m_storageLists)) {
-            m_recordsIsValid = false;
-            return true;
-        }
-        return false;
+        m_recordsIsValid = false;
+        return true;
     }
 
-    QList<Record> get() const {
+    QList<Record> getRecords() const {
         if (m_recordsIsValid) {
             return m_records;
         }
@@ -309,78 +382,74 @@ public:
         return m_records;
     }
 
-    bool reset() {
-        auto oldStorageRecordsLinks = m_storageRecordsLinks;
-        auto oldStorageLists = m_storageLists;
-        auto oldRecordsIsValid = m_recordsIsValid;
-
+    void reset() {
         m_storageRecordsLinks.reset();
         m_storageLists.reset();
         m_recordsIsValid = false;
-
-        if (m_saverStorageFileRecordsLinks->prepare(m_storageRecordsLinks) &&
-            m_saverFileStorageLists->prepare(m_storageLists)) {
-            return true;
-        }
-
-        m_storageRecordsLinks = oldStorageRecordsLinks;
-        m_storageLists = oldStorageLists;
-        m_recordsIsValid = oldRecordsIsValid;
-        return false;
     }
 
-    bool save() {
-        auto oldStorageRecordsLinks = m_storageRecordsLinks;
-        auto oldStorageLists = m_storageLists;
-
+    void commit() {
         m_storageRecordsLinks.commit();
         m_storageLists.commit();
-
-        if (m_saverStorageFileRecordsLinks->write() && m_saverFileStorageLists->write()) {
-            return true;
-        }
-
-        m_storageRecordsLinks = oldStorageRecordsLinks;
-        m_storageLists = oldStorageLists;
-        return false;
     }
 
-    bool load() {
-        if (m_saverStorageFileRecordsLinks->read(m_storageRecordsLinks) &&
-            m_saverFileStorageLists->read(m_storageLists)) {
-            m_recordsIsValid = false;
-            return true;
-        }
-        return false;
-    }
-
-    qsizetype count() const {
-        return m_storageRecordsLinks.count();
-    }
-
-    bool clear() {
-        auto oldStorageRecordsLinks = m_storageRecordsLinks;
-        auto oldStorageLists = m_storageLists;
-        auto oldRecordsIsValid = m_recordsIsValid;
-
+    void clear() {
         m_storageRecordsLinks.clear();
         m_storageLists.clear();
         m_recordsIsValid = false;
-
-        if (m_saverStorageFileRecordsLinks->prepare(m_storageRecordsLinks) &&
-            m_saverFileStorageLists->prepare(m_storageLists)) {
-            return true;
-        }
-
-        m_storageRecordsLinks = oldStorageRecordsLinks;
-        m_storageLists = oldStorageLists;
-        m_recordsIsValid = oldRecordsIsValid;
-        return false;
     }
 
-    bool deleteBadLinks() {
-        auto oldStorageRecordsLinks = m_storageRecordsLinks;
+    void serialize(QDataStream& out) const {
+        m_storageRecordsLinks.serialize(out);
+        m_storageLists.serialize(out);
+    }
 
+    void deserialize(QDataStream& in) {
+        m_storageRecordsLinks.deserialize(in);
+        m_storageLists.deserialize(in);
+        m_recordsIsValid = false;
+    }
+
+    qsizetype countRecords() const {
+        return m_storageRecordsLinks.count();
+    }
+
+private:
+    StorageRecordsLinks m_storageRecordsLinks;
+    StorageLists m_storageLists;
+    mutable QList<Record> m_records;
+    mutable bool m_recordsIsValid = true;
+
+    bool checkRecord(const Record& record) const {
+        if (!DatesList::checkDate(record.date) || !record.drawing.isValid() || record.amount < 1) {
+            return false;
+        }
+        return true;
+    }
+
+    template<typename T>
+    QSet<qint32> addHelper(const QStringList& values, ServiceCustomList<T>& storage) {
+        QSet<qint32> result;
+        for (auto it = values.begin(); it != values.end(); ++it) {
+            if (auto id = storage.add(*it); id.has_value()) {
+                result.insert(id.value());
+            }
+        }
+        return result;
+    }
+
+    template<typename T>
+    QSet<qint32> findIdHelper(const QStringList& values, const ServiceCustomList<T>& storage) const {
+        QSet<qint32> result;
+        for (auto it = values.begin(); it != values.end(); ++it) {
+            if (auto id = storage.findId(*it); id.has_value()) {
+                result.insert(id.value());
+            }
+        }
+        return result;
+    }
+
+    void deleteBadLinks() {
         const auto links = m_storageRecordsLinks.get();
         bool linksChanged = false;
         for (auto link : links) {
@@ -438,72 +507,21 @@ public:
             }
 
             m_storageRecordsLinks.remove(link);
-            link.remove()
-                .idsExecutors(executorsIdsOld)
-                .idsAuthors(authorsIdsOld)
-                .idsCastingMaterials(castingMaterialsIdsOld)
-                .idsModelMaterials(modelMaterialsIdOld)
-                .idsMachines(machinesIdsOld)
-                .idsNotes(notesIdsOld);
-
-            link.add()
+            link.update()
                 .idsExecutors(executorsIdsNew)
                 .idsAuthors(authorsIdsNew)
                 .idsCastingMaterials(castingMaterialsIdsNew)
                 .idsModelMaterials(modelMaterialsIdNew)
                 .idsMachines(machinesIdsNew)
                 .idsNotes(notesIdsNew);
+
             m_storageRecordsLinks.add(link);
             linksChanged = true;
         }
+
         if (linksChanged) {
-            if (m_saverStorageFileRecordsLinks->prepare(m_storageRecordsLinks)) {
-                m_recordsIsValid = false;
-                return true;
-            } else {
-                m_storageRecordsLinks = oldStorageRecordsLinks;
-                return false;
-            }
-        } else {
-            return true;
+            m_recordsIsValid = false;
         }
-    }
-
-private:
-    StorageRecordsLinks m_storageRecordsLinks;
-    StorageLists m_storageLists;
-    std::unique_ptr<Saver<StorageLists>> m_saverFileStorageLists;
-    std::unique_ptr<Saver<StorageRecordsLinks>> m_saverStorageFileRecordsLinks;
-    mutable QList<Record> m_records;
-    mutable bool m_recordsIsValid = true;
-
-    bool checkRecord(const Record& record) {
-        if (!DatesList::checkDate(record.date) || !record.drawing.isValid() || record.amount < 1) {
-            return false;
-        }
-        return true;
-    }
-
-    template<typename T>
-    QSet<qint32> addHelper(const QStringList& values, ServiceCustomList<T>& storage) {
-        QSet<qint32> result;
-        for (auto it = values.begin(); it != values.end(); ++it) {
-            if (auto id = storage.add(*it); id.has_value()) {
-                result.insert(id.value());
-            }
-        }
-        return result;
-    }
-
-    template<typename T>
-    QSet<qint32> findIdHelper(const QStringList& values, const ServiceCustomList<T>& storage) const {
-        QSet<qint32> result;
-        for (auto it = values.begin(); it != values.end(); ++it) {
-            if (auto id = storage.findId(*it); id.has_value()) {
-                result.insert(id.value());
-            }
-        }
-        return result;
     }
 };
 
