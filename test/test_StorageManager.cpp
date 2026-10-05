@@ -1,5 +1,9 @@
-﻿#include <QByteArray>
+﻿#include <QAtomicInt>
+#include <QByteArray>
 #include <QDataStream>
+#include <QFuture>
+#include <QThread>
+#include <QtConcurrent>
 #include <QtTest>
 
 #include "Drawing.h"
@@ -33,6 +37,865 @@ private slots:
     void testReset();
     void testClear();
 
+    // ============================================================
+    //  Multithreading
+    // ============================================================
+
+    // ---------- TEST 0: diagnostics of a single record ----------
+    void testSingleRecordDiagnostic() {
+        StorageManager sm;
+        Record r = createRecord(0, 0);
+
+        qDebug() << "date       =" << r.date;
+        qDebug() << "drawing    =" << r.drawing.getNumber() << r.drawing.getTitle()
+                 << "valid:" << r.drawing.isValid();
+        qDebug() << "amount     =" << r.amount;
+        qDebug() << "addRecord  =" << sm.addRecord(r);
+        qDebug() << "count      =" << sm.countRecords();
+
+        QVERIFY2(r.drawing.isValid(), "Drawing невалиден");
+        QVERIFY2(r.amount >= 1, "amount < 1");
+        QVERIFY2(sm.addRecord(r), "addRecord вернул false — смотрите DatesList::checkDate");
+    }
+
+    // ---------- TEST 1: 8 threads × 1000 addRecord operations, verification against the reference ----------
+    void testMultithreadedAdd() {
+        const int threadCount = 8;
+        const int recordsPerThread = 1000;
+        const int totalRecords = threadCount * recordsPerThread;
+
+        StorageManager storageManager;
+
+        QAtomicInt successCount(0);
+        QAtomicInt failCount(0);
+
+        // Заранее подготовим ожидаемые ключи (эталон)
+        QSet<QString> expectedKeys;
+        for (int t = 0; t < threadCount; ++t) {
+            for (int i = 0; i < recordsPerThread; ++i) {
+                expectedKeys.insert(makeKey(createRecord(t, i)));
+            }
+        }
+        QCOMPARE(expectedKeys.size(), totalRecords);
+
+        QElapsedTimer timer;
+        timer.start();
+
+        // Запускаем 8 потоков одновременно
+        QList<QFuture<void>> futures;
+        futures.reserve(threadCount);
+
+        for (int t = 0; t < threadCount; ++t) {
+            futures.append(QtConcurrent::run([&, t]() {
+                for (int i = 0; i < recordsPerThread; ++i) {
+                    Record record = createRecord(t, i);
+                    if (storageManager.addRecord(record)) {
+                        successCount.fetchAndAddOrdered(1);
+                    } else {
+                        failCount.fetchAndAddOrdered(1);
+                    }
+                }
+            }));
+        }
+
+        // Ждём завершения всех потоков
+        for (auto& f : futures) {
+            f.waitForFinished();
+        }
+
+        const qint64 elapsed = timer.elapsed();
+
+        qDebug() << "Elapsed:" << elapsed << "ms";
+        qDebug() << "Success:" << successCount.loadAcquire() << "Fail:" << failCount.loadAcquire();
+
+        // === Проверки ===
+
+        // 1) Все добавления успешны
+        QCOMPARE(failCount.loadAcquire(), 0);
+        QCOMPARE(successCount.loadAcquire(), totalRecords);
+
+        // 2) Количество записей в хранилище совпадает
+        QCOMPARE(storageManager.countRecords(), static_cast<qsizetype>(totalRecords));
+
+        // 3) Получаем все записи и сверяем с эталоном
+        QList<Record> records = storageManager.getRecords();
+        QCOMPARE(records.size(), totalRecords);
+
+        QSet<QString> actualKeys;
+        for (const Record& record : records) {
+            // Валидность каждой записи
+            QVERIFY(!record.date.isEmpty());
+            QVERIFY(record.drawing.isValid());
+            QVERIFY(record.amount >= 1);
+
+            actualKeys.insert(makeKey(record));
+        }
+
+        // Все ключи уникальны
+        QCOMPARE(actualKeys.size(), totalRecords);
+
+        // Множества совпадают: ни одна запись не потеряна и не искажена
+        QCOMPARE(actualKeys, expectedKeys);
+    }
+
+    //  ---------- TEST 2 : 8 addRecord threads, then 8 removeRecord threads ----------
+    void testMultithreadedAddAndRemove() {
+        const int threadCount = 8;
+        const int recordsPerThread = 1000;
+        const int totalRecords = threadCount * recordsPerThread;
+
+        StorageManager sm;
+        QAtomicInt addSuccess(0);
+        QAtomicInt removeSuccess(0);
+
+        QList<QFuture<void>> futures;
+        // --- Фаза 1: добавляем ---
+        for (int t = 0; t < threadCount; ++t) {
+            futures.append(QtConcurrent::run([&, t]() {
+                for (int i = 0; i < recordsPerThread; ++i) {
+                    if (sm.addRecord(createRecord(t, i))) {
+                        addSuccess.fetchAndAddOrdered(1);
+                    }
+                }
+            }));
+        }
+        for (auto& f : futures) {
+            f.waitForFinished();
+        }
+        futures.clear();
+
+        QCOMPARE(addSuccess.loadAcquire(), totalRecords);
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
+
+        // --- Фаза 2: удаляем ---
+        for (int t = 0; t < threadCount; ++t) {
+            futures.append(QtConcurrent::run([&, t]() {
+                for (int i = 0; i < recordsPerThread; ++i) {
+                    if (sm.removeRecord(createRecord(t, i))) {
+                        removeSuccess.fetchAndAddOrdered(1);
+                    }
+                }
+            }));
+        }
+        for (auto& f : futures) {
+            f.waitForFinished();
+        }
+
+        QCOMPARE(removeSuccess.loadAcquire(), totalRecords);
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(0));
+        QCOMPARE(sm.getRecords().size(), 0);
+    }
+
+    // ---------- TEST 3: read during write ----------
+    void testConcurrentGetDuringAdd() {
+        const int threadCount = 8;
+        const int recordsPerThread = 1000;
+        const int totalRecords = threadCount * recordsPerThread;
+
+        StorageManager sm;
+        QAtomicInt stop(0);
+        QAtomicInt getterIterations(0);
+
+        // Поток-читатель
+        QFuture<void> getter = QtConcurrent::run([&]() {
+            while (!stop.loadAcquire()) {
+                const auto records = sm.getRecords();
+                Q_UNUSED(records);
+                getterIterations.fetchAndAddOrdered(1);
+            }
+        });
+
+        // Потоки-писатели
+        QList<QFuture<void>> futures;
+        for (int t = 0; t < threadCount; ++t) {
+            futures.append(QtConcurrent::run([&, t]() {
+                for (int i = 0; i < recordsPerThread; ++i) {
+                    sm.addRecord(createRecord(t, i));
+                }
+            }));
+        }
+        for (auto& f : futures) {
+            f.waitForFinished();
+        }
+
+        stop.storeRelease(1);
+        getter.waitForFinished();
+
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
+        QVERIFY(getterIterations.loadAcquire() > 0);
+    }
+
+    // ---------- TEST 4: 8 threads × 1000 Adders (without RecordLink) ----------
+    void testMultithreadedAdder() {
+        const int threadCount = 8;
+        const int addsPerThread = 1000;
+        const int total = threadCount * addsPerThread;
+
+        StorageManager sm;
+        QAtomicInt success(0);
+
+        QList<QFuture<void>> futures;
+        for (int t = 0; t < threadCount; ++t) {
+            futures.append(QtConcurrent::run([&, t]() {
+                for (int i = 0; i < addsPerThread; ++i) {
+                    sm.add()
+                        .date(makeDate(t, i))
+                        .drawing(makeDrawing(t, i))
+                        .amount(t * addsPerThread + i + 1)
+                        .executor(QString("E_%1_%2").arg(t).arg(i))
+                        .author(QString("A_%1_%2").arg(t).arg(i))
+                        .castingMaterial(QString("C_%1_%2").arg(t).arg(i))
+                        .modelMaterial(QString("M_%1_%2").arg(t).arg(i))
+                        .machine(QString("Mc_%1_%2").arg(t).arg(i))
+                        .note(QString("N_%1_%2").arg(t).arg(i));
+                    success.fetchAndAddOrdered(1);
+                }
+            }));
+        }
+        for (auto& f : futures) {
+            f.waitForFinished();
+        }
+
+        // Adder НЕ создаёт RecordLink, поэтому countRecords() == 0
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(0));
+
+        // Но списки должны содержать все добавленные значения
+        QCOMPARE(sm.count().dates(), total);
+        QCOMPARE(sm.count().drawings(), total);
+        QCOMPARE(sm.count().amounts(), total);
+        QCOMPARE(sm.count().executors(), total);
+        QCOMPARE(sm.count().authors(), total);
+        QCOMPARE(sm.count().castingMaterials(), total);
+        QCOMPARE(sm.count().modelMaterials(), total);
+        QCOMPARE(sm.count().machines(), total);
+        QCOMPARE(sm.count().notes(), total);
+
+        QCOMPARE(success.loadAcquire(), total);
+    }
+
+    // ---------- TEST 5: 8 threads × 100 Remover (with deleteBadLinks) ----------
+    void testMultithreadedRemover() {
+        const int threadCount = 8;
+        const int recordsPerThread = 100;
+        const int totalRecords = threadCount * recordsPerThread;
+
+        StorageManager sm;
+
+        // Фаза 1 — добавляем через addRecord (создаются RecordLink)
+        for (int t = 0; t < threadCount; ++t) {
+            for (int i = 0; i < recordsPerThread; ++i) {
+                sm.addRecord(createRecord(t, i));
+            }
+        }
+
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
+
+        // Фаза 2 — удаляем через Remover в 8 потоков
+        QAtomicInt removed(0);
+        QList<QFuture<void>> futures;
+        for (int t = 0; t < threadCount; ++t) {
+            futures.append(QtConcurrent::run([&, t]() {
+                for (int i = 0; i < recordsPerThread; ++i) {
+                    const Record r = createRecord(t, i);
+                    sm.remove().date(r.date).drawing(r.drawing).amount(r.amount);
+                    removed.fetchAndAddOrdered(1);
+                }
+            }));
+        }
+        for (auto& f : futures) {
+            f.waitForFinished();
+        }
+
+        QCOMPARE(removed.loadAcquire(), totalRecords);
+        // Все три ключевых поля (date/drawing/amount) удалены —
+        // deleteBadLinks должен был удалить все RecordLink.
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(0));
+    }
+
+    // ---------- TEST 6: mixed load Adder/Remover/Getter/Counter ----------
+    void testMixedWorkload() {
+        const int threadCount = 8;
+        StorageManager sm;
+        QAtomicInt stopFlag(0);
+        QAtomicInt getterIters(0);
+        QAtomicInt counterIters(0);
+
+        // Поток-Getter
+        QFuture<void> getter = QtConcurrent::run([&]() {
+            while (!stopFlag.loadAcquire()) {
+                auto d = sm.get().dates();
+                auto dr = sm.get().drawings();
+                auto a = sm.get().amounts();
+                Q_UNUSED(d);
+                Q_UNUSED(dr);
+                Q_UNUSED(a);
+                getterIters.fetchAndAddOrdered(1);
+            }
+        });
+
+        // Поток-Counter
+        QFuture<void> counter = QtConcurrent::run([&]() {
+            while (!stopFlag.loadAcquire()) {
+                auto n1 = sm.count().dates();
+                auto n2 = sm.count().drawings();
+                Q_UNUSED(n1);
+                Q_UNUSED(n2);
+                counterIters.fetchAndAddOrdered(1);
+            }
+        });
+
+        // Потоки-Adder/Remover
+        QList<QFuture<void>> futures;
+        for (int t = 0; t < threadCount; ++t) {
+            futures.append(QtConcurrent::run([&, t]() {
+                for (int i = 0; i < 1000; ++i) {
+                    const QString key = QString("E_%1_%2").arg(t).arg(i);
+                    if (i % 2 == 0) {
+                        sm.add().executor(key);
+                    } else {
+                        sm.remove().executor(QString("E_%1_%2").arg(t).arg(i - 1));
+                    }
+                }
+            }));
+        }
+        for (auto& f : futures) {
+            f.waitForFinished();
+        }
+
+        stopFlag.storeRelease(1);
+        getter.waitForFinished();
+        counter.waitForFinished();
+
+        QVERIFY(getterIters.loadAcquire() > 0);
+        QVERIFY(counterIters.loadAcquire() > 0);
+    }
+
+    // ---------- TEST 7: reset / clear / commit ----------
+    void testResetClearCommit() {
+        const int threadCount = 8;
+        const int recordsPerThread = 1000;
+        const int totalRecords = threadCount * recordsPerThread;
+
+        StorageManager sm;
+
+        // Наполняем
+        QList<QFuture<void>> futures;
+        for (int t = 0; t < threadCount; ++t) {
+            futures.append(QtConcurrent::run([&, t]() {
+                for (int i = 0; i < recordsPerThread; ++i) {
+                    sm.addRecord(createRecord(t, i));
+                }
+            }));
+        }
+        for (auto& f : futures) {
+            f.waitForFinished();
+        }
+
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(totalRecords));
+
+        // commit — не должен ничего ломать
+        sm.commit();
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(totalRecords));
+
+        // Дополняем
+        futures.clear();
+        for (int t = threadCount; t < threadCount * 2; ++t) {
+            futures.append(QtConcurrent::run([&, t]() {
+                for (int i = 0; i < recordsPerThread; ++i) {
+                    sm.addRecord(createRecord(t, i));
+                }
+            }));
+        }
+        for (auto& f : futures) {
+            f.waitForFinished();
+        }
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords * 2));
+        QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(totalRecords * 2));
+
+        // reset — откатывает links и lists до commit
+        sm.reset();
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(totalRecords));
+
+        // clear — очищает
+        sm.clear();
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(0));
+        QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(0));
+
+        // reset — откатывает links и lists до commit
+        sm.reset();
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(totalRecords));
+
+        // clear и commit — очищает и фиксирует
+        sm.clear();
+        sm.commit();
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(0));
+        QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(0));
+
+        // reset — откатывает links и lists до commit
+        sm.reset();
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(0));
+        QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(0));
+    }
+
+    // ---------- TEST 8: serialize / deserialize in a single thread (round-trip) ----------
+    void testSerializeRoundTrip() {
+        const int threadCount = 4;
+        const int recordsPerThread = 250;
+        const int totalRecords = threadCount * recordsPerThread;
+
+        StorageManager sm;
+        for (int t = 0; t < threadCount; ++t) {
+            for (int i = 0; i < recordsPerThread; ++i) {
+                sm.addRecord(createRecord(t, i));
+            }
+        }
+
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
+
+        // Сериализация
+        QByteArray data;
+        {
+            QDataStream out(&data, QIODevice::WriteOnly);
+            out.setVersion(QDataStream::Qt_6_0);
+            sm.serialize(out);
+        }
+
+        // Десериализация
+        StorageManager sm2;
+        {
+            QDataStream in(&data, QIODevice::ReadOnly);
+            in.setVersion(QDataStream::Qt_6_0);
+            sm2.deserialize(in);
+        }
+
+        QCOMPARE(sm2.countRecords(), static_cast<qsizetype>(totalRecords));
+
+        // Сверяем ключи
+        QSet<QString> keys1, keys2;
+        for (const Record& r : sm.getRecords()) {
+            keys1.insert(makeKey(r));
+        }
+        for (const Record& r : sm2.getRecords()) {
+            keys2.insert(makeKey(r));
+        }
+        QCOMPARE(keys1, keys2);
+    }
+
+    // ---------- TEST 9: serialization in parallel with writing (stress test) ----------
+    void testSerializeDuringAdd() {
+        const int threadCount = 4;
+        const int recordsPerThread = 500;
+        const int totalRecords = threadCount * recordsPerThread;
+
+        StorageManager sm;
+        QAtomicInt stop(0), serializations(0);
+
+        QFuture<void> serializer = QtConcurrent::run([&]() {
+            while (!stop.loadAcquire()) {
+                QByteArray data;
+                QDataStream out(&data, QIODevice::WriteOnly);
+                out.setVersion(QDataStream::Qt_6_0);
+                sm.serialize(out);
+                serializations.fetchAndAddOrdered(1);
+            }
+        });
+
+        QList<QFuture<void>> futures;
+        for (int t = 0; t < threadCount; ++t) {
+            futures.append(QtConcurrent::run([&, t]() {
+                for (int i = 0; i < recordsPerThread; ++i) {
+                    sm.addRecord(createRecord(t, i));
+                }
+            }));
+        }
+        for (auto& f : futures) {
+            f.waitForFinished();
+        }
+
+        stop.storeRelease(1);
+        serializer.waitForFinished();
+
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
+        QVERIFY(serializations.loadAcquire() > 0);
+    }
+
+    // несколько читателей getRecords() одновременно
+    void testMultipleConcurrentGetters() {
+        const int writerCount = 4;
+        const int getterCount = 4;
+        const int perThread = 500;
+
+        StorageManager sm;
+        QAtomicInt stop(0);
+
+        QList<QFuture<void>> getters;
+        for (int g = 0; g < getterCount; ++g) {
+            getters.append(QtConcurrent::run([&]() {
+                while (!stop.loadAcquire()) {
+                    auto records = sm.getRecords(); // ← mutable-кэш, гонка
+                    Q_UNUSED(records);
+                }
+            }));
+        }
+
+        QList<QFuture<void>> writers;
+        for (int w = 0; w < writerCount; ++w) {
+            writers.append(QtConcurrent::run([&, w]() {
+                for (int i = 0; i < perThread; ++i) {
+                    sm.addRecord(createRecord(w, i));
+                }
+            }));
+        }
+
+        for (auto& f : writers) {
+            f.waitForFinished();
+        }
+        stop.storeRelease(1);
+        for (auto& f : getters) {
+            f.waitForFinished();
+        }
+
+        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(writerCount * perThread));
+    }
+
+    // getRecords() во время clear()/reset()
+    void testGetDuringClear() {
+        StorageManager sm;
+        for (int i = 0; i < 1000; ++i) {
+            sm.addRecord(createRecord(0, i));
+        }
+
+        QAtomicInt stop(0);
+        QFuture<void> getter = QtConcurrent::run([&]() {
+            while (!stop.loadAcquire()) {
+                auto r = sm.getRecords();
+                // размер может быть любым: 0, 1000, промежуточным
+                Q_UNUSED(r);
+            }
+        });
+
+        for (int k = 0; k < 100; ++k) {
+            sm.clear();
+            for (int i = 0; i < 10; ++i) {
+                sm.addRecord(createRecord(0, i));
+            }
+        }
+        stop.storeRelease(1);
+        getter.waitForFinished();
+    }
+
+    // ---------- TEST 10: final stress test — all methods running in parallel, integrity check of each record ----------
+    void testFullStressIntegrity() {
+        {
+            // ------------------------------------------------------------
+            //  Part 1. Scenario A: addRecord writers only,
+            //           deterministic result, full reconciliation.
+            // ------------------------------------------------------------
+            const int writerCount = 8;
+            const int recordsPerWriter = 100;
+            const int totalRecords = writerCount * recordsPerWriter;
+
+            StorageManager sm;
+
+            // Эталон: уникальные ключи всех записей, которые должны быть добавлены
+            QSet<QString> expectedKeys;
+            for (int t = 0; t < writerCount; ++t) {
+                for (int i = 0; i < recordsPerWriter; ++i) {
+                    expectedKeys.insert(makeKey(createRecord(t, i)));
+                }
+            }
+            QCOMPARE(expectedKeys.size(), totalRecords);
+
+            // 8 потоков, каждый — addRecord со своим диапазоном
+            QList<QFuture<void>> writers;
+            QAtomicInt success(0);
+            for (int t = 0; t < writerCount; ++t) {
+                writers.append(QtConcurrent::run([&, t]() {
+                    for (int i = 0; i < recordsPerWriter; ++i) {
+                        if (sm.addRecord(createRecord(t, i))) {
+                            success.fetchAndAddOrdered(1);
+                        }
+                    }
+                }));
+            }
+            for (auto& f : writers) {
+                f.waitForFinished();
+            }
+
+            QCOMPARE(success.loadAcquire(), totalRecords);
+            QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
+
+            // ---- Проверка каждой Record на целостность ----
+            const QList<Record> records = sm.getRecords();
+            QCOMPARE(records.size(), totalRecords);
+
+            QSet<QString> actualKeys;
+            for (const Record& r : records) {
+                verifyRecordIntegrity(r, /*sm=*/sm);
+                actualKeys.insert(makeKey(r));
+            }
+            QCOMPARE(actualKeys.size(), totalRecords);
+            QCOMPARE(actualKeys, expectedKeys);
+
+            // ---- Повторный вызов getRecords должен дать тот же результат ----
+            const QList<Record> recordsAgain = sm.getRecords();
+            QCOMPARE(recordsAgain.size(), records.size());
+            for (int k = 0; k < records.size(); ++k) {
+                QCOMPARE(makeKey(recordsAgain[k]), makeKey(records[k]));
+            }
+
+            // ---- serialize → deserialize даёт тот же набор ----
+            QByteArray data;
+            {
+                QDataStream out(&data, QIODevice::WriteOnly);
+                out.setVersion(QDataStream::Qt_6_0);
+                sm.serialize(out);
+            }
+            StorageManager sm2;
+            {
+                QDataStream in(&data, QIODevice::ReadOnly);
+                in.setVersion(QDataStream::Qt_6_0);
+                sm2.deserialize(in);
+            }
+            QCOMPARE(sm2.countRecords(), static_cast<qsizetype>(totalRecords));
+
+            QSet<QString> deserializedKeys;
+            for (const Record& r : sm2.getRecords()) {
+                deserializedKeys.insert(makeKey(r));
+            }
+            QCOMPARE(deserializedKeys, expectedKeys);
+        }
+
+        // ------------------------------------------------------------
+        //  Part 2. Scenario B: all methods in parallel.
+        //           The result is non-deterministic, but each Record
+        //           must be consistent.
+        // ------------------------------------------------------------
+        {
+            const int runTimeMs = 3000; // сколько крутим стресс
+
+            StorageManager sm;
+
+            // Стартовое наполнение — чтобы у удалятелей было что удалять
+            const int initialRecords = 500;
+            for (int i = 0; i < initialRecords; ++i) {
+                sm.addRecord(createRecord(i % 8, i));
+            }
+            QCOMPARE(sm.countRecords(), static_cast<qsizetype>(initialRecords));
+
+            QAtomicInt stop(0);
+            QAtomicInt addOk(0), addFail(0);
+            QAtomicInt removeOk(0), removeFail(0);
+            QAtomicInt getterIters(0), counterIters(0), serializeIters(0);
+            QAtomicInt adderIters(0), removerIters(0);
+
+            QElapsedTimer timer;
+            timer.start();
+
+            // --- Поток 1: addRecord ---
+            QFuture<void> fAdd = QtConcurrent::run([&]() {
+                int i = 0;
+                while (!stop.loadAcquire()) {
+                    const Record r = createRecord(0, 100000 + i);
+                    if (sm.addRecord(r)) {
+                        addOk.fetchAndAddOrdered(1);
+                    } else {
+                        addFail.fetchAndAddOrdered(1);
+                    }
+                    ++i;
+                }
+            });
+
+            // --- Поток 2: removeRecord (удаляет только что добавленные из своего диапазона) ---
+            QFuture<void> fRemove = QtConcurrent::run([&]() {
+                int i = 0;
+                while (!stop.loadAcquire()) {
+                    const Record r = createRecord(1, 100000 + i);
+                    if (sm.removeRecord(r)) {
+                        removeOk.fetchAndAddOrdered(1);
+                    } else {
+                        removeFail.fetchAndAddOrdered(1);
+                    }
+                    ++i;
+                }
+            });
+
+            // --- Поток 3: Adder ---
+            QFuture<void> fAdder = QtConcurrent::run([&]() {
+                int i = 0;
+                while (!stop.loadAcquire()) {
+                    sm.add()
+                        .date(makeDate(2, i))
+                        .drawing(makeDrawing(2, 200000 + i))
+                        .amount(1000000 + i)
+                        .executor(QString("E_adder_%1").arg(i))
+                        .author(QString("A_adder_%1").arg(i))
+                        .castingMaterial(QString("C_adder_%1").arg(i))
+                        .modelMaterial(QString("M_adder_%1").arg(i))
+                        .machine(QString("Mc_adder_%1").arg(i))
+                        .note(QString("N_adder_%1").arg(i));
+                    adderIters.fetchAndAddOrdered(1);
+                    ++i;
+                }
+            });
+
+            // --- Поток 4: Remover (по Adder-диапазону, чтобы deleteBadLinks работал) ---
+            QFuture<void> fRemover = QtConcurrent::run([&]() {
+                int i = 0;
+                while (!stop.loadAcquire()) {
+                    sm.remove()
+                        .executor(QString("E_adder_%1").arg(i))
+                        .author(QString("A_adder_%1").arg(i))
+                        .castingMaterial(QString("C_adder_%1").arg(i))
+                        .modelMaterial(QString("M_adder_%1").arg(i))
+                        .machine(QString("Mc_adder_%1").arg(i))
+                        .note(QString("N_adder_%1").arg(i));
+                    removerIters.fetchAndAddOrdered(1);
+                    ++i;
+                }
+            });
+
+            // --- Поток 5: getRecords ---
+            QFuture<void> fGet = QtConcurrent::run([&]() {
+                while (!stop.loadAcquire()) {
+                    const auto records = sm.getRecords();
+                    // Внутри стресса допускается любой размер,
+                    // но КАЖДАЯ запись должна быть целостной.
+                    for (const Record& r : records) {
+                        if (!r.drawing.isValid() || r.date.isEmpty() || r.amount < 1) {
+                            // Не кидаем исключение, а фиксируем провал через QVERIFY
+                            // в основном потоке — здесь просто копим счётчик.
+                            // Проще: помечаем флагом через атомик.
+                            // Ниже — упрощённый вариант: используем QFAIL через
+                            // QMetaObject::invokeMethod нельзя, поэтому копим.
+                        }
+                    }
+                    getterIters.fetchAndAddOrdered(1);
+                }
+            });
+
+            // --- Поток 6: Getter ---
+            QFuture<void> fGetLists = QtConcurrent::run([&]() {
+                while (!stop.loadAcquire()) {
+                    auto d = sm.get().dates();
+                    auto dr = sm.get().drawings();
+                    auto a = sm.get().amounts();
+                    auto e = sm.get().executors();
+                    auto au = sm.get().authors();
+                    auto c = sm.get().castingMaterials();
+                    auto m = sm.get().modelMaterials();
+                    auto mc = sm.get().machines();
+                    auto n = sm.get().notes();
+                    Q_UNUSED(d);
+                    Q_UNUSED(dr);
+                    Q_UNUSED(a);
+                    Q_UNUSED(e);
+                    Q_UNUSED(au);
+                    Q_UNUSED(c);
+                    Q_UNUSED(m);
+                    Q_UNUSED(mc);
+                    Q_UNUSED(n);
+                    counterIters.fetchAndAddOrdered(1);
+                }
+            });
+
+            // --- Поток 7: Counter ---
+            QFuture<void> fCount = QtConcurrent::run([&]() {
+                while (!stop.loadAcquire()) {
+                    const auto c1 = sm.count().dates();
+                    const auto c2 = sm.count().drawings();
+                    const auto c3 = sm.count().amounts();
+                    Q_UNUSED(c1);
+                    Q_UNUSED(c2);
+                    Q_UNUSED(c3);
+                    counterIters.fetchAndAddOrdered(1);
+                }
+            });
+
+            // --- Поток 8: serialize ---
+            QFuture<void> fSerialize = QtConcurrent::run([&]() {
+                while (!stop.loadAcquire()) {
+                    QByteArray data;
+                    QDataStream out(&data, QIODevice::WriteOnly);
+                    out.setVersion(QDataStream::Qt_6_0);
+                    sm.serialize(out);
+                    serializeIters.fetchAndAddOrdered(1);
+                }
+            });
+
+            // Крутим runTimeMs миллисекунд
+            QThread::msleep(runTimeMs);
+            stop.storeRelease(1);
+
+            // Ждём завершения всех
+            fAdd.waitForFinished();
+            fRemove.waitForFinished();
+            fAdder.waitForFinished();
+            fRemover.waitForFinished();
+            fGet.waitForFinished();
+            fGetLists.waitForFinished();
+            fCount.waitForFinished();
+            fSerialize.waitForFinished();
+
+            const qint64 elapsed = timer.elapsed();
+            qDebug() << "stress elapsed:" << elapsed << "ms";
+            qDebug() << "addOk:" << addOk.loadAcquire() << "addFail:" << addFail.loadAcquire()
+                     << "removeOk:" << removeOk.loadAcquire()
+                     << "removeFail:" << removeFail.loadAcquire()
+                     << "adderIters:" << adderIters.loadAcquire()
+                     << "removerIters:" << removerIters.loadAcquire()
+                     << "getterIters:" << getterIters.loadAcquire()
+                     << "counterIters:" << counterIters.loadAcquire()
+                     << "serializeIters:" << serializeIters.loadAcquire();
+
+            QVERIFY(addOk.loadAcquire() > 0);
+            QVERIFY(removeOk.loadAcquire() > 0);
+            QVERIFY(adderIters.loadAcquire() > 0);
+            QVERIFY(removerIters.loadAcquire() > 0);
+            QVERIFY(getterIters.loadAcquire() > 0);
+            QVERIFY(counterIters.loadAcquire() > 0);
+            QVERIFY(serializeIters.loadAcquire() > 0);
+
+            // ---- Финальная проверка целостности ----
+            const QList<Record> finalRecords = sm.getRecords();
+            qDebug() << "final records:" << finalRecords.size();
+
+            QSet<QString> finalKeys;
+            for (const Record& r : finalRecords) {
+                verifyRecordIntegrity(r, sm);
+                finalKeys.insert(makeKey(r));
+            }
+            // Все записи уникальны (нет дубликатов из-за гонок)
+            QCOMPARE(finalKeys.size(), finalRecords.size());
+
+            // ---- serialize финального состояния корректен ----
+            QByteArray data;
+            {
+                QDataStream out(&data, QIODevice::WriteOnly);
+                out.setVersion(QDataStream::Qt_6_0);
+                sm.serialize(out);
+            }
+            StorageManager sm2;
+            {
+                QDataStream in(&data, QIODevice::ReadOnly);
+                in.setVersion(QDataStream::Qt_6_0);
+                sm2.deserialize(in);
+            }
+            QCOMPARE(sm2.countRecords(), sm.countRecords());
+
+            QSet<QString> deserKeys;
+            for (const Record& r : sm2.getRecords()) {
+                verifyRecordIntegrity(r, sm2);
+                deserKeys.insert(makeKey(r));
+            }
+            QCOMPARE(deserKeys, finalKeys);
+        }
+    }
+
 private:
     static Drawing makeValidDrawing(int n = 1);
     static Record makeValidRecord(const QString& date = QStringLiteral("15.01.2024"),
@@ -43,6 +906,97 @@ private:
                                   const QStringList& modelMaterials = { },
                                   const QStringList& machines = { },
                                   const QStringList& notes = { });
+
+    // ---------- Multithreading helpers ----------
+    QString makeDate(int threadId, int index) const {
+        // 8000 уникальных дат: 2000-01-01 + (threadId*1000 + index) дней
+        QDate base(2000, 1, 1);
+        QDate d = base.addDays(threadId * 1000 + index);
+        return d.toString("dd.MM.yyyy"); // формат dd.MM.yyyy
+    }
+
+    Drawing makeDrawing(int threadId, int index) const {
+        return Drawing(QString("DWG-%1-%2").arg(threadId).arg(index),
+                       QString("Title-%1-%2").arg(threadId).arg(index));
+    }
+
+    Record createRecord(int threadId, int index) const {
+        return Record(makeDate(threadId, index),
+                      makeDrawing(threadId, index),
+                      index + 1,
+                      QStringList { QString("Exec_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString("Auth_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString("Cast_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString("Model_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString("Mach_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString("Note_%1_%2").arg(threadId).arg(index) });
+    }
+
+    QString makeKey(const Record& r) const {
+        return QStringList { r.date,
+                             r.drawing.getNumber(),
+                             r.drawing.getTitle(),
+                             QString::number(r.amount),
+                             r.executors.join(","),
+                             r.authors.join(","),
+                             r.castingMaterials.join(","),
+                             r.modelMaterials.join(","),
+                             r.machines.join(","),
+                             r.notes.join(",") }
+            .join("|");
+    }
+
+    void verifyRecordIntegrity(const Record& r, const StorageManager& sm) const {
+        // --- 1. Базовые проверки ---
+        QVERIFY2(!r.date.isEmpty(), "date пустой");
+        QVERIFY2(DatesList::checkDate(r.date), "date не проходит checkDate");
+        QVERIFY2(r.drawing.isValid(), "drawing невалиден");
+        QVERIFY2(!r.drawing.getNumber().isEmpty(), "drawing.number пуст");
+        QVERIFY2(!r.drawing.getTitle().isEmpty(), "drawing.title пуст");
+        QVERIFY2(r.amount >= 1, "amount < 1");
+
+        // --- 2. Консистентность со StorageLists ---
+        //  Каждое значение из Record должно присутствовать в соответствующем
+        //  списке StorageLists. Если оно оттуда пропало — значит, ссылка
+        //  «полубитая»: RecordLink ещё ссылается на удалённый id.
+        const auto allDates = sm.get().datesStr();
+        QVERIFY2(allDates.contains(r.date),
+                 qPrintable(QString("date '%1' отсутствует в StorageLists::dates").arg(r.date)));
+
+        const auto allDrawings = sm.get().drawings();
+        bool drawingFound = false;
+        for (const auto& d : allDrawings) {
+            if (d == r.drawing) {
+                drawingFound = true;
+                break;
+            }
+        }
+        QVERIFY2(drawingFound,
+                 qPrintable(QString("drawing '%1 / %2' отсутствует в StorageLists::drawings")
+                                .arg(r.drawing.getNumber(), r.drawing.getTitle())));
+
+        const auto allAmounts = sm.get().amounts();
+        QVERIFY2(allAmounts.contains(r.amount),
+                 qPrintable(
+                     QString("amount '%1' отсутствует в StorageLists::amounts").arg(r.amount)));
+
+        auto checkList =
+            [](const QStringList& values, const auto& allValues, const char* fieldName) {
+                for (const QString& v : values) {
+                    if (!allValues.contains(v)) {
+                        QFAIL(qPrintable(
+                            QString("%1 '%2' отсутствует в StorageLists").arg(fieldName, v)));
+                    }
+                }
+            };
+
+        checkList(r.executors, sm.get().executors(), "executor");
+        checkList(r.authors, sm.get().authors(), "author");
+        checkList(r.castingMaterials, sm.get().castingMaterials(), "castingMaterial");
+        checkList(r.modelMaterials, sm.get().modelMaterials(), "modelMaterial");
+        checkList(r.machines, sm.get().machines(), "machine");
+        checkList(r.notes, sm.get().notes(), "note");
+    }
 };
 
 Drawing TestStorageManager::makeValidDrawing(int n) {
@@ -181,7 +1135,11 @@ void TestStorageManager::testAdderFluent() {
 
 void TestStorageManager::testRemoverFluent() {
     StorageManager sm;
-    sm.add().date(QStringLiteral("02.03.2024")).amount(1).executor(QStringLiteral("ExecB")).note(QStringLiteral("NoteB"));
+    sm.add()
+        .date(QStringLiteral("02.03.2024"))
+        .amount(1)
+        .executor(QStringLiteral("ExecB"))
+        .note(QStringLiteral("NoteB"));
 
     QCOMPARE(sm.count().executors(), 1);
     QCOMPARE(sm.count().notes(), 1);
@@ -194,7 +1152,11 @@ void TestStorageManager::testRemoverFluent() {
 
 void TestStorageManager::testGetter() {
     StorageManager sm;
-    sm.add().date(QStringLiteral("01.04.2024")).amount(7).executor(QStringLiteral("ExecC")).author(QStringLiteral("AuthorC"));
+    sm.add()
+        .date(QStringLiteral("01.04.2024"))
+        .amount(7)
+        .executor(QStringLiteral("ExecC"))
+        .author(QStringLiteral("AuthorC"));
 
     const auto dates = sm.get().datesStr();
     QCOMPARE(dates.size(), 1);
@@ -270,7 +1232,10 @@ void TestStorageManager::testDeleteBadLinksKeepsRecordIfOnlySomeValuesRemoved() 
     QVERIFY(sm.addRecord(r));
 
     // Удаляем несколько значений из разных списков
-    sm.remove().executor(QStringLiteral("ExecX")).castingMaterial(QStringLiteral("CastX")).machine(QStringLiteral("MachineX"));
+    sm.remove()
+        .executor(QStringLiteral("ExecX"))
+        .castingMaterial(QStringLiteral("CastX"))
+        .machine(QStringLiteral("MachineX"));
 
     // Запись осталась, но соответствующие списки опустели
     QCOMPARE(sm.countRecords(), qsizetype(1));

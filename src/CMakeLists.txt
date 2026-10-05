@@ -20,6 +20,7 @@ target_link_libraries(ModelDepartmentTables_lib
         Qt6::Widgets
         Qt6::Sql
         Qt6::Network
+        Qt6::Concurrent
 )
 
 qt_wrap_ui(ModelDepartmentTables_lib ${UI_FILES})

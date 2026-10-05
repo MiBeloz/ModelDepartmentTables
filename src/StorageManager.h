@@ -61,51 +61,61 @@ public:
         explicit Remover(StorageManager& storageManager) : m_storageManager(storageManager) { }
 
         Remover& date(const QString& date) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.dates().remove(date);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& date(const qint32 exelFormat) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.dates().remove(exelFormat);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& drawing(const Drawing& drawing) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.drawings().remove(drawing);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& amount(const qint32 amount) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.amounts().remove(amount);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& executor(const QString& executor) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.executors().remove(executor);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& author(const QString& author) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.authors().remove(author);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& castingMaterial(const QString& castingMaterial) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.castingMaterials().remove(castingMaterial);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& modelMaterial(const QString& modelMaterial) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.modelMaterials().remove(modelMaterial);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& machine(const QString& machine) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.machines().remove(machine);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& note(const QString& note) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.notes().remove(note);
             m_storageManager.deleteBadLinks();
             return *this;
@@ -209,15 +219,16 @@ public:
         return Remover(*this);
     }
 
-    Getter get() {
+    Getter get() const {
         return Getter(*this);
     }
 
-    Counter count() {
+    Counter count() const {
         return Counter(*this);
     }
 
     bool addRecord(const Record& record) {
+        const QWriteLocker locker(&m_lock);
         if (!checkRecord(record)) {
             return false;
         }
@@ -253,6 +264,7 @@ public:
     }
 
     bool removeRecord(const Record& record) {
+        const QWriteLocker locker(&m_lock);
         if (!checkRecord(record)) {
             return false;
         }
@@ -288,6 +300,7 @@ public:
     }
 
     QList<Record> getRecords() const {
+        const QWriteLocker locker(&m_lock);
         if (m_recordsIsValid) {
             return m_records;
         }
@@ -382,28 +395,33 @@ public:
     }
 
     void reset() {
+        const QWriteLocker locker(&m_lock);
         m_storageRecordsLinks.reset();
         m_storageLists.reset();
         m_recordsIsValid = false;
     }
 
     void commit() {
+        const QWriteLocker locker(&m_lock);
         m_storageRecordsLinks.commit();
         m_storageLists.commit();
     }
 
     void clear() {
+        const QWriteLocker locker(&m_lock);
         m_storageRecordsLinks.clear();
         m_storageLists.clear();
         m_recordsIsValid = false;
     }
 
     void serialize(QDataStream& out) const {
+        const QWriteLocker locker(&m_lock);
         m_storageRecordsLinks.serialize(out);
         m_storageLists.serialize(out);
     }
 
     void deserialize(QDataStream& in) {
+        const QWriteLocker locker(&m_lock);
         m_storageRecordsLinks.deserialize(in);
         m_storageLists.deserialize(in);
         m_recordsIsValid = false;
@@ -418,6 +436,7 @@ private:
     StorageLists m_storageLists;
     mutable QList<Record> m_records;
     mutable bool m_recordsIsValid = true;
+    mutable QReadWriteLock m_lock;
 
     bool checkRecord(const Record& record) const {
         if (!DatesList::checkDate(record.date) || !record.drawing.isValid() || record.amount < 1) {
