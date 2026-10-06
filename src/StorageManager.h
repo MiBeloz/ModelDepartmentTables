@@ -61,63 +61,63 @@ public:
         explicit Remover(StorageManager& storageManager) : m_storageManager(storageManager) { }
 
         Remover& date(const QString& date) {
-            const QWriteLocker locker(&m_storageManager.m_lock);
+            const QWriteLocker locker(&m_storageManager.m_dataLock);
             m_storageManager.m_storageLists.dates().remove(date);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& date(const qint32 exelFormat) {
-            const QWriteLocker locker(&m_storageManager.m_lock);
+            const QWriteLocker locker(&m_storageManager.m_dataLock);
             m_storageManager.m_storageLists.dates().remove(exelFormat);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& drawing(const Drawing& drawing) {
-            const QWriteLocker locker(&m_storageManager.m_lock);
+            const QWriteLocker locker(&m_storageManager.m_dataLock);
             m_storageManager.m_storageLists.drawings().remove(drawing);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& amount(const qint32 amount) {
-            const QWriteLocker locker(&m_storageManager.m_lock);
+            const QWriteLocker locker(&m_storageManager.m_dataLock);
             m_storageManager.m_storageLists.amounts().remove(amount);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& executor(const QString& executor) {
-            const QWriteLocker locker(&m_storageManager.m_lock);
+            const QWriteLocker locker(&m_storageManager.m_dataLock);
             m_storageManager.m_storageLists.executors().remove(executor);
-            m_storageManager.deleteBadLinks();
+            m_storageManager.deleteBadLinksExecutors();
             return *this;
         }
         Remover& author(const QString& author) {
-            const QWriteLocker locker(&m_storageManager.m_lock);
+            const QWriteLocker locker(&m_storageManager.m_dataLock);
             m_storageManager.m_storageLists.authors().remove(author);
-            m_storageManager.deleteBadLinks();
+            m_storageManager.deleteBadLinksAuthors();
             return *this;
         }
         Remover& castingMaterial(const QString& castingMaterial) {
-            const QWriteLocker locker(&m_storageManager.m_lock);
+            const QWriteLocker locker(&m_storageManager.m_dataLock);
             m_storageManager.m_storageLists.castingMaterials().remove(castingMaterial);
-            m_storageManager.deleteBadLinks();
+            m_storageManager.deleteBadLinksCastingMaterials();
             return *this;
         }
         Remover& modelMaterial(const QString& modelMaterial) {
-            const QWriteLocker locker(&m_storageManager.m_lock);
+            const QWriteLocker locker(&m_storageManager.m_dataLock);
             m_storageManager.m_storageLists.modelMaterials().remove(modelMaterial);
-            m_storageManager.deleteBadLinks();
+            m_storageManager.deleteBadLinksModelMaterials();
             return *this;
         }
         Remover& machine(const QString& machine) {
-            const QWriteLocker locker(&m_storageManager.m_lock);
+            const QWriteLocker locker(&m_storageManager.m_dataLock);
             m_storageManager.m_storageLists.machines().remove(machine);
-            m_storageManager.deleteBadLinks();
+            m_storageManager.deleteBadLinksMachines();
             return *this;
         }
         Remover& note(const QString& note) {
-            const QWriteLocker locker(&m_storageManager.m_lock);
+            const QWriteLocker locker(&m_storageManager.m_dataLock);
             m_storageManager.m_storageLists.notes().remove(note);
-            m_storageManager.deleteBadLinks();
+            m_storageManager.deleteBadLinksNotes();
             return *this;
         }
 
@@ -228,7 +228,7 @@ public:
     }
 
     bool addRecord(const Record& record) {
-        const QWriteLocker locker(&m_lock);
+        const QWriteLocker locker(&m_dataLock);
         if (!checkRecord(record)) {
             return false;
         }
@@ -264,7 +264,7 @@ public:
     }
 
     bool removeRecord(const Record& record) {
-        const QWriteLocker locker(&m_lock);
+        const QWriteLocker locker(&m_dataLock);
         if (!checkRecord(record)) {
             return false;
         }
@@ -300,7 +300,7 @@ public:
     }
 
     QList<Record> getRecords() const {
-        const QWriteLocker locker(&m_lock);
+        const QWriteLocker locker(&m_cacheLock);
         if (m_recordsIsValid) {
             return m_records;
         }
@@ -395,33 +395,33 @@ public:
     }
 
     void reset() {
-        const QWriteLocker locker(&m_lock);
+        const QWriteLocker locker(&m_dataLock);
         m_storageRecordsLinks.reset();
         m_storageLists.reset();
         m_recordsIsValid = false;
     }
 
     void commit() {
-        const QWriteLocker locker(&m_lock);
+        const QWriteLocker locker(&m_dataLock);
         m_storageRecordsLinks.commit();
         m_storageLists.commit();
     }
 
     void clear() {
-        const QWriteLocker locker(&m_lock);
+        const QWriteLocker locker(&m_dataLock);
         m_storageRecordsLinks.clear();
         m_storageLists.clear();
         m_recordsIsValid = false;
     }
 
     void serialize(QDataStream& out) const {
-        const QWriteLocker locker(&m_lock);
+        const QWriteLocker locker(&m_dataLock);
         m_storageRecordsLinks.serialize(out);
         m_storageLists.serialize(out);
     }
 
     void deserialize(QDataStream& in) {
-        const QWriteLocker locker(&m_lock);
+        const QWriteLocker locker(&m_dataLock);
         m_storageRecordsLinks.deserialize(in);
         m_storageLists.deserialize(in);
         m_recordsIsValid = false;
@@ -436,7 +436,8 @@ private:
     StorageLists m_storageLists;
     mutable QList<Record> m_records;
     mutable bool m_recordsIsValid = true;
-    mutable QReadWriteLock m_lock;
+    mutable QReadWriteLock m_dataLock;
+    mutable QReadWriteLock m_cacheLock;
 
     bool checkRecord(const Record& record) const {
         if (!DatesList::checkDate(record.date) || !record.drawing.isValid() || record.amount < 1) {
@@ -468,72 +469,207 @@ private:
     }
 
     void deleteBadLinks() {
+        bool again = true;
+        while (again) {
+            again = false;
+
+            const auto links = m_storageRecordsLinks.get();
+            for (auto& link : links) {
+                bool bad = false;
+                if (auto date = m_storageLists.dates().findValue(link.get().idDate());
+                    !date.has_value()) {
+                    bad = true;
+                } else if (auto drawing = m_storageLists.drawings().findValue(
+                               link.get().idDrawing());
+                           !drawing.has_value()) {
+                    bad = true;
+                } else if (auto amount = m_storageLists.amounts().findValue(link.get().idAmount());
+                           !amount.has_value()) {
+                    bad = true;
+                }
+
+                if (bad) {
+                    m_storageRecordsLinks.remove(link);
+                    again = true;
+                    continue;
+                }
+            }
+        }
+    }
+
+    void deleteBadLinksExecutors() {
         const auto links = m_storageRecordsLinks.get();
         bool linksChanged = false;
         for (auto link : links) {
-            bool bad = false;
-            if (auto date = m_storageLists.dates().findValue(link.get().idDate());
-                !date.has_value()) {
-                bad = true;
-            } else if (auto drawing = m_storageLists.drawings().findValue(link.get().idDrawing());
-                       !drawing.has_value()) {
-                bad = true;
-            } else if (auto amount = m_storageLists.amounts().findValue(link.get().idAmount());
-                       !amount.has_value()) {
-                bad = true;
-            }
-            if (bad) {
-                m_storageRecordsLinks.remove(link);
-                linksChanged = true;
-                continue;
-            }
-
-            auto filterIds = [](const QSet<qint32>& ids, const auto& storage) {
-                QSet<qint32> result;
-                for (auto id : ids) {
-                    if (auto value = storage.findValue(id); value.has_value()) {
-                        result.insert(id);
-                    }
-                }
-                return result;
-            };
-
             const auto executorsIdsOld = link.get().idsExecutors();
-            const auto authorsIdsOld = link.get().idsAuthors();
-            const auto castingMaterialsIdsOld = link.get().idsCastingMaterials();
-            const auto modelMaterialsIdOld = link.get().idsModelMaterials();
-            const auto machinesIdsOld = link.get().idsMachines();
-            const auto notesIdsOld = link.get().idsNotes();
 
-            const auto executorsIdsNew = filterIds(executorsIdsOld, m_storageLists.executors());
-            const auto authorsIdsNew = filterIds(authorsIdsOld, m_storageLists.authors());
-            const auto castingMaterialsIdsNew = filterIds(castingMaterialsIdsOld,
-                                                          m_storageLists.castingMaterials());
-            const auto modelMaterialsIdNew = filterIds(modelMaterialsIdOld,
-                                                       m_storageLists.modelMaterials());
-            const auto machinesIdsNew = filterIds(machinesIdsOld, m_storageLists.machines());
-            const auto notesIdsNew = filterIds(notesIdsOld, m_storageLists.notes());
+            QSet<qint32> executorsIdsNew;
+            for (auto id : executorsIdsOld) {
+                if (auto value = m_storageLists.executors().findValue(id); value.has_value()) {
+                    executorsIdsNew.insert(id);
+                }
+            }
 
-            const bool changed = executorsIdsNew != executorsIdsOld ||
-                                 authorsIdsNew != authorsIdsOld ||
-                                 castingMaterialsIdsNew != castingMaterialsIdsOld ||
-                                 modelMaterialsIdNew != modelMaterialsIdOld ||
-                                 machinesIdsNew != machinesIdsOld || notesIdsNew != notesIdsOld;
-
+            const bool changed = executorsIdsNew != executorsIdsOld;
             if (!changed) {
                 continue;
             }
 
             m_storageRecordsLinks.remove(link);
-            link.replace()
-                .idsExecutors(executorsIdsNew)
-                .idsAuthors(authorsIdsNew)
-                .idsCastingMaterials(castingMaterialsIdsNew)
-                .idsModelMaterials(modelMaterialsIdNew)
-                .idsMachines(machinesIdsNew)
-                .idsNotes(notesIdsNew);
-
+            link.replace().idsExecutors(executorsIdsNew);
             m_storageRecordsLinks.add(link);
+
+            linksChanged = true;
+        }
+
+        if (linksChanged) {
+            m_recordsIsValid = false;
+        }
+    }
+
+    void deleteBadLinksAuthors() {
+        const auto links = m_storageRecordsLinks.get();
+        bool linksChanged = false;
+        for (auto link : links) {
+            const auto authorsIdsOld = link.get().idsAuthors();
+
+            QSet<qint32> authorsIdsNew;
+            for (auto id : authorsIdsOld) {
+                if (auto value = m_storageLists.authors().findValue(id); value.has_value()) {
+                    authorsIdsNew.insert(id);
+                }
+            }
+
+            const bool changed = authorsIdsNew != authorsIdsOld;
+            if (!changed) {
+                continue;
+            }
+
+            m_storageRecordsLinks.remove(link);
+            link.replace().idsAuthors(authorsIdsNew);
+            m_storageRecordsLinks.add(link);
+
+            linksChanged = true;
+        }
+
+        if (linksChanged) {
+            m_recordsIsValid = false;
+        }
+    }
+
+    void deleteBadLinksCastingMaterials() {
+        const auto links = m_storageRecordsLinks.get();
+        bool linksChanged = false;
+        for (auto link : links) {
+            const auto castingMaterialsIdsOld = link.get().idsCastingMaterials();
+
+            QSet<qint32> castingMaterialsIdsNew;
+            for (auto id : castingMaterialsIdsOld) {
+                if (auto value = m_storageLists.castingMaterials().findValue(id);
+                    value.has_value()) {
+                    castingMaterialsIdsNew.insert(id);
+                }
+            }
+
+            const bool changed = castingMaterialsIdsNew != castingMaterialsIdsOld;
+            if (!changed) {
+                continue;
+            }
+
+            m_storageRecordsLinks.remove(link);
+            link.replace().idsCastingMaterials(castingMaterialsIdsNew);
+            m_storageRecordsLinks.add(link);
+
+            linksChanged = true;
+        }
+
+        if (linksChanged) {
+            m_recordsIsValid = false;
+        }
+    }
+
+    void deleteBadLinksModelMaterials() {
+        const auto links = m_storageRecordsLinks.get();
+        bool linksChanged = false;
+        for (auto link : links) {
+            const auto modelMaterialsIdsOld = link.get().idsModelMaterials();
+
+            QSet<qint32> modelMaterialsIdsNew;
+            for (auto id : modelMaterialsIdsOld) {
+                if (auto value = m_storageLists.modelMaterials().findValue(id); value.has_value()) {
+                    modelMaterialsIdsNew.insert(id);
+                }
+            }
+
+            const bool changed = modelMaterialsIdsNew != modelMaterialsIdsOld;
+            if (!changed) {
+                continue;
+            }
+
+            m_storageRecordsLinks.remove(link);
+            link.replace().idsModelMaterials(modelMaterialsIdsNew);
+            m_storageRecordsLinks.add(link);
+
+            linksChanged = true;
+        }
+
+        if (linksChanged) {
+            m_recordsIsValid = false;
+        }
+    }
+
+    void deleteBadLinksMachines() {
+        const auto links = m_storageRecordsLinks.get();
+        bool linksChanged = false;
+        for (auto link : links) {
+            const auto machinesIdsOld = link.get().idsMachines();
+
+            QSet<qint32> machinesIdsNew;
+            for (auto id : machinesIdsOld) {
+                if (auto value = m_storageLists.machines().findValue(id); value.has_value()) {
+                    machinesIdsNew.insert(id);
+                }
+            }
+
+            const bool changed = machinesIdsNew != machinesIdsOld;
+            if (!changed) {
+                continue;
+            }
+
+            m_storageRecordsLinks.remove(link);
+            link.replace().idsMachines(machinesIdsNew);
+            m_storageRecordsLinks.add(link);
+
+            linksChanged = true;
+        }
+
+        if (linksChanged) {
+            m_recordsIsValid = false;
+        }
+    }
+
+    void deleteBadLinksNotes() {
+        const auto links = m_storageRecordsLinks.get();
+        bool linksChanged = false;
+        for (auto link : links) {
+            const auto notesIdsOld = link.get().idsNotes();
+
+            QSet<qint32> notesIdsNew;
+            for (auto id : notesIdsOld) {
+                if (auto value = m_storageLists.notes().findValue(id); value.has_value()) {
+                    notesIdsNew.insert(id);
+                }
+            }
+
+            const bool changed = notesIdsNew != notesIdsOld;
+            if (!changed) {
+                continue;
+            }
+
+            m_storageRecordsLinks.remove(link);
+            link.replace().idsNotes(notesIdsNew);
+            m_storageRecordsLinks.add(link);
+
             linksChanged = true;
         }
 
