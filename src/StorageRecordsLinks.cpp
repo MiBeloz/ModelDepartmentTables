@@ -151,12 +151,12 @@ void StorageRecordsLinks::serialize(QDataStream &out) const {
     out << out.version();
 
     out << static_cast<qint32>(m_SetRecordLink.size());
-    for (auto it = m_SetRecordLink.begin(); it != m_SetRecordLink.end(); ++it) {
+    for (auto it = m_SetRecordLink.cbegin(); it != m_SetRecordLink.cend(); ++it) {
         it->serialize(out);
     }
 
     out << static_cast<qint32>(m_SetRecordLinkTmp.size());
-    for (auto it = m_SetRecordLinkTmp.begin(); it != m_SetRecordLinkTmp.end(); ++it) {
+    for (auto it = m_SetRecordLinkTmp.cbegin(); it != m_SetRecordLinkTmp.cend(); ++it) {
         it->serialize(out);
     }
 

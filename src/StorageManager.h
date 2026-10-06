@@ -415,7 +415,7 @@ public:
     }
 
     void serialize(QDataStream& out) const {
-        const QWriteLocker locker(&m_dataLock);
+        const QReadLocker locker(&m_dataLock);
         m_storageRecordsLinks.serialize(out);
         m_storageLists.serialize(out);
     }

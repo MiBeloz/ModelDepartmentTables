@@ -311,22 +311,22 @@ inline void CustomList<T>::serialize(QDataStream& out) const {
     out << out.version();
 
     out << static_cast<qint32>(m_list.size());
-    for (auto it = m_list.begin(); it != m_list.end(); ++it) {
+    for (auto it = m_list.cbegin(); it != m_list.cend(); ++it) {
         out << it.key() << it.value();
     }
     out << m_id;
     out << static_cast<qint32>(m_emptyId.size());
-    for (auto id : m_emptyId) {
+    for (auto& id : std::as_const(m_emptyId)) {
         out << id;
     }
 
     out << static_cast<qint32>(m_listTmp.size());
-    for (auto it = m_listTmp.begin(); it != m_listTmp.end(); ++it) {
+    for (auto it = m_listTmp.cbegin(); it != m_listTmp.cend(); ++it) {
         out << it.key() << it.value();
     }
     out << m_idTmp;
     out << static_cast<qint32>(m_emptyIdTmp.size());
-    for (auto id : m_emptyIdTmp) {
+    for (auto& id : std::as_const(m_emptyIdTmp)) {
         out << id;
     }
 

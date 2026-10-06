@@ -899,7 +899,10 @@ private slots:
                     QByteArray data;
                     QDataStream out(&data, QIODevice::WriteOnly);
                     out.setVersion(QDataStream::Qt_6_0);
+                    QElapsedTimer t;
+                    t.start();
                     sm.serialize(out);
+                    qDebug() << "serialize took" << t.elapsed() << "ms";
                     serializeIters.fetchAndAddOrdered(1);
                 }
             });
