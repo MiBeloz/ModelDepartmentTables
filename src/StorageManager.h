@@ -1,6 +1,10 @@
 ﻿#ifndef STORAGEMANAGER_H
 #define STORAGEMANAGER_H
 
+#include <QMutex>
+#include <QSet>
+#include <QString>
+
 #include "Record.h"
 #include "StorageLists.h"
 #include "StorageRecordsLinks.h"
@@ -28,27 +32,29 @@ public:
             return *this;
         }
         Adder& executor(const QString& executor) {
-            m_storageManager.m_storageLists.executors().add(executor);
+            m_storageManager.m_storageLists.customStorage(CustomStorage::Executors).add(executor);
             return *this;
         }
         Adder& author(const QString& author) {
-            m_storageManager.m_storageLists.authors().add(author);
+            m_storageManager.m_storageLists.customStorage(CustomStorage::Authors).add(author);
             return *this;
         }
         Adder& castingMaterial(const QString& castingMaterial) {
-            m_storageManager.m_storageLists.castingMaterials().add(castingMaterial);
+            m_storageManager.m_storageLists.customStorage(CustomStorage::CastingMaterials)
+                .add(castingMaterial);
             return *this;
         }
         Adder& modelMaterial(const QString& modelMaterial) {
-            m_storageManager.m_storageLists.modelMaterials().add(modelMaterial);
+            m_storageManager.m_storageLists.customStorage(CustomStorage::ModelMaterials)
+                .add(modelMaterial);
             return *this;
         }
         Adder& machine(const QString& machine) {
-            m_storageManager.m_storageLists.machines().add(machine);
+            m_storageManager.m_storageLists.customStorage(CustomStorage::Machines).add(machine);
             return *this;
         }
         Adder& note(const QString& note) {
-            m_storageManager.m_storageLists.notes().add(note);
+            m_storageManager.m_storageLists.customStorage(CustomStorage::Notes).add(note);
             return *this;
         }
 
@@ -61,62 +67,64 @@ public:
         explicit Remover(StorageManager& storageManager) : m_storageManager(storageManager) { }
 
         Remover& date(const QString& date) {
-            const QWriteLocker locker(&m_storageManager.m_dataLock);
+            const QMutexLocker locker(&m_storageManager.m_dataLock);
             m_storageManager.m_storageLists.dates().remove(date);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& date(const qint32 exelFormat) {
-            const QWriteLocker locker(&m_storageManager.m_dataLock);
+            const QMutexLocker locker(&m_storageManager.m_dataLock);
             m_storageManager.m_storageLists.dates().remove(exelFormat);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& drawing(const Drawing& drawing) {
-            const QWriteLocker locker(&m_storageManager.m_dataLock);
+            const QMutexLocker locker(&m_storageManager.m_dataLock);
             m_storageManager.m_storageLists.drawings().remove(drawing);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& amount(const qint32 amount) {
-            const QWriteLocker locker(&m_storageManager.m_dataLock);
+            const QMutexLocker locker(&m_storageManager.m_dataLock);
             m_storageManager.m_storageLists.amounts().remove(amount);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& executor(const QString& executor) {
-            const QWriteLocker locker(&m_storageManager.m_dataLock);
-            m_storageManager.m_storageLists.executors().remove(executor);
+            const QMutexLocker locker(&m_storageManager.m_dataLock);
+            m_storageManager.m_storageLists.customStorage(CustomStorage::Executors).remove(executor);
             m_storageManager.deleteBadLinksExecutors();
             return *this;
         }
         Remover& author(const QString& author) {
-            const QWriteLocker locker(&m_storageManager.m_dataLock);
-            m_storageManager.m_storageLists.authors().remove(author);
+            const QMutexLocker locker(&m_storageManager.m_dataLock);
+            m_storageManager.m_storageLists.customStorage(CustomStorage::Authors).remove(author);
             m_storageManager.deleteBadLinksAuthors();
             return *this;
         }
         Remover& castingMaterial(const QString& castingMaterial) {
-            const QWriteLocker locker(&m_storageManager.m_dataLock);
-            m_storageManager.m_storageLists.castingMaterials().remove(castingMaterial);
+            const QMutexLocker locker(&m_storageManager.m_dataLock);
+            m_storageManager.m_storageLists.customStorage(CustomStorage::CastingMaterials)
+                .remove(castingMaterial);
             m_storageManager.deleteBadLinksCastingMaterials();
             return *this;
         }
         Remover& modelMaterial(const QString& modelMaterial) {
-            const QWriteLocker locker(&m_storageManager.m_dataLock);
-            m_storageManager.m_storageLists.modelMaterials().remove(modelMaterial);
+            const QMutexLocker locker(&m_storageManager.m_dataLock);
+            m_storageManager.m_storageLists.customStorage(CustomStorage::ModelMaterials)
+                .remove(modelMaterial);
             m_storageManager.deleteBadLinksModelMaterials();
             return *this;
         }
         Remover& machine(const QString& machine) {
-            const QWriteLocker locker(&m_storageManager.m_dataLock);
-            m_storageManager.m_storageLists.machines().remove(machine);
+            const QMutexLocker locker(&m_storageManager.m_dataLock);
+            m_storageManager.m_storageLists.customStorage(CustomStorage::Machines).remove(machine);
             m_storageManager.deleteBadLinksMachines();
             return *this;
         }
         Remover& note(const QString& note) {
-            const QWriteLocker locker(&m_storageManager.m_dataLock);
-            m_storageManager.m_storageLists.notes().remove(note);
+            const QMutexLocker locker(&m_storageManager.m_dataLock);
+            m_storageManager.m_storageLists.customStorage(CustomStorage::Notes).remove(note);
             m_storageManager.deleteBadLinksNotes();
             return *this;
         }
@@ -145,22 +153,27 @@ public:
             return m_storageManager.m_storageLists.amounts().findAllValues();
         }
         auto executors() const {
-            return m_storageManager.m_storageLists.executors().findAllValues();
+            return m_storageManager.m_storageLists.customStorage(CustomStorage::Executors)
+                .findAllValues();
         }
         auto authors() const {
-            return m_storageManager.m_storageLists.authors().findAllValues();
+            return m_storageManager.m_storageLists.customStorage(CustomStorage::Authors)
+                .findAllValues();
         }
         auto castingMaterials() const {
-            return m_storageManager.m_storageLists.castingMaterials().findAllValues();
+            return m_storageManager.m_storageLists.customStorage(CustomStorage::CastingMaterials)
+                .findAllValues();
         }
         auto modelMaterials() const {
-            return m_storageManager.m_storageLists.modelMaterials().findAllValues();
+            return m_storageManager.m_storageLists.customStorage(CustomStorage::ModelMaterials)
+                .findAllValues();
         }
         auto machines() const {
-            return m_storageManager.m_storageLists.machines().findAllValues();
+            return m_storageManager.m_storageLists.customStorage(CustomStorage::Machines)
+                .findAllValues();
         }
         auto notes() const {
-            return m_storageManager.m_storageLists.notes().findAllValues();
+            return m_storageManager.m_storageLists.customStorage(CustomStorage::Notes).findAllValues();
         }
 
     private:
@@ -182,22 +195,24 @@ public:
             return m_storageManager.m_storageLists.amounts().count();
         }
         auto executors() const {
-            return m_storageManager.m_storageLists.executors().count();
+            return m_storageManager.m_storageLists.customStorage(CustomStorage::Executors).count();
         }
         auto authors() const {
-            return m_storageManager.m_storageLists.authors().count();
+            return m_storageManager.m_storageLists.customStorage(CustomStorage::Authors).count();
         }
         auto castingMaterials() const {
-            return m_storageManager.m_storageLists.castingMaterials().count();
+            return m_storageManager.m_storageLists.customStorage(CustomStorage::CastingMaterials)
+                .count();
         }
         auto modelMaterials() const {
-            return m_storageManager.m_storageLists.modelMaterials().count();
+            return m_storageManager.m_storageLists.customStorage(CustomStorage::ModelMaterials)
+                .count();
         }
         auto machines() const {
-            return m_storageManager.m_storageLists.machines().count();
+            return m_storageManager.m_storageLists.customStorage(CustomStorage::Machines).count();
         }
         auto notes() const {
-            return m_storageManager.m_storageLists.notes().count();
+            return m_storageManager.m_storageLists.customStorage(CustomStorage::Notes).count();
         }
 
     private:
@@ -228,7 +243,7 @@ public:
     }
 
     bool addRecord(const Record& record) {
-        const QWriteLocker locker(&m_dataLock);
+        const QMutexLocker locker(&m_dataLock);
         if (!checkRecord(record)) {
             return false;
         }
@@ -240,13 +255,19 @@ public:
             return false;
         }
 
-        auto idExecutors = addHelper(record.executors, m_storageLists.executors());
-        auto idAuthors = addHelper(record.authors, m_storageLists.authors());
+        auto idExecutors = addHelper(record.executors,
+                                     m_storageLists.customStorage(CustomStorage::Executors));
+        auto idAuthors = addHelper(record.authors,
+                                   m_storageLists.customStorage(CustomStorage::Authors));
         auto idCastingMaterials = addHelper(record.castingMaterials,
-                                            m_storageLists.castingMaterials());
-        auto idModelMaterials = addHelper(record.modelMaterials, m_storageLists.modelMaterials());
-        auto idMachines = addHelper(record.machines, m_storageLists.machines());
-        auto idNotes = addHelper(record.notes, m_storageLists.notes());
+                                            m_storageLists.customStorage(
+                                                CustomStorage::CastingMaterials));
+        auto idModelMaterials = addHelper(record.modelMaterials,
+                                          m_storageLists.customStorage(
+                                              CustomStorage::ModelMaterials));
+        auto idMachines = addHelper(record.machines,
+                                    m_storageLists.customStorage(CustomStorage::Machines));
+        auto idNotes = addHelper(record.notes, m_storageLists.customStorage(CustomStorage::Notes));
 
         RecordLink recordLink(*idDate,
                               *idDrawing,
@@ -264,7 +285,7 @@ public:
     }
 
     bool removeRecord(const Record& record) {
-        const QWriteLocker locker(&m_dataLock);
+        const QMutexLocker locker(&m_dataLock);
         if (!checkRecord(record)) {
             return false;
         }
@@ -276,13 +297,20 @@ public:
             return false;
         }
 
-        auto idExecutors = findIdHelper(record.executors, m_storageLists.executors());
-        auto idAuthors = findIdHelper(record.authors, m_storageLists.authors());
+        auto idExecutors = findIdHelper(record.executors,
+                                        m_storageLists.customStorage(CustomStorage::Executors));
+        auto idAuthors = findIdHelper(record.authors,
+                                      m_storageLists.customStorage(CustomStorage::Authors));
         auto idCastingMaterials = findIdHelper(record.castingMaterials,
-                                               m_storageLists.castingMaterials());
-        auto idModelMaterials = findIdHelper(record.modelMaterials, m_storageLists.modelMaterials());
-        auto idMachines = findIdHelper(record.machines, m_storageLists.machines());
-        auto idNotes = findIdHelper(record.notes, m_storageLists.notes());
+                                               m_storageLists.customStorage(
+                                                   CustomStorage::CastingMaterials));
+        auto idModelMaterials = findIdHelper(record.modelMaterials,
+                                             m_storageLists.customStorage(
+                                                 CustomStorage::ModelMaterials));
+        auto idMachines = findIdHelper(record.machines,
+                                       m_storageLists.customStorage(CustomStorage::Machines));
+        auto idNotes = findIdHelper(record.notes,
+                                    m_storageLists.customStorage(CustomStorage::Notes));
 
         RecordLink recordLink(idDate.value(),
                               idDrawing.value(),
@@ -300,7 +328,7 @@ public:
     }
 
     QList<Record> getRecords() const {
-        const QWriteLocker locker(&m_cacheLock);
+        const QMutexLocker locker(&m_cacheLock);
         if (m_recordsIsValid) {
             return m_records;
         }
@@ -332,7 +360,8 @@ public:
             QStringList executors;
             QSet executorsIds = it.get().idsExecutors();
             for (auto id = executorsIds.begin(); id != executorsIds.end(); ++id) {
-                if (auto v = m_storageLists.executors().findValue(*id); v.has_value()) {
+                if (auto v = m_storageLists.customStorage(CustomStorage::Executors).findValue(*id);
+                    v.has_value()) {
                     executors << v.value();
                 }
             }
@@ -340,7 +369,8 @@ public:
             QStringList authors;
             QSet authorsIds = it.get().idsAuthors();
             for (auto id = authorsIds.begin(); id != authorsIds.end(); ++id) {
-                if (auto v = m_storageLists.authors().findValue(*id); v.has_value()) {
+                if (auto v = m_storageLists.customStorage(CustomStorage::Authors).findValue(*id);
+                    v.has_value()) {
                     authors << v.value();
                 }
             }
@@ -348,7 +378,9 @@ public:
             QStringList castingMaterials;
             QSet castingMaterialsIds = it.get().idsCastingMaterials();
             for (auto id = castingMaterialsIds.begin(); id != castingMaterialsIds.end(); ++id) {
-                if (auto v = m_storageLists.castingMaterials().findValue(*id); v.has_value()) {
+                if (auto v =
+                        m_storageLists.customStorage(CustomStorage::CastingMaterials).findValue(*id);
+                    v.has_value()) {
                     castingMaterials << v.value();
                 }
             }
@@ -356,7 +388,9 @@ public:
             QStringList modelMaterials;
             QSet modelMaterialsIds = it.get().idsModelMaterials();
             for (auto id = modelMaterialsIds.begin(); id != modelMaterialsIds.end(); ++id) {
-                if (auto v = m_storageLists.modelMaterials().findValue(*id); v.has_value()) {
+                if (auto v =
+                        m_storageLists.customStorage(CustomStorage::ModelMaterials).findValue(*id);
+                    v.has_value()) {
                     modelMaterials << v.value();
                 }
             }
@@ -364,7 +398,8 @@ public:
             QStringList machines;
             QSet machinesIds = it.get().idsMachines();
             for (auto id = machinesIds.begin(); id != machinesIds.end(); ++id) {
-                if (auto v = m_storageLists.machines().findValue(*id); v.has_value()) {
+                if (auto v = m_storageLists.customStorage(CustomStorage::Machines).findValue(*id);
+                    v.has_value()) {
                     machines << v.value();
                 }
             }
@@ -372,7 +407,8 @@ public:
             QStringList notes;
             QSet notesIds = it.get().idsNotes();
             for (auto id = notesIds.begin(); id != notesIds.end(); ++id) {
-                if (auto v = m_storageLists.notes().findValue(*id); v.has_value()) {
+                if (auto v = m_storageLists.customStorage(CustomStorage::Notes).findValue(*id);
+                    v.has_value()) {
                     notes << v.value();
                 }
             }
@@ -395,33 +431,33 @@ public:
     }
 
     void reset() {
-        const QWriteLocker locker(&m_dataLock);
+        const QMutexLocker locker(&m_dataLock);
         m_storageRecordsLinks.reset();
         m_storageLists.reset();
         m_recordsIsValid = false;
     }
 
     void commit() {
-        const QWriteLocker locker(&m_dataLock);
+        const QMutexLocker locker(&m_dataLock);
         m_storageRecordsLinks.commit();
         m_storageLists.commit();
     }
 
     void clear() {
-        const QWriteLocker locker(&m_dataLock);
+        const QMutexLocker locker(&m_dataLock);
         m_storageRecordsLinks.clear();
         m_storageLists.clear();
         m_recordsIsValid = false;
     }
 
     void serialize(QDataStream& out) const {
-        const QReadLocker locker(&m_dataLock);
+        const QMutexLocker locker(&m_dataLock);
         m_storageRecordsLinks.serialize(out);
         m_storageLists.serialize(out);
     }
 
     void deserialize(QDataStream& in) {
-        const QWriteLocker locker(&m_dataLock);
+        const QMutexLocker locker(&m_dataLock);
         m_storageRecordsLinks.deserialize(in);
         m_storageLists.deserialize(in);
         m_recordsIsValid = false;
@@ -436,8 +472,8 @@ private:
     StorageLists m_storageLists;
     mutable QList<Record> m_records;
     mutable bool m_recordsIsValid = true;
-    mutable QReadWriteLock m_dataLock;
-    mutable QReadWriteLock m_cacheLock;
+    mutable QMutex m_dataLock;
+    mutable QMutex m_cacheLock;
 
     bool checkRecord(const Record& record) const {
         if (!DatesList::checkDate(record.date) || !record.drawing.isValid() || record.amount < 1) {
@@ -469,30 +505,13 @@ private:
     }
 
     void deleteBadLinks() {
-        bool again = true;
-        while (again) {
-            again = false;
-
-            const auto links = m_storageRecordsLinks.get();
-            for (auto& link : links) {
-                bool bad = false;
-                if (auto date = m_storageLists.dates().findValue(link.get().idDate());
-                    !date.has_value()) {
-                    bad = true;
-                } else if (auto drawing = m_storageLists.drawings().findValue(
-                               link.get().idDrawing());
-                           !drawing.has_value()) {
-                    bad = true;
-                } else if (auto amount = m_storageLists.amounts().findValue(link.get().idAmount());
-                           !amount.has_value()) {
-                    bad = true;
-                }
-
-                if (bad) {
-                    m_storageRecordsLinks.remove(link);
-                    again = true;
-                    continue;
-                }
+        const auto links = m_storageRecordsLinks.get();
+        for (auto& link : links) {
+            bool bad = false;
+            if (!m_storageLists.dates().findValue(link.get().idDate()).has_value() ||
+                !m_storageLists.drawings().findValue(link.get().idDrawing()).has_value() ||
+                !m_storageLists.amounts().findValue(link.get().idAmount()).has_value()) {
+                m_storageRecordsLinks.remove(link);
             }
         }
     }
@@ -505,7 +524,8 @@ private:
 
             QSet<qint32> executorsIdsNew;
             for (auto id : executorsIdsOld) {
-                if (auto value = m_storageLists.executors().findValue(id); value.has_value()) {
+                if (auto value = m_storageLists.customStorage(CustomStorage::Executors).findValue(id);
+                    value.has_value()) {
                     executorsIdsNew.insert(id);
                 }
             }
@@ -535,7 +555,8 @@ private:
 
             QSet<qint32> authorsIdsNew;
             for (auto id : authorsIdsOld) {
-                if (auto value = m_storageLists.authors().findValue(id); value.has_value()) {
+                if (auto value = m_storageLists.customStorage(CustomStorage::Authors).findValue(id);
+                    value.has_value()) {
                     authorsIdsNew.insert(id);
                 }
             }
@@ -565,7 +586,8 @@ private:
 
             QSet<qint32> castingMaterialsIdsNew;
             for (auto id : castingMaterialsIdsOld) {
-                if (auto value = m_storageLists.castingMaterials().findValue(id);
+                if (auto value =
+                        m_storageLists.customStorage(CustomStorage::CastingMaterials).findValue(id);
                     value.has_value()) {
                     castingMaterialsIdsNew.insert(id);
                 }
@@ -596,7 +618,9 @@ private:
 
             QSet<qint32> modelMaterialsIdsNew;
             for (auto id : modelMaterialsIdsOld) {
-                if (auto value = m_storageLists.modelMaterials().findValue(id); value.has_value()) {
+                if (auto value =
+                        m_storageLists.customStorage(CustomStorage::ModelMaterials).findValue(id);
+                    value.has_value()) {
                     modelMaterialsIdsNew.insert(id);
                 }
             }
@@ -626,7 +650,8 @@ private:
 
             QSet<qint32> machinesIdsNew;
             for (auto id : machinesIdsOld) {
-                if (auto value = m_storageLists.machines().findValue(id); value.has_value()) {
+                if (auto value = m_storageLists.customStorage(CustomStorage::Machines).findValue(id);
+                    value.has_value()) {
                     machinesIdsNew.insert(id);
                 }
             }
@@ -656,7 +681,8 @@ private:
 
             QSet<qint32> notesIdsNew;
             for (auto id : notesIdsOld) {
-                if (auto value = m_storageLists.notes().findValue(id); value.has_value()) {
+                if (auto value = m_storageLists.customStorage(CustomStorage::Notes).findValue(id);
+                    value.has_value()) {
                     notesIdsNew.insert(id);
                 }
             }

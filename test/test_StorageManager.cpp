@@ -55,6 +55,8 @@ private slots:
         QAtomicInt successCount(0);
         QAtomicInt failCount(0);
 
+        QThreadPool::globalInstance()->setMaxThreadCount(16);
+
         // Заранее подготовим ожидаемые ключи (эталон)
         QSet<QString> expectedKeys;
         for (int t = 0; t < threadCount; ++t) {
@@ -144,6 +146,8 @@ private slots:
         QAtomicInt addSuccess(0);
         QAtomicInt removeSuccess(0);
 
+        QThreadPool::globalInstance()->setMaxThreadCount(16);
+
         QElapsedTimer timer;
         timer.start();
 
@@ -209,6 +213,8 @@ private slots:
         QAtomicInt addSuccess(0);
         QAtomicInt getterIterations(0);
 
+        QThreadPool::globalInstance()->setMaxThreadCount(16);
+
         QElapsedTimer timer;
         timer.start();
 
@@ -264,6 +270,8 @@ private slots:
 
         StorageManager sm;
         QAtomicInt success(0);
+
+        QThreadPool::globalInstance()->setMaxThreadCount(16);
 
         QElapsedTimer timer;
         timer.start();
@@ -327,6 +335,8 @@ private slots:
         StorageManager sm;
         QAtomicInt addSuccess(0);
 
+        QThreadPool::globalInstance()->setMaxThreadCount(16);
+
         QElapsedTimer timer;
         timer.start();
 
@@ -384,6 +394,8 @@ private slots:
         QAtomicInt adderRemoverIters(0);
         QAtomicInt getterIters(0);
         QAtomicInt counterIters(0);
+
+        QThreadPool::globalInstance()->setMaxThreadCount(16);
 
         QElapsedTimer timer;
         timer.start();
@@ -456,6 +468,8 @@ private slots:
         const int threadCount = 8;
         const int recordsPerThread = 500;
         const int totalRecords = threadCount * recordsPerThread;
+
+        QThreadPool::globalInstance()->setMaxThreadCount(16);
 
         StorageManager sm;
 
@@ -543,6 +557,8 @@ private slots:
         const int recordsPerThread = 200;
         const int totalRecords = threadCount * recordsPerThread;
 
+        QThreadPool::globalInstance()->setMaxThreadCount(16);
+
         StorageManager sm;
         for (int t = 0; t < threadCount; ++t) {
             for (int i = 0; i < recordsPerThread; ++i) {
@@ -559,7 +575,7 @@ private slots:
         QByteArray data;
         {
             QDataStream out(&data, QIODevice::WriteOnly);
-            out.setVersion(QDataStream::Qt_6_0);
+            out.setVersion(QDataStream::Version::Qt_6_11);
             sm.serialize(out);
         }
 
@@ -572,7 +588,7 @@ private slots:
         StorageManager sm2;
         {
             QDataStream in(&data, QIODevice::ReadOnly);
-            in.setVersion(QDataStream::Qt_6_0);
+            in.setVersion(QDataStream::Version::Qt_6_11);
             sm2.deserialize(in);
         }
 
@@ -606,6 +622,8 @@ private slots:
         const int recordsPerThread = 500;
         const int totalRecords = threadCount * recordsPerThread;
 
+        QThreadPool::globalInstance()->setMaxThreadCount(16);
+
         StorageManager sm;
         QAtomicInt stop(0), serializations(0);
 
@@ -616,7 +634,7 @@ private slots:
             while (!stop.loadAcquire()) {
                 QByteArray data;
                 QDataStream out(&data, QIODevice::WriteOnly);
-                out.setVersion(QDataStream::Qt_6_0);
+                out.setVersion(QDataStream::Version::Qt_6_11);
                 sm.serialize(out);
                 serializations.fetchAndAddOrdered(1);
             }
@@ -663,6 +681,8 @@ private slots:
             const int totalRecords = writerCount * recordsPerWriter;
 
             StorageManager sm;
+
+            QThreadPool::globalInstance()->setMaxThreadCount(16);
 
             QElapsedTimer timerA;
             timerA.start();
@@ -727,13 +747,13 @@ private slots:
             QByteArray data;
             {
                 QDataStream out(&data, QIODevice::WriteOnly);
-                out.setVersion(QDataStream::Qt_6_0);
+                out.setVersion(QDataStream::Version::Qt_6_11);
                 sm.serialize(out);
             }
             StorageManager sm2;
             {
                 QDataStream in(&data, QIODevice::ReadOnly);
-                in.setVersion(QDataStream::Qt_6_0);
+                in.setVersion(QDataStream::Version::Qt_6_11);
                 sm2.deserialize(in);
             }
             QCOMPARE(sm2.countRecords(), static_cast<qsizetype>(totalRecords));
@@ -754,6 +774,8 @@ private slots:
             TEST_SCOPE("testFullStressIntegrity - Scenario B");
 
             const int runTimeMs = 30000; // сколько крутим стресс
+
+            QThreadPool::globalInstance()->setMaxThreadCount(16);
 
             StorageManager sm;
 
@@ -898,7 +920,7 @@ private slots:
                 while (!stop.loadAcquire()) {
                     QByteArray data;
                     QDataStream out(&data, QIODevice::WriteOnly);
-                    out.setVersion(QDataStream::Qt_6_0);
+                    out.setVersion(QDataStream::Version::Qt_6_11);
                     QElapsedTimer t;
                     t.start();
                     sm.serialize(out);
@@ -944,17 +966,69 @@ private slots:
                 .metric("serializeIters", serializeIters.loadAcquire())
                 .metric("runTimeMs", runTimeMs);
 
+            {
+                // Все потоки стоят. Состояние sm фиксировано.
+                const QList<Record> finalRecords1 = sm.getRecords();
+                QByteArray data1;
+                {
+                    QDataStream out(&data1, QIODevice::WriteOnly);
+                    out.setVersion(QDataStream::Version::Qt_6_11);
+                    sm.serialize(out);
+                }
+                StorageManager sm2;
+                {
+                    QDataStream in(&data1, QIODevice::ReadOnly);
+                    in.setVersion(QDataStream::Version::Qt_6_11);
+                    sm2.deserialize(in);
+                }
+                const QList<Record> deserRecords = sm2.getRecords();
+                const QList<Record> finalRecords2 = sm.getRecords();
+
+                QFile deserFile("deserRecords.txt");
+                if (deserFile.open(QIODevice::WriteOnly)) {
+                    QDataStream out(&deserFile);
+                    for (auto& key : std::as_const(deserRecords)) {
+                        out << key.date << '-' << key.drawing << '-' << key.amount << '-'
+                            << key.executors << '-' << key.authors << '-' << key.castingMaterials
+                            << '-' << key.modelMaterials << '-' << key.machines << '-' << key.notes
+                            << '\n';
+                    }
+                }
+                deserFile.close();
+
+                QFile finalFile("finalRecords2.txt");
+                if (finalFile.open(QIODevice::WriteOnly)) {
+                    QDataStream out(&finalFile);
+                    for (auto& key : std::as_const(finalRecords2)) {
+                        out << key.date << '-' << key.drawing << '-' << key.amount << '-'
+                            << key.executors << '-' << key.authors << '-' << key.castingMaterials
+                            << '-' << key.modelMaterials << '-' << key.machines << '-' << key.notes
+                            << '\n';
+                    }
+                }
+                finalFile.close();
+
+                // 1) getRecords стабилен
+                QCOMPARE(finalRecords1.size(), finalRecords2.size());
+                for (int i = 0; i < finalRecords1.size(); ++i) {
+                    QCOMPARE(makeKey(finalRecords1[i]), makeKey(finalRecords2[i]));
+                }
+
+                // 2) serialize/deserialize даёт то же
+                QCOMPARE(deserRecords.size(), finalRecords1.size());
+                QSet<QString> k1, k2;
+                for (const auto& r : finalRecords1) {
+                    k1.insert(makeKey(r));
+                }
+                for (const auto& r : deserRecords) {
+                    k2.insert(makeKey(r));
+                }
+                QCOMPARE(k1, k2);
+            }
+
             // ---- Финальная проверка целостности ----
             const QList<Record> finalRecords = sm.getRecords();
             qDebug() << "final records:" << finalRecords.size();
-
-            // QVERIFY(addOk.loadAcquire() > 0);
-            // QVERIFY(removeOk.loadAcquire() > 0);
-            // QVERIFY(adderIters.loadAcquire() > 0);
-            // QVERIFY(removerIters.loadAcquire() > 0);
-            // QVERIFY(getterIters.loadAcquire() > 0);
-            // QVERIFY(counterIters.loadAcquire() > 0);
-            // QVERIFY(serializeIters.loadAcquire() > 0);
 
             QSet<QString> finalKeys;
             for (const Record& r : finalRecords) {
@@ -968,13 +1042,13 @@ private slots:
             QByteArray data;
             {
                 QDataStream out(&data, QIODevice::WriteOnly);
-                out.setVersion(QDataStream::Qt_6_0);
+                out.setVersion(QDataStream::Version::Qt_6_11);
                 sm.serialize(out);
             }
             StorageManager sm2;
             {
                 QDataStream in(&data, QIODevice::ReadOnly);
-                in.setVersion(QDataStream::Qt_6_0);
+                in.setVersion(QDataStream::Version::Qt_6_11);
                 sm2.deserialize(in);
             }
             QCOMPARE(sm2.countRecords(), sm.countRecords());
@@ -984,6 +1058,7 @@ private slots:
                 verifyRecordIntegrity(r, sm2);
                 deserKeys.insert(makeKey(r));
             }
+
             QCOMPARE(deserKeys, finalKeys);
         }
     }
@@ -996,6 +1071,8 @@ private slots:
 
         StorageManager sm;
         QAtomicInt stop(0);
+
+        QThreadPool::globalInstance()->setMaxThreadCount(16);
 
         QList<QFuture<void>> getters;
         for (int g = 0; g < getterCount; ++g) {
@@ -1029,6 +1106,8 @@ private slots:
 
     // getRecords() во время clear()/reset()
     void testGetDuringClear() {
+        QThreadPool::globalInstance()->setMaxThreadCount(16);
+
         StorageManager sm;
         for (int i = 0; i < 1000; ++i) {
             sm.addRecord(createRecord(0, i));
