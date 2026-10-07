@@ -34,8 +34,8 @@ public:
     void deserialize(QDataStream& in);
 
 private:
-    QSet<RecordLink> m_SetRecordLink;
-    QSet<RecordLink> m_SetRecordLinkTmp;
+    QSet<RecordLink> m_setRecordLink;
+    QSet<RecordLink> m_setRecordLinkTmp;
     bool m_commit = true;
     mutable QReadWriteLock m_lock;
 

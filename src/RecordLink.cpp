@@ -336,33 +336,33 @@ void RecordLink::serialize(QDataStream &out) const {
     out << m_idAmount;
 
     out << static_cast<qint32>(m_idsExecutors.size());
-    for (auto it = m_idsExecutors.begin(); it != m_idsExecutors.end(); ++it) {
-        out << *it;
+    for (auto &v : std::as_const(m_idsExecutors)) {
+        out << v;
     }
 
     out << static_cast<qint32>(m_idsAuthors.size());
-    for (auto it = m_idsAuthors.begin(); it != m_idsAuthors.end(); ++it) {
-        out << *it;
+    for (auto &v : std::as_const(m_idsAuthors)) {
+        out << v;
     }
 
     out << static_cast<qint32>(m_idsCastingMaterials.size());
-    for (auto it = m_idsCastingMaterials.begin(); it != m_idsCastingMaterials.end(); ++it) {
-        out << *it;
+    for (auto &v : std::as_const(m_idsCastingMaterials)) {
+        out << v;
     }
 
     out << static_cast<qint32>(m_idsModelMaterials.size());
-    for (auto it = m_idsModelMaterials.begin(); it != m_idsModelMaterials.end(); ++it) {
-        out << *it;
+    for (auto &v : std::as_const(m_idsModelMaterials)) {
+        out << v;
     }
 
     out << static_cast<qint32>(m_idsMachines.size());
-    for (auto it = m_idsMachines.begin(); it != m_idsMachines.end(); ++it) {
-        out << *it;
+    for (auto &v : std::as_const(m_idsMachines)) {
+        out << v;
     }
 
     out << static_cast<qint32>(m_idsNotes.size());
-    for (auto it = m_idsNotes.begin(); it != m_idsNotes.end(); ++it) {
-        out << *it;
+    for (auto &v : std::as_const(m_idsNotes)) {
+        out << v;
     }
 
     if (out.status() != QDataStream::Ok) {

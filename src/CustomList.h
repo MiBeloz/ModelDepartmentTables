@@ -311,8 +311,8 @@ inline void CustomList<T>::serialize(QDataStream& out) const {
     out << out.version();
 
     out << static_cast<qint32>(m_list.size());
-    for (auto it = m_list.cbegin(); it != m_list.cend(); ++it) {
-        out << it.key() << it.value();
+    for (auto [id, value] : std::as_const(m_list).asKeyValueRange()) {
+        out << id << value;
     }
     out << m_id;
     out << static_cast<qint32>(m_emptyId.size());
@@ -321,8 +321,8 @@ inline void CustomList<T>::serialize(QDataStream& out) const {
     }
 
     out << static_cast<qint32>(m_listTmp.size());
-    for (auto it = m_listTmp.cbegin(); it != m_listTmp.cend(); ++it) {
-        out << it.key() << it.value();
+    for (auto [id, value] : std::as_const(m_listTmp).asKeyValueRange()) {
+        out << id << value;
     }
     out << m_idTmp;
     out << static_cast<qint32>(m_emptyIdTmp.size());
