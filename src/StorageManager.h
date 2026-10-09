@@ -1,7 +1,7 @@
 ﻿#ifndef STORAGEMANAGER_H
 #define STORAGEMANAGER_H
 
-#include <QMutex>
+#include <QReadWriteLock>
 #include <QSet>
 #include <QString>
 
@@ -67,63 +67,73 @@ public:
         explicit Remover(StorageManager& storageManager) : m_storageManager(storageManager) { }
 
         Remover& date(const QString& date) {
-            const QMutexLocker locker(&m_storageManager.m_dataLock);
+            const QWriteLocker locker(&m_storageManager.m_lock);
+
             m_storageManager.m_storageLists.dates().remove(date);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& date(const qint32 exelFormat) {
-            const QMutexLocker locker(&m_storageManager.m_dataLock);
+            const QWriteLocker locker(&m_storageManager.m_lock);
+
             m_storageManager.m_storageLists.dates().remove(exelFormat);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& drawing(const Drawing& drawing) {
-            const QMutexLocker locker(&m_storageManager.m_dataLock);
+            const QWriteLocker locker(&m_storageManager.m_lock);
+
             m_storageManager.m_storageLists.drawings().remove(drawing);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& amount(const qint32 amount) {
-            const QMutexLocker locker(&m_storageManager.m_dataLock);
+            const QWriteLocker locker(&m_storageManager.m_lock);
+
             m_storageManager.m_storageLists.amounts().remove(amount);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& executor(const QString& executor) {
-            const QMutexLocker locker(&m_storageManager.m_dataLock);
+            const QWriteLocker locker(&m_storageManager.m_lock);
+
             m_storageManager.m_storageLists.customStorage(CustomStorage::Executors).remove(executor);
             m_storageManager.deleteBadLinksExecutors();
             return *this;
         }
         Remover& author(const QString& author) {
-            const QMutexLocker locker(&m_storageManager.m_dataLock);
+            const QWriteLocker locker(&m_storageManager.m_lock);
+
             m_storageManager.m_storageLists.customStorage(CustomStorage::Authors).remove(author);
             m_storageManager.deleteBadLinksAuthors();
             return *this;
         }
         Remover& castingMaterial(const QString& castingMaterial) {
-            const QMutexLocker locker(&m_storageManager.m_dataLock);
+            const QWriteLocker locker(&m_storageManager.m_lock);
+
             m_storageManager.m_storageLists.customStorage(CustomStorage::CastingMaterials)
                 .remove(castingMaterial);
             m_storageManager.deleteBadLinksCastingMaterials();
             return *this;
         }
         Remover& modelMaterial(const QString& modelMaterial) {
-            const QMutexLocker locker(&m_storageManager.m_dataLock);
+            const QWriteLocker locker(&m_storageManager.m_lock);
+
             m_storageManager.m_storageLists.customStorage(CustomStorage::ModelMaterials)
                 .remove(modelMaterial);
             m_storageManager.deleteBadLinksModelMaterials();
             return *this;
         }
         Remover& machine(const QString& machine) {
-            const QMutexLocker locker(&m_storageManager.m_dataLock);
+            const QWriteLocker locker(&m_storageManager.m_lock);
+
             m_storageManager.m_storageLists.customStorage(CustomStorage::Machines).remove(machine);
             m_storageManager.deleteBadLinksMachines();
             return *this;
         }
         Remover& note(const QString& note) {
-            const QMutexLocker locker(&m_storageManager.m_dataLock);
+            const QWriteLocker locker(&m_storageManager.m_lock);
+
             m_storageManager.m_storageLists.customStorage(CustomStorage::Notes).remove(note);
             m_storageManager.deleteBadLinksNotes();
             return *this;
@@ -219,11 +229,6 @@ public:
         const StorageManager& m_storageManager;
     };
 
-    friend class Adder;
-    friend class Remover;
-    friend class Getter;
-    friend class Counter;
-
     StorageManager() = default;
 
     Adder add() {
@@ -243,10 +248,11 @@ public:
     }
 
     bool addRecord(const Record& record) {
-        const QMutexLocker locker(&m_dataLock);
         if (!checkRecord(record)) {
             return false;
         }
+
+        const QWriteLocker locker(&m_lock);
 
         auto idDate = m_storageLists.dates().add(record.date);
         auto idDrawing = m_storageLists.drawings().add(record.drawing);
@@ -285,10 +291,11 @@ public:
     }
 
     bool removeRecord(const Record& record) {
-        const QMutexLocker locker(&m_dataLock);
         if (!checkRecord(record)) {
             return false;
         }
+
+        const QWriteLocker locker(&m_lock);
 
         auto idDate = m_storageLists.dates().findId(record.date);
         auto idDrawing = m_storageLists.drawings().findId(record.drawing);
@@ -328,7 +335,14 @@ public:
     }
 
     QList<Record> getRecords() const {
-        const QMutexLocker locker(&m_cacheLock);
+        {
+            const QWriteLocker readLocker(&m_lock);
+            if (m_recordsIsValid) {
+                return m_records;
+            }
+        }
+
+        const QWriteLocker writeLocker(&m_lock);
         if (m_recordsIsValid) {
             return m_records;
         }
@@ -431,33 +445,38 @@ public:
     }
 
     void reset() {
-        const QMutexLocker locker(&m_dataLock);
+        const QWriteLocker locker(&m_lock);
+
         m_storageRecordsLinks.reset();
         m_storageLists.reset();
         m_recordsIsValid = false;
     }
 
     void commit() {
-        const QMutexLocker locker(&m_dataLock);
+        const QWriteLocker locker(&m_lock);
+
         m_storageRecordsLinks.commit();
         m_storageLists.commit();
     }
 
     void clear() {
-        const QMutexLocker locker(&m_dataLock);
+        const QWriteLocker locker(&m_lock);
+
         m_storageRecordsLinks.clear();
         m_storageLists.clear();
         m_recordsIsValid = false;
     }
 
     void serialize(QDataStream& out) const {
-        const QMutexLocker locker(&m_dataLock);
+        const QWriteLocker locker(&m_lock);
+
         m_storageRecordsLinks.serialize(out);
         m_storageLists.serialize(out);
     }
 
     void deserialize(QDataStream& in) {
-        const QMutexLocker locker(&m_dataLock);
+        const QWriteLocker locker(&m_lock);
+
         m_storageRecordsLinks.deserialize(in);
         m_storageLists.deserialize(in);
         m_recordsIsValid = false;
@@ -472,8 +491,8 @@ private:
     StorageLists m_storageLists;
     mutable QList<Record> m_records;
     mutable bool m_recordsIsValid = true;
-    mutable QMutex m_dataLock;
-    mutable QMutex m_cacheLock;
+    mutable QReadWriteLock m_lock;
+    mutable QReadWriteLock m_cacheLock;
 
     bool checkRecord(const Record& record) const {
         if (!DatesList::checkDate(record.date) || !record.drawing.isValid() || record.amount < 1) {
@@ -512,6 +531,7 @@ private:
                 !m_storageLists.drawings().findValue(link.get().idDrawing()).has_value() ||
                 !m_storageLists.amounts().findValue(link.get().idAmount()).has_value()) {
                 m_storageRecordsLinks.remove(link);
+                m_recordsIsValid = false;
             }
         }
     }
