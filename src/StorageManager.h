@@ -268,7 +268,7 @@ public:
     }
 
     bool addRecord(const Record& record) {
-        if (!checkRecord(record)) {
+        if (!record.isValid()) {
             return false;
         }
 
@@ -311,7 +311,7 @@ public:
     }
 
     bool removeRecord(const Record& record) {
-        if (!checkRecord(record)) {
+        if (!record.isValid()) {
             return false;
         }
 
@@ -509,13 +509,6 @@ private:
     mutable bool m_recordsIsValid = true;
     mutable QReadWriteLock m_lock;
     mutable QReadWriteLock m_cacheLock;
-
-    bool checkRecord(const Record& record) const {
-        if (!DatesList::checkDate(record.date) || !record.drawing.isValid() || record.amount < 1) {
-            return false;
-        }
-        return true;
-    }
 
     template<typename T>
     QSet<qint32> addHelper(const QStringList& values, ServiceCustomList<T>& storage) {

@@ -2,6 +2,7 @@
 #define RECORD_H
 
 #include "Drawing.h"
+#include <DatesList.h>
 
 struct Record {
     Record() = default;
@@ -31,6 +32,13 @@ struct Record {
                castingMaterials == other.castingMaterials &&
                modelMaterials == other.modelMaterials && machines == other.machines &&
                notes == other.notes;
+    }
+
+    bool isValid() const {
+        if (!DatesList::checkDate(date) || !drawing.isValid() || amount < 1) {
+            return false;
+        }
+        return true;
     }
 
     static const Record Null;
