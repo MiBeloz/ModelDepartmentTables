@@ -16,44 +16,54 @@ public:
         explicit Adder(StorageManager& storageManager) : m_storageManager(storageManager) { }
 
         Adder& date(const QString& date) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.dates().add(date);
             return *this;
         }
         Adder& date(const qint32 exelFormat) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.dates().add(exelFormat);
             return *this;
         }
         Adder& drawing(const Drawing& drawing) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.drawings().add(drawing);
             return *this;
         }
         Adder& amount(const qint32 amount) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.amounts().add(amount);
             return *this;
         }
         Adder& executor(const QString& executor) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.customStorage(CustomStorage::Executors).add(executor);
             return *this;
         }
         Adder& author(const QString& author) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.customStorage(CustomStorage::Authors).add(author);
             return *this;
         }
         Adder& castingMaterial(const QString& castingMaterial) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.customStorage(CustomStorage::CastingMaterials)
                 .add(castingMaterial);
             return *this;
         }
         Adder& modelMaterial(const QString& modelMaterial) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.customStorage(CustomStorage::ModelMaterials)
                 .add(modelMaterial);
             return *this;
         }
         Adder& machine(const QString& machine) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.customStorage(CustomStorage::Machines).add(machine);
             return *this;
         }
         Adder& note(const QString& note) {
+            const QWriteLocker locker(&m_storageManager.m_lock);
             m_storageManager.m_storageLists.customStorage(CustomStorage::Notes).add(note);
             return *this;
         }
@@ -68,49 +78,42 @@ public:
 
         Remover& date(const QString& date) {
             const QWriteLocker locker(&m_storageManager.m_lock);
-
             m_storageManager.m_storageLists.dates().remove(date);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& date(const qint32 exelFormat) {
             const QWriteLocker locker(&m_storageManager.m_lock);
-
             m_storageManager.m_storageLists.dates().remove(exelFormat);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& drawing(const Drawing& drawing) {
             const QWriteLocker locker(&m_storageManager.m_lock);
-
             m_storageManager.m_storageLists.drawings().remove(drawing);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& amount(const qint32 amount) {
             const QWriteLocker locker(&m_storageManager.m_lock);
-
             m_storageManager.m_storageLists.amounts().remove(amount);
             m_storageManager.deleteBadLinks();
             return *this;
         }
         Remover& executor(const QString& executor) {
             const QWriteLocker locker(&m_storageManager.m_lock);
-
             m_storageManager.m_storageLists.customStorage(CustomStorage::Executors).remove(executor);
             m_storageManager.deleteBadLinksExecutors();
             return *this;
         }
         Remover& author(const QString& author) {
             const QWriteLocker locker(&m_storageManager.m_lock);
-
             m_storageManager.m_storageLists.customStorage(CustomStorage::Authors).remove(author);
             m_storageManager.deleteBadLinksAuthors();
             return *this;
         }
         Remover& castingMaterial(const QString& castingMaterial) {
             const QWriteLocker locker(&m_storageManager.m_lock);
-
             m_storageManager.m_storageLists.customStorage(CustomStorage::CastingMaterials)
                 .remove(castingMaterial);
             m_storageManager.deleteBadLinksCastingMaterials();
@@ -118,7 +121,6 @@ public:
         }
         Remover& modelMaterial(const QString& modelMaterial) {
             const QWriteLocker locker(&m_storageManager.m_lock);
-
             m_storageManager.m_storageLists.customStorage(CustomStorage::ModelMaterials)
                 .remove(modelMaterial);
             m_storageManager.deleteBadLinksModelMaterials();
@@ -126,14 +128,12 @@ public:
         }
         Remover& machine(const QString& machine) {
             const QWriteLocker locker(&m_storageManager.m_lock);
-
             m_storageManager.m_storageLists.customStorage(CustomStorage::Machines).remove(machine);
             m_storageManager.deleteBadLinksMachines();
             return *this;
         }
         Remover& note(const QString& note) {
             const QWriteLocker locker(&m_storageManager.m_lock);
-
             m_storageManager.m_storageLists.customStorage(CustomStorage::Notes).remove(note);
             m_storageManager.deleteBadLinksNotes();
             return *this;
@@ -148,41 +148,52 @@ public:
         explicit Getter(const StorageManager& storageManager) : m_storageManager(storageManager) { }
 
         auto dates() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.dates().findAllValues();
         }
         auto datesStr() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.dates().findAllStrValues();
         }
         auto datesError() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.dates().lastError();
         }
         auto drawings() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.drawings().findAllValues();
         }
         auto amounts() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.amounts().findAllValues();
         }
         auto executors() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.customStorage(CustomStorage::Executors)
                 .findAllValues();
         }
         auto authors() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.customStorage(CustomStorage::Authors)
                 .findAllValues();
         }
         auto castingMaterials() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.customStorage(CustomStorage::CastingMaterials)
                 .findAllValues();
         }
         auto modelMaterials() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.customStorage(CustomStorage::ModelMaterials)
                 .findAllValues();
         }
         auto machines() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.customStorage(CustomStorage::Machines)
                 .findAllValues();
         }
         auto notes() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.customStorage(CustomStorage::Notes).findAllValues();
         }
 
@@ -196,32 +207,41 @@ public:
             : m_storageManager(storageManager) { }
 
         auto dates() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.dates().count();
         }
         auto drawings() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.drawings().count();
         }
         auto amounts() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.amounts().count();
         }
         auto executors() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.customStorage(CustomStorage::Executors).count();
         }
         auto authors() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.customStorage(CustomStorage::Authors).count();
         }
         auto castingMaterials() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.customStorage(CustomStorage::CastingMaterials)
                 .count();
         }
         auto modelMaterials() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.customStorage(CustomStorage::ModelMaterials)
                 .count();
         }
         auto machines() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.customStorage(CustomStorage::Machines).count();
         }
         auto notes() const {
+            const QReadLocker locker(&m_storageManager.m_lock);
             return m_storageManager.m_storageLists.customStorage(CustomStorage::Notes).count();
         }
 
@@ -336,7 +356,7 @@ public:
 
     QList<Record> getRecords() const {
         {
-            const QWriteLocker readLocker(&m_lock);
+            const QReadLocker readLocker(&m_lock);
             if (m_recordsIsValid) {
                 return m_records;
             }
@@ -446,7 +466,6 @@ public:
 
     void reset() {
         const QWriteLocker locker(&m_lock);
-
         m_storageRecordsLinks.reset();
         m_storageLists.reset();
         m_recordsIsValid = false;
@@ -454,35 +473,32 @@ public:
 
     void commit() {
         const QWriteLocker locker(&m_lock);
-
         m_storageRecordsLinks.commit();
         m_storageLists.commit();
     }
 
     void clear() {
         const QWriteLocker locker(&m_lock);
-
         m_storageRecordsLinks.clear();
         m_storageLists.clear();
         m_recordsIsValid = false;
     }
 
     void serialize(QDataStream& out) const {
-        const QWriteLocker locker(&m_lock);
-
+        const QReadLocker locker(&m_lock);
         m_storageRecordsLinks.serialize(out);
         m_storageLists.serialize(out);
     }
 
     void deserialize(QDataStream& in) {
         const QWriteLocker locker(&m_lock);
-
         m_storageRecordsLinks.deserialize(in);
         m_storageLists.deserialize(in);
         m_recordsIsValid = false;
     }
 
     qsizetype countRecords() const {
+        const QReadLocker locker(&m_lock);
         return m_storageRecordsLinks.count();
     }
 

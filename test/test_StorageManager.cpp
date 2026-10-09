@@ -806,6 +806,8 @@ private slots:
                         addFail.fetchAndAddOrdered(1);
                     }
                     ++i;
+
+                    QThread::currentThread()->sleep(10);
                 }
             });
 
@@ -820,6 +822,8 @@ private slots:
                         removeFail.fetchAndAddOrdered(1);
                     }
                     ++i;
+
+                    QThread::currentThread()->sleep(10);
                 }
             });
 
@@ -839,6 +843,8 @@ private slots:
                         .note(QString("N_adder_%1").arg(i));
                     adderIters.fetchAndAddOrdered(1);
                     ++i;
+
+                    QThread::currentThread()->sleep(10);
                 }
             });
 
@@ -855,6 +861,8 @@ private slots:
                         .note(QString("N_adder_%1").arg(i));
                     removerIters.fetchAndAddOrdered(1);
                     ++i;
+
+                    QThread::currentThread()->sleep(10);
                 }
             });
 
@@ -874,6 +882,8 @@ private slots:
                         }
                     }
                     getterIters.fetchAndAddOrdered(1);
+
+                    QThread::currentThread()->sleep(10);
                 }
             });
 

@@ -3,14 +3,14 @@
 #include "Exceptions.h"
 
 StorageRecordsLinks::StorageRecordsLinks(const StorageRecordsLinks &other) {
-    const QReadLocker otherLocker(&other.m_lock);
+    // const QReadLocker otherLocker(&other.m_lock);
     m_setRecordLink = other.m_setRecordLink;
     m_setRecordLinkTmp = other.m_setRecordLinkTmp;
     m_commit = other.m_commit;
 }
 
 StorageRecordsLinks::StorageRecordsLinks(StorageRecordsLinks &&other) noexcept {
-    const QWriteLocker otherLocker(&other.m_lock);
+    // const QWriteLocker otherLocker(&other.m_lock);
 
     m_setRecordLink = std::move(other.m_setRecordLink);
     m_setRecordLinkTmp = std::move(other.m_setRecordLinkTmp);
@@ -23,14 +23,14 @@ StorageRecordsLinks &StorageRecordsLinks::operator =(const StorageRecordsLinks &
         return *this;
     }
 
-    QReadWriteLock *first = &m_lock;
-    QReadWriteLock *second = &other.m_lock;
-    if (second < first) {
-        std::swap(first, second);
-    }
+    // QReadWriteLock *first = &m_lock;
+    // QReadWriteLock *second = &other.m_lock;
+    // if (second < first) {
+    //     std::swap(first, second);
+    // }
 
-    const QWriteLocker l1(first);
-    const QWriteLocker l2(second);
+    // const QWriteLocker l1(first);
+    // const QWriteLocker l2(second);
 
     m_setRecordLink = other.m_setRecordLink;
     m_setRecordLinkTmp = other.m_setRecordLinkTmp;
@@ -43,14 +43,14 @@ StorageRecordsLinks &StorageRecordsLinks::operator =(StorageRecordsLinks &&other
         return *this;
     }
 
-    QReadWriteLock *first = &m_lock;
-    QReadWriteLock *second = &other.m_lock;
-    if (second < first) {
-        std::swap(first, second);
-    }
+    // QReadWriteLock *first = &m_lock;
+    // QReadWriteLock *second = &other.m_lock;
+    // if (second < first) {
+    //     std::swap(first, second);
+    // }
 
-    const QWriteLocker l1(first);
-    const QWriteLocker l2(second);
+    // const QWriteLocker l1(first);
+    // const QWriteLocker l2(second);
 
     m_setRecordLink = std::move(other.m_setRecordLink);
     m_setRecordLinkTmp = std::move(other.m_setRecordLinkTmp);
@@ -64,14 +64,14 @@ bool StorageRecordsLinks::operator ==(const StorageRecordsLinks &other) const {
         return true;
     }
 
-    QReadWriteLock *first = &m_lock;
-    QReadWriteLock *second = &other.m_lock;
-    if (second < first) {
-        std::swap(first, second);
-    }
+    // QReadWriteLock *first = &m_lock;
+    // QReadWriteLock *second = &other.m_lock;
+    // if (second < first) {
+    //     std::swap(first, second);
+    // }
 
-    const QReadLocker l1(first);
-    const QReadLocker l2(second);
+    // const QReadLocker l1(first);
+    // const QReadLocker l2(second);
 
     return m_setRecordLink == other.m_setRecordLink &&
            m_setRecordLinkTmp == other.m_setRecordLinkTmp && m_commit == other.m_commit;
@@ -86,14 +86,14 @@ void StorageRecordsLinks::swap(StorageRecordsLinks &other) {
         return;
     }
 
-    QReadWriteLock *first = &m_lock;
-    QReadWriteLock *second = &other.m_lock;
-    if (second < first) {
-        std::swap(first, second);
-    }
+    // QReadWriteLock *first = &m_lock;
+    // QReadWriteLock *second = &other.m_lock;
+    // if (second < first) {
+    //     std::swap(first, second);
+    // }
 
-    const QWriteLocker l1(first);
-    const QWriteLocker l2(second);
+    // const QWriteLocker l1(first);
+    // const QWriteLocker l2(second);
 
     m_setRecordLink.swap(other.m_setRecordLink);
     m_setRecordLinkTmp.swap(other.m_setRecordLinkTmp);
@@ -101,52 +101,52 @@ void StorageRecordsLinks::swap(StorageRecordsLinks &other) {
 }
 
 void StorageRecordsLinks::add(const RecordLink &recordLink) {
-    const QWriteLocker locker(&m_lock);
+    // const QWriteLocker locker(&m_lock);
     m_setRecordLinkTmp.insert(recordLink);
     m_commit = false;
 }
 
 void StorageRecordsLinks::remove(const RecordLink &recordLink) {
-    const QWriteLocker locker(&m_lock);
+    // const QWriteLocker locker(&m_lock);
     m_setRecordLinkTmp.remove(recordLink);
     m_commit = false;
 }
 
 QSet<RecordLink> StorageRecordsLinks::get() const {
-    const QReadLocker locker(&m_lock);
+    // const QReadLocker locker(&m_lock);
     return m_setRecordLinkTmp;
 }
 
 void StorageRecordsLinks::reset() {
-    const QWriteLocker locker(&m_lock);
+    // const QWriteLocker locker(&m_lock);
     m_setRecordLinkTmp = m_setRecordLink;
     m_commit = true;
 }
 
 void StorageRecordsLinks::commit() {
-    const QWriteLocker locker(&m_lock);
+    // const QWriteLocker locker(&m_lock);
     m_setRecordLink = m_setRecordLinkTmp;
     m_commit = true;
 }
 
 qsizetype StorageRecordsLinks::count() const {
-    const QReadLocker locker(&m_lock);
+    // const QReadLocker locker(&m_lock);
     return m_setRecordLinkTmp.count();
 }
 
 qsizetype StorageRecordsLinks::countCommitted() const {
-    const QReadLocker locker(&m_lock);
+    // const QReadLocker locker(&m_lock);
     return m_setRecordLink.count();
 }
 
 void StorageRecordsLinks::clear() {
-    const QWriteLocker locker(&m_lock);
+    // const QWriteLocker locker(&m_lock);
     m_setRecordLinkTmp.clear();
     m_commit = false;
 }
 
 void StorageRecordsLinks::serialize(QDataStream &out) const {
-    const QReadLocker locker(&m_lock);
+    // const QReadLocker locker(&m_lock);
 
     out << out.version();
 
@@ -168,7 +168,7 @@ void StorageRecordsLinks::serialize(QDataStream &out) const {
 }
 
 void StorageRecordsLinks::deserialize(QDataStream &in) {
-    const QWriteLocker locker(&m_lock);
+    // const QWriteLocker locker(&m_lock);
 
     deserializeVersion(in);
     QSet<RecordLink> setRecordLink = deserializeRecordsLinks(in);
