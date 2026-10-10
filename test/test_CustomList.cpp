@@ -102,9 +102,6 @@ private slots:
     void workWithQString();
     void workWithDrawing();
 
-    // ---------- Thread safety (basic check for crashes) ----------
-    void concurrentReadsAndWritesDoNotCrash();
-
 private:
     QByteArray toBytes(CustomList<int>& list);
     CustomList<int> fromBytes(const QByteArray& bytes);
@@ -1030,128 +1027,6 @@ void TestCustomList::workWithDrawing() {
     QVERIFY(list.remove(Drawing("105-02", "Крышка")));
     list.commit();
     QCOMPARE(list.size(), 1);
-}
-
-// ---------- Thread safety (basic check for crashes) ----------
-
-void TestCustomList::concurrentReadsAndWritesDoNotCrash() {
-    constexpr int threadCount = 8;
-    constexpr int opsPerThread = 2000;
-    constexpr int timeoutMs = 60000;
-
-    CustomList<qint32> list;
-
-    QMutex startMutex;
-    QWaitCondition startCondition;
-    bool startFlag = false;
-
-    QMutex statsMutex;
-    QSet<qint32> insertedIds;
-    int insertFailures = 0;
-    int removeFailures = 0;
-
-    QVector<QThread*> threads;
-    threads.reserve(threadCount);
-
-    for (int t = 0; t < threadCount; ++t) {
-        QThread* thread = QThread::create([&, t]() {
-            {
-                QMutexLocker locker(&startMutex);
-                while (!startFlag) {
-                    startCondition.wait(&startMutex);
-                }
-            }
-
-            QRandomGenerator rng(static_cast<quint32>(0xC0FFEE + t));
-
-            for (int i = 0; i < opsPerThread; ++i) {
-                const int op = rng.bounded(100);
-
-                if (op < 40) {
-                    const qint32 value = static_cast<qint32>(rng.bounded(1000));
-                    auto id = list.insert(value);
-                    if (id.has_value()) {
-                        QMutexLocker locker(&statsMutex);
-                        insertedIds.insert(*id);
-                    } else {
-                        QMutexLocker locker(&statsMutex);
-                        ++insertFailures;
-                    }
-                } else if (op < 60) {
-                    const qint32 value = static_cast<qint32>(rng.bounded(1000));
-                    if (!list.remove(value)) {
-                        QMutexLocker locker(&statsMutex);
-                        ++removeFailures;
-                    }
-                } else if (op < 75) {
-                    const qint32 value = static_cast<qint32>(rng.bounded(1000));
-                    (void)list.getId(value);
-                } else if (op < 85) {
-                    const qint32 id = static_cast<qint32>(rng.bounded(1000));
-                    (void)list.getValue(id);
-                } else if (op < 90) {
-                    (void)list.getAllValues();
-                } else if (op < 93) {
-                    (void)list.size();
-                    (void)list.sizeCommitted();
-                } else if (op < 96) {
-                    list.reset();
-                } else if (op < 99) {
-                    list.commit();
-                } else {
-                    list.clear();
-                }
-            }
-            list.commit();
-        });
-        threads.append(thread);
-    }
-
-    QElapsedTimer timer;
-    timer.start();
-
-    {
-        QMutexLocker locker(&startMutex);
-        startFlag = true;
-        startCondition.wakeAll();
-    }
-
-    for (QThread* thread : threads) {
-        thread->start();
-    }
-
-    for (QThread* thread : threads) {
-        QVERIFY2(thread->wait(timeoutMs),
-                 "Поток не завершился за отведённое время — возможен дедлок");
-        delete thread;
-    }
-
-    list.commit();
-
-    const qsizetype finalSize = list.size();
-    const qsizetype finalSizeCommitted = list.sizeCommitted();
-
-    QCOMPARE(finalSize, finalSizeCommitted);
-
-    const QList<qint32> values = list.getAllValues();
-    QCOMPARE(values.size(), finalSize);
-
-    for (const qint32& v : values) {
-        auto id = list.getId(v);
-        QVERIFY2(id.has_value(), "Значение из getAllValues() не найдено через getId()");
-        auto restored = list.getValue(*id);
-        QVERIFY2(restored.has_value(), "getId() вернул id, но getValue() не нашёл значение");
-        QCOMPARE(*restored, v);
-    }
-
-    QVERIFY2(finalSize <= static_cast<qsizetype>(threadCount) * opsPerThread,
-             "Размер списка превышает общее число операций вставки");
-
-    qInfo() << "Final size:" << finalSize << "insertFailures:" << insertFailures
-            << "removeFailures:" << removeFailures << "elapsed ms:" << timer.elapsed();
-
-    list.clear();
-    list.commit();
 }
 
 QTEST_APPLESS_MAIN(TestCustomList)

@@ -19,6 +19,18 @@ bool Drawing::operator <(const Drawing &other) const {
     return m_title < other.m_title;
 }
 
+bool Drawing::operator >(const Drawing &other) const {
+    return other < *this;
+}
+
+bool Drawing::operator <=(const Drawing &other) const {
+    return !(other < *this);
+}
+
+bool Drawing::operator >=(const Drawing &other) const {
+    return !(*this < other);
+}
+
 const QString &Drawing::getNumber() const {
     return m_number;
 }

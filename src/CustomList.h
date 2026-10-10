@@ -45,14 +45,11 @@ public:
 private:
     QHash<qint32, T> m_list;
     QHash<qint32, T> m_listTmp;
-    qint32 m_id = 0;
-    qint32 m_idTmp = 0;
+    qint32 m_id { };
+    qint32 m_idTmp { };
     QStack<qint32> m_emptyId;
     QStack<qint32> m_emptyIdTmp;
-
     bool m_commit = true;
-
-    // mutable QReadWriteLock m_lock;
 
     void throwStreamError(QDataStream::Status status) const;
 
@@ -65,8 +62,6 @@ private:
 
 template<typename T>
 inline CustomList<T>::CustomList(const CustomList& other) {
-    // const QReadLocker otherLocker(&other.m_lock);
-
     m_list = other.m_list;
     m_listTmp = other.m_listTmp;
     m_id = other.m_id;
@@ -78,8 +73,6 @@ inline CustomList<T>::CustomList(const CustomList& other) {
 
 template<typename T>
 inline CustomList<T>::CustomList(CustomList&& other) noexcept {
-    // const QWriteLocker otherLocker(&other.m_lock);
-
     m_list = std::move(other.m_list);
     m_listTmp = std::move(other.m_listTmp);
     m_id = other.m_id;
@@ -99,15 +92,6 @@ inline CustomList<T>& CustomList<T>::operator =(const CustomList& other) {
         return *this;
     }
 
-    // QReadWriteLock* first = &m_lock;
-    // QReadWriteLock* second = &other.m_lock;
-    // if (second < first) {
-    //     std::swap(first, second);
-    // }
-
-    // const QWriteLocker l1(first);
-    // const QWriteLocker l2(second);
-
     m_list = other.m_list;
     m_listTmp = other.m_listTmp;
     m_id = other.m_id;
@@ -123,15 +107,6 @@ inline CustomList<T>& CustomList<T>::operator =(CustomList&& other) noexcept {
     if (this == &other) {
         return *this;
     }
-
-    // QReadWriteLock* first = &m_lock;
-    // QReadWriteLock* second = &other.m_lock;
-    // if (second < first) {
-    //     std::swap(first, second);
-    // }
-
-    // const QWriteLocker l1(first);
-    // const QWriteLocker l2(second);
 
     m_list = std::move(other.m_list);
     m_listTmp = std::move(other.m_listTmp);
@@ -154,15 +129,6 @@ inline bool CustomList<T>::operator ==(const CustomList& other) const {
         return true;
     }
 
-    // QReadWriteLock* first = &m_lock;
-    // QReadWriteLock* second = &other.m_lock;
-    // if (second < first) {
-    //     std::swap(first, second);
-    // }
-
-    // const QReadLocker l1(first);
-    // const QReadLocker l2(second);
-
     return m_list == other.m_list && m_listTmp == other.m_listTmp && m_id == other.m_id &&
            m_idTmp == other.m_idTmp && m_emptyId == other.m_emptyId &&
            m_emptyIdTmp == other.m_emptyIdTmp && m_commit == other.m_commit;
@@ -179,15 +145,6 @@ inline void CustomList<T>::swap(CustomList& other) {
         return;
     }
 
-    // QReadWriteLock* first = &m_lock;
-    // QReadWriteLock* second = &other.m_lock;
-    // if (second < first) {
-    //     std::swap(first, second);
-    // }
-
-    // const QWriteLocker l1(first);
-    // const QWriteLocker l2(second);
-
     m_list.swap(other.m_list);
     m_listTmp.swap(other.m_listTmp);
     std::swap(m_id, other.m_id);
@@ -199,8 +156,6 @@ inline void CustomList<T>::swap(CustomList& other) {
 
 template<typename T>
 inline std::optional<qint32> CustomList<T>::insert(const T& data) {
-    // const QWriteLocker locker(&m_lock);
-
     for (auto [k, v] : m_listTmp.asKeyValueRange()) {
         if (v == data) {
             return k;
@@ -222,8 +177,6 @@ inline std::optional<qint32> CustomList<T>::insert(const T& data) {
 
 template<typename T>
 inline bool CustomList<T>::remove(const T& data) {
-    // const QWriteLocker locker(&m_lock);
-
     for (auto it = m_listTmp.begin(); it != m_listTmp.end(); ++it) {
         if (it.value() == data) {
             m_emptyIdTmp.push(it.key());
@@ -238,8 +191,6 @@ inline bool CustomList<T>::remove(const T& data) {
 
 template<typename T>
 inline std::optional<qint32> CustomList<T>::getId(const T& data) const {
-    // const QReadLocker locker(&m_lock);
-
     if (auto id = m_listTmp.key(data, -1); id != -1) {
         return id;
     }
@@ -248,8 +199,6 @@ inline std::optional<qint32> CustomList<T>::getId(const T& data) const {
 
 template<typename T>
 inline std::optional<T> CustomList<T>::getValue(qint32 id) const {
-    // const QReadLocker locker(&m_lock);
-
     if (auto it = m_listTmp.find(id); it != m_listTmp.end()) {
         return *it;
     }
@@ -258,13 +207,11 @@ inline std::optional<T> CustomList<T>::getValue(qint32 id) const {
 
 template<typename T>
 inline QList<T> CustomList<T>::getAllValues() const {
-    // const QReadLocker locker(&m_lock);
     return m_listTmp.values();
 }
 
 template<typename T>
 inline void CustomList<T>::reset() {
-    // const QWriteLocker locker(&m_lock);
     m_listTmp = m_list;
     m_idTmp = m_id;
     m_emptyIdTmp = m_emptyId;
@@ -273,7 +220,6 @@ inline void CustomList<T>::reset() {
 
 template<typename T>
 inline void CustomList<T>::commit() {
-    // const QWriteLocker locker(&m_lock);
     m_list = m_listTmp;
     m_id = m_idTmp;
     m_emptyId = m_emptyIdTmp;
@@ -282,22 +228,16 @@ inline void CustomList<T>::commit() {
 
 template<typename T>
 inline qsizetype CustomList<T>::size() const {
-    // const QReadLocker locker(&m_lock);
-
     return m_listTmp.size();
 }
 
 template<typename T>
 inline qsizetype CustomList<T>::sizeCommitted() const {
-    // const QReadLocker locker(&m_lock);
-
     return m_list.size();
 }
 
 template<typename T>
 inline void CustomList<T>::clear() {
-    // const QWriteLocker locker(&m_lock);
-
     m_listTmp.clear();
     m_emptyIdTmp.clear();
     m_idTmp = 0;
@@ -306,8 +246,6 @@ inline void CustomList<T>::clear() {
 
 template<typename T>
 inline void CustomList<T>::serialize(QDataStream& out) const {
-    // const QReadLocker locker(&m_lock);
-
     out << out.version();
 
     out << static_cast<qint32>(m_list.size());
@@ -339,8 +277,6 @@ inline void CustomList<T>::serialize(QDataStream& out) const {
 
 template<typename T>
 inline void CustomList<T>::deserialize(QDataStream& in) {
-    // const QWriteLocker locker(&m_lock);
-
     deserializeVersion(in);
     QHash<qint32, T> list = deserializeList(in);
     qint32 id = deserializeId(in);

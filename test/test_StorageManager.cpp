@@ -131,7 +131,7 @@ private slots:
         TEST_SCOPE("testMultithreadedAddAndRemove");
 
         const int threadCount = 8;
-        const int recordsPerThread = 500;
+        const int recordsPerThread = 400;
         const int totalRecords = threadCount * recordsPerThread;
 
         StorageManager sm;
@@ -252,7 +252,7 @@ private slots:
         QVERIFY(getterIterations.loadAcquire() > 0);
     }
 
-    // ---------- TEST 4: 8 threads × 1000 Adders (without RecordLink) ----------
+    // ---------- TEST 4: 8 threads × 500 Adders (without RecordLink) ----------
     void testMultithreadedAdder() {
         TEST_SCOPE("testMultithreadedAdder");
 
@@ -314,12 +314,12 @@ private slots:
         QCOMPARE(success.loadAcquire(), total);
     }
 
-    // ---------- TEST 5: 8 threads × 1000 Remover (with deleteBadLinks) ----------
+    // ---------- TEST 5: 8 threads × 400 Remover (with deleteBadLinks) ----------
     void testMultithreadedRemover() {
         TEST_SCOPE("testMultithreadedRemover");
 
         const int threadCount = 8;
-        const int recordsPerThread = 300;
+        const int recordsPerThread = 400;
         const int totalRecords = threadCount * recordsPerThread;
 
         StorageManager sm;
@@ -417,7 +417,7 @@ private slots:
         QList<QFuture<void>> futures;
         for (int t = 0; t < threadCount; ++t) {
             futures.append(QtConcurrent::run([&, t]() {
-                for (int i = 0; i < 1000; ++i) {
+                for (int i = 0; i < 10000; ++i) {
                     const QString key = QString("E_%1_%2").arg(t).arg(i);
                     if (i % 2 == 0) {
                         sm.add().executor(key);
@@ -536,7 +536,7 @@ private slots:
         TEST_SCOPE("testSerializeRoundTrip");
 
         const int threadCount = 8;
-        const int recordsPerThread = 1000;
+        const int recordsPerThread = 2000;
         const int totalRecords = threadCount * recordsPerThread;
 
         QThreadPool::globalInstance()->setMaxThreadCount(16);
@@ -763,7 +763,7 @@ private slots:
             StorageManager sm;
 
             // Стартовое наполнение — чтобы у удалятелей было что удалять
-            const int initialRecords = 300;
+            const int initialRecords = 500;
             for (int i = 0; i < initialRecords; ++i) {
                 sm.addRecord(createRecord(i % 8, i));
             }

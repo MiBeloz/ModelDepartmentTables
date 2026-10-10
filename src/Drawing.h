@@ -12,6 +12,9 @@ public:
     bool operator ==(const Drawing& other) const;
     bool operator !=(const Drawing& other) const;
     bool operator <(const Drawing& other) const;
+    bool operator >(const Drawing& other) const;
+    bool operator <=(const Drawing& other) const;
+    bool operator >=(const Drawing& other) const;
 
     const QString& getNumber() const;
     const QString& getTitle() const;

@@ -1,8 +1,10 @@
 ﻿#ifndef RECORD_H
 #define RECORD_H
 
+#include <QDate>
+
+#include "DatesList.h"
 #include "Drawing.h"
-#include <DatesList.h>
 
 struct Record {
     Record() = default;
@@ -32,6 +34,32 @@ struct Record {
                castingMaterials == other.castingMaterials &&
                modelMaterials == other.modelMaterials && machines == other.machines &&
                notes == other.notes;
+    }
+
+    bool operator !=(const Record& other) const {
+        return !(*this == other);
+    }
+
+    bool operator <(const Record& other) const {
+        QDate leftDate = QDate::fromString(date, DatesList::getDateFormat());
+        QDate rightDate = QDate::fromString(other.date, DatesList::getDateFormat());
+
+        return leftDate < rightDate && drawing < other.drawing && amount < other.amount &&
+               executors < other.executors && authors < other.authors &&
+               castingMaterials < other.castingMaterials && modelMaterials < other.modelMaterials &&
+               machines < other.machines && notes < other.notes;
+    }
+
+    bool operator >(const Record& other) const {
+        return other < *this;
+    }
+
+    bool operator <=(const Record& other) const {
+        return !(other < *this);
+    }
+
+    bool operator >=(const Record& other) const {
+        return !(*this < other);
     }
 
     bool isValid() const {

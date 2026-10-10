@@ -1,14 +1,6 @@
 ﻿#ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-constexpr const char* SAVER_STORAGE_FILENAME = "dataStorage.mdt";
-constexpr const char* SAVER_STORAGE_FILENAME_TMP = "dataStorage.mdt.tmp";
-constexpr const char* SAVER_STORAGE_FILENAME_BACKUP = "dataStorage.mdt.backup";
-
-constexpr const char* SAVER_RECORDLINK_FILENAME = "dataRecordLink.mdt";
-constexpr const char* SAVER_RECORDLINK_FILENAME_TMP = "dataRecordLink.mdt.tmp";
-constexpr const char* SAVER_RECORDLINK_FILENAME_BACKUP = "dataRecordLink.mdt.backup";
-
 namespace mdt {
 #define STRINGIZE(x) #x
 #define STRINGIZE_VALUE_OF(x) STRINGIZE(x)
@@ -49,6 +41,12 @@ namespace mdt {
         constexpr const char* AutoConnect = "AutoConnect";
         constexpr const bool AutoConnectDefaultValue = true;
     } // namespace ConnectionSettings
+    namespace SaverSettings {
+        constexpr const char* SAVER_STORAGE_FILENAME = "storage.mdt";
+        constexpr const char* SAVER_STORAGE_FILENAME_TMP = "storage.tmp";
+
+    } // namespace SaverSettings
+
 } // namespace mdt
 
 #endif // CONSTANTS_H

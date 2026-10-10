@@ -120,7 +120,6 @@ private:
     QSet<qint32> m_idsModelMaterials;
     QSet<qint32> m_idsMachines;
     QSet<qint32> m_idsNotes;
-    // mutable QReadWriteLock m_lock;
 
     RecordLink();
 
