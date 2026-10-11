@@ -4,9 +4,11 @@
 #include <QAtomicInt>
 #include <QMutex>
 #include <QObject>
+#include <QSqlDatabase>
 #include <QThread>
+#include <QThreadStorage>
+#include <QTimer>
 #include <QWaitCondition>
-#include <QtSql>
 
 // #include "CacheManager.hpp"
 

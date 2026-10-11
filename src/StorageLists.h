@@ -4,6 +4,7 @@
 #include "Drawing.h"
 #include "ServiceCustomList.h"
 #include "ServiceDatesList.h"
+#include "Storage.h"
 
 enum class CustomStorage : quint8 {
     Executors,
@@ -14,7 +15,7 @@ enum class CustomStorage : quint8 {
     Notes
 };
 
-class StorageLists final {
+class StorageLists final : public Storage {
 public:
     StorageLists() {
         for (int i = 0; i < 6; ++i) {
@@ -77,7 +78,7 @@ public:
         }
     }
 
-    void serialize(QDataStream& out) const {
+    void serialize(QDataStream& out) const override {
         m_dateStorage.serialize(out);
         m_drawingStorage.serialize(out);
         m_amountStorage.serialize(out);
@@ -86,7 +87,7 @@ public:
         }
     }
 
-    void deserialize(QDataStream& in) {
+    void deserialize(QDataStream& in) override {
         m_dateStorage.deserialize(in);
         m_drawingStorage.deserialize(in);
         m_amountStorage.deserialize(in);

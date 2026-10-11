@@ -1,6 +1,6 @@
 ﻿#include <QHash>
 #include <QSet>
-#include <QtTest>
+#include <QTest>
 
 #include "Drawing.h"
 
@@ -29,10 +29,20 @@ private slots:
     void inequality_data();
     void inequality();
 
-    // ---------- operator< ----------
+    // ---------- operator< / > / <= / >= ----------
     void lessThan_data();
     void lessThan();
     void lessThanIsStrictWeakOrdering();
+    void greaterThan_data();
+    void greaterThan();
+    void greaterThanIsStrictWeakOrdering();
+    void lessOrEqual_data();
+    void lessOrEqual();
+    void lessOrEqualIsLessOrEqual();
+    void greaterOrEqual_data();
+    void greaterOrEqual();
+    void greaterOrEqualIsGreaterOrEqual();
+    void comparisonOperatorsAreConsistent();
 
     // ---------- qHash ----------
     void qHashEqualObjectsHaveEqualHash();
@@ -191,8 +201,6 @@ void TestDrawing::lessThan() {
     QFETCH(Drawing, b);
     QFETCH(bool, expected);
 
-    //qDebug() << "case:" << a << b << expected;
-
     QCOMPARE(a < b, expected);
 }
 
@@ -201,8 +209,7 @@ void TestDrawing::lessThanIsStrictWeakOrdering() {
     //  2) asymmetry:      a < b  =>  !(b < a)
     //  3) transitivity:   a < b && b < c  =>  a < c
     const QVector<Drawing> items = {
-        Drawing(), // пустое
-        Drawing("A", "A"), Drawing("A", "B"), Drawing("B", "A"), Drawing("B", "B"),
+        Drawing(), Drawing("A", "A"), Drawing("A", "B"), Drawing("B", "A"), Drawing("B", "B"),
     };
 
     for (const Drawing& a : items) {
@@ -223,6 +230,172 @@ void TestDrawing::lessThanIsStrictWeakOrdering() {
     std::sort(sorted.begin(), sorted.end());
     for (int i = 1; i < sorted.size(); ++i) {
         QVERIFY(!(sorted[i] < sorted[i - 1]));
+    }
+}
+
+void TestDrawing::greaterThan_data() {
+    QTest::addColumn<Drawing>("a");
+    QTest::addColumn<Drawing>("b");
+    QTest::addColumn<bool>("expected");
+
+    QTest::newRow("number less") << Drawing("A-1", "Z") << Drawing("A-2", "A") << false;
+    QTest::newRow("number greater") << Drawing("B-1", "A") << Drawing("A-2", "Z") << true;
+    QTest::newRow("number equal, title less")
+        << Drawing("A-1", "A") << Drawing("A-1", "B") << false;
+    QTest::newRow("number equal, title greater")
+        << Drawing("A-1", "B") << Drawing("A-1", "A") << true;
+    QTest::newRow("fully equal") << Drawing("A-1", "T") << Drawing("A-1", "T") << false;
+    QTest::newRow("empty > filled") << Drawing() << Drawing("A", "T") << false;
+    QTest::newRow("case sensitive")
+        << Drawing("A", "T") << Drawing("a", "T") << false; // 'A'(0x41) > 'a'(0x61)
+}
+
+void TestDrawing::greaterThan() {
+    QFETCH(Drawing, a);
+    QFETCH(Drawing, b);
+    QFETCH(bool, expected);
+
+    QCOMPARE(a > b, expected);
+}
+
+void TestDrawing::greaterThanIsStrictWeakOrdering() {
+    //  1) irreflexivity:  !(a > a)
+    //  2) asymmetry:      b > a  =>  !(a > b)
+    //  3) transitivity:   b > a && c > b  =>  c > a
+    const QVector<Drawing> items = {
+        Drawing(), Drawing("A", "A"), Drawing("A", "B"), Drawing("B", "A"), Drawing("B", "B"),
+    };
+
+    for (const Drawing& a : items) {
+        QVERIFY2(!(a > a), "irreflexivity violated");
+        for (const Drawing& b : items) {
+            if (b > a) {
+                QVERIFY2(!(a > b), "asymmetry violated");
+            }
+            for (const Drawing& c : items) {
+                if (b > a && c > b) {
+                    QVERIFY2(c > a, "transitivity violated");
+                }
+            }
+        }
+    }
+
+    QVector<Drawing> sorted = items;
+    std::sort(sorted.begin(), sorted.end());
+    for (int i = 1; i < sorted.size(); ++i) {
+        QVERIFY(!(sorted[i] < sorted[i - 1]));
+    }
+}
+
+void TestDrawing::lessOrEqual_data() {
+    QTest::addColumn<Drawing>("a");
+    QTest::addColumn<Drawing>("b");
+    QTest::addColumn<bool>("expected");
+
+    QTest::newRow("number less") << Drawing("A-1", "Z") << Drawing("A-2", "A") << true;
+    QTest::newRow("number greater") << Drawing("B-1", "A") << Drawing("A-2", "Z") << false;
+    QTest::newRow("number equal, title less") << Drawing("A-1", "A") << Drawing("A-1", "B") << true;
+    QTest::newRow("number equal, title greater")
+        << Drawing("A-1", "B") << Drawing("A-1", "A") << false;
+    QTest::newRow("fully equal") << Drawing("A-1", "T") << Drawing("A-1", "T") << true;
+    QTest::newRow("empty < filled") << Drawing() << Drawing("A", "T") << true;
+    QTest::newRow("filled > empty") << Drawing("A", "T") << Drawing() << false;
+    QTest::newRow("case sensitive") << Drawing("A", "T") << Drawing("a", "T") << true;
+}
+
+void TestDrawing::lessOrEqual() {
+    QFETCH(Drawing, a);
+    QFETCH(Drawing, b);
+    QFETCH(bool, expected);
+
+    QCOMPARE(a <= b, expected);
+}
+
+void TestDrawing::lessOrEqualIsLessOrEqual() {
+    const QVector<Drawing> items = {
+        Drawing(),         Drawing("A", "A"), Drawing("A", "B"),
+        Drawing("B", "A"), Drawing("B", "B"), Drawing("A-1", "T"),
+    };
+
+    for (const Drawing& a : items) {
+        for (const Drawing& b : items) {
+            QCOMPARE(a <= b, (a < b) || (a == b));
+        }
+    }
+}
+
+void TestDrawing::greaterOrEqual_data() {
+    QTest::addColumn<Drawing>("a");
+    QTest::addColumn<Drawing>("b");
+    QTest::addColumn<bool>("expected");
+
+    QTest::newRow("number less") << Drawing("A-1", "Z") << Drawing("A-2", "A") << false;
+    QTest::newRow("number greater") << Drawing("B-1", "A") << Drawing("A-2", "Z") << true;
+    QTest::newRow("number equal, title less")
+        << Drawing("A-1", "A") << Drawing("A-1", "B") << false;
+    QTest::newRow("number equal, title greater")
+        << Drawing("A-1", "B") << Drawing("A-1", "A") << true;
+    QTest::newRow("fully equal") << Drawing("A-1", "T") << Drawing("A-1", "T") << true;
+    QTest::newRow("empty < filled") << Drawing() << Drawing("A", "T") << false;
+    QTest::newRow("filled > empty") << Drawing("A", "T") << Drawing() << true;
+    QTest::newRow("case sensitive") << Drawing("A", "T") << Drawing("a", "T") << false;
+}
+
+void TestDrawing::greaterOrEqual() {
+    QFETCH(Drawing, a);
+    QFETCH(Drawing, b);
+    QFETCH(bool, expected);
+
+    QCOMPARE(a >= b, expected);
+}
+
+void TestDrawing::greaterOrEqualIsGreaterOrEqual() {
+    const QVector<Drawing> items = {
+        Drawing(),         Drawing("A", "A"), Drawing("A", "B"),
+        Drawing("B", "A"), Drawing("B", "B"), Drawing("A-1", "T"),
+    };
+
+    for (const Drawing& a : items) {
+        for (const Drawing& b : items) {
+            QCOMPARE(a >= b, (a > b) || (a == b));
+        }
+    }
+}
+
+void TestDrawing::comparisonOperatorsAreConsistent() {
+    const QVector<Drawing> items = {
+        Drawing(),         Drawing("A", "A"),   Drawing("A", "B"),   Drawing("B", "A"),
+        Drawing("B", "B"), Drawing("A-1", "T"), Drawing("A-2", "T"), Drawing("B-1", "A"),
+    };
+
+    for (const Drawing& a : items) {
+        for (const Drawing& b : items) {
+            // exactly one of <, ==, > must be true
+            int count = 0;
+            if (a < b) {
+                ++count;
+            }
+            if (a == b) {
+                ++count;
+            }
+            if (a > b) {
+                ++count;
+            }
+            QCOMPARE(count, 1);
+
+            // consistency of <= and >=
+            QCOMPARE(a <= b, (a < b) || (a == b));
+            QCOMPARE(a >= b, (a > b) || (a == b));
+            QCOMPARE(a != b, !(a == b));
+
+            // duality
+            QCOMPARE(a<b, b> a);
+            QCOMPARE(a <= b, b >= a);
+            QCOMPARE(a > b, b < a);
+            QCOMPARE(a >= b, b <= a);
+            QCOMPARE(a == b, b == a);
+            QCOMPARE(a != b, b != a);
+        }
     }
 }
 
@@ -299,8 +472,8 @@ void TestDrawing::serializationRoundTrip_data() {
 void TestDrawing::serializationRoundTrip() {
     QFETCH(Drawing, drawing);
 
-    const QByteArray data = serialize(drawing);
-    const Drawing restored = deserialize(data);
+    const QByteArray _data = serialize(drawing);
+    const Drawing restored = deserialize(_data);
 
     QCOMPARE(restored, drawing);
     QCOMPARE(restored.getNumber(), drawing.getNumber());

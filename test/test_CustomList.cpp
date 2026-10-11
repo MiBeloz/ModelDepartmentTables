@@ -1,6 +1,6 @@
 ﻿#include <QByteArray>
 #include <QDataStream>
-#include <QtTest>
+#include <QTest>
 
 #include "CustomList.h"
 #include "Drawing.h"
@@ -55,12 +55,12 @@ private slots:
     void insertSwitchesToDraftMode();
     void removeSwitchesToDraftMode();
     void clearSwitchesToDraftMode();
-    void readersSeeDraftData(); // ← переименовано и переписано
+    void readersSeeDraftData();
     void readersSeeCommittedAfterCommit();
 
     // ---------- size / sizeCommitted ----------
-    void sizeReflectsDraft();         // ← переписано
-    void sizeCommittedReflectsMain(); // ← переписано
+    void sizeReflectsDraft();
+    void sizeCommittedReflectsMain();
     void sizeEqualsSizeCommittedAfterCommit();
 
     // ---------- clear ----------
@@ -90,7 +90,7 @@ private slots:
     void serializeDeserializeRoundTrip();
     void serializeDeserializeEmpty();
     void serializeDeserializePreservesFreeIds();
-    void serializePreservesDraft(); // ← переписано (раньше "IgnoresDraft")
+    void serializePreservesDraft();
     void serializeDeserializePreservesDraft();
     void serializeDeserializeRoundTrip2();
     void deserializeWrongVersionThrows();
@@ -186,13 +186,9 @@ void TestCustomList::equalityOperator() {
     QVERIFY(a == b);
 
     a.insert(1);
-    // После insert у a черновик непустой, m_commit = false.
-    // У b всё ещё пусто и m_commit = true. Значит, объекты не равны.
     QVERIFY(a != b);
 
     a.commit();
-    // После commit у a m_list == m_listTmp, но у b пусто.
-    // Всё ещё не равны.
     QVERIFY(a != b);
 
     b.insert(1);
@@ -258,9 +254,7 @@ void TestCustomList::insertReturnsIncrementingIds() {
     QCOMPARE(*id2, 2);
     QCOMPARE(*id3, 3);
 
-    // size() — это размер черновика. После insert'ов он равен 3.
     QCOMPARE(list.size(), 3);
-    // sizeCommitted() — размер m_list. Пока 0.
     QCOMPARE(list.sizeCommitted(), 0);
 
     list.commit();
@@ -353,9 +347,7 @@ void TestCustomList::insertDuplicateInDraftReturnsSameId() {
     QCOMPARE(*second, *first);
     QCOMPARE(*third, *first);
 
-    // size() — размер черновика. После трёх insert одного значения — 1.
     QCOMPARE(list.size(), 1);
-    // sizeCommitted() — размер m_list. Пока 0.
     QCOMPARE(list.sizeCommitted(), 0);
 
     list.commit();
@@ -377,7 +369,6 @@ void TestCustomList::insertDuplicateManyTimesKeepsSingleEntry() {
         }
     }
 
-    // size() — черновик, sizeCommitted() — m_list.
     QCOMPARE(list.size(), 1);
     QCOMPARE(list.sizeCommitted(), 0);
 
@@ -489,9 +480,7 @@ void TestCustomList::insertSwitchesToDraftMode() {
     QCOMPARE(list.sizeCommitted(), 0);
 
     list.insert(1);
-    // size() — размер черновика, теперь 1.
     QCOMPARE(list.size(), 1);
-    // sizeCommitted() — размер m_list, пока 0.
     QCOMPARE(list.sizeCommitted(), 0);
 }
 
@@ -502,7 +491,6 @@ void TestCustomList::removeSwitchesToDraftMode() {
     QCOMPARE(list.sizeCommitted(), 3);
 
     list.remove(2);
-    // Черновик теперь содержит {1, 3}, m_list всё ещё {1, 2, 3}.
     QCOMPARE(list.size(), 2);
     QCOMPARE(list.sizeCommitted(), 3);
 }
@@ -511,7 +499,6 @@ void TestCustomList::clearSwitchesToDraftMode() {
     auto list = makeCommitted<int>({ 1, 2, 3 });
 
     list.clear();
-    // Черновик пуст, m_list нетронут.
     QCOMPARE(list.size(), 0);
     QCOMPARE(list.sizeCommitted(), 3);
 }
@@ -521,7 +508,6 @@ void TestCustomList::readersSeeDraftData() {
 
     list.insert(20);
 
-    // read-методы смотрят в m_listTmp, то есть видят и 10, и 20.
     QVERIFY(list.getId(10).has_value());
     QVERIFY(list.getId(20).has_value());
 
@@ -558,7 +544,6 @@ void TestCustomList::sizeReflectsDraft() {
     list.insert(2);
     list.insert(3);
 
-    // size() — размер черновика.
     QCOMPARE(list.size(), 3);
     QCOMPARE(list.sizeCommitted(), 0);
 
@@ -597,11 +582,8 @@ void TestCustomList::clearInDraftModeAffectsOnlyDraft() {
 
     list.clear();
 
-    // Черновик пуст, m_list нетронут.
     QCOMPARE(list.size(), 0);
     QCOMPARE(list.sizeCommitted(), 3);
-
-    // getAllValues смотрит в m_listTmp, то есть пусто.
     QCOMPARE(list.getAllValues().size(), 0);
 }
 
@@ -649,7 +631,6 @@ void TestCustomList::resetReturnsToMainMode() {
 void TestCustomList::resetOnCleanStateIsNoop() {
     auto list = makeCommitted<int>({ 1, 2 });
 
-    // insert(2) — дубликат, ничего не меняет.
     list.insert(2);
     QCOMPARE(list.size(), 2);
 
@@ -803,8 +784,6 @@ void TestCustomList::draftAccumulatesMultipleOperations() {
     list.remove(2);
     list.insert(5);
 
-    // Черновик: {1, 3, 4, 5} → size() == 4
-    // m_list:    {1, 2, 3}    → sizeCommitted() == 3
     QCOMPARE(list.size(), 4);
     QCOMPARE(list.sizeCommitted(), 3);
 
@@ -881,15 +860,12 @@ void TestCustomList::serializeDeserializePreservesFreeIds() {
 void TestCustomList::serializePreservesDraft() {
     auto original = makeCommitted<int>({ 1, 2 });
 
-    // Создаём черновик: insert(3) без commit.
     original.insert(3);
     original.insert(4);
 
     auto bytes = toBytes(original);
     auto restored = fromBytes(bytes);
 
-    // Теперь serialize пишет полное состояние, включая m_listTmp.
-    // Значит, у restored тоже будет черновик с {1, 2, 3, 4}.
     QCOMPARE(restored.size(), 4);
     QCOMPARE(restored.sizeCommitted(), 2);
     QVERIFY(restored.getId(1).has_value());
@@ -907,8 +883,6 @@ void TestCustomList::serializeDeserializePreservesDraft() {
     auto bytes = toBytes(original);
     auto restored = fromBytes(bytes);
 
-    // Round-trip должен сохранить даже несохранённые изменения
-    // (потому что serialize теперь пишет полное состояние).
     QCOMPARE(restored, original);
     QCOMPARE(restored.size(), original.size());
     QCOMPARE(restored.sizeCommitted(), original.sizeCommitted());

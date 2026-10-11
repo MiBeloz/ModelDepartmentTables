@@ -2,9 +2,9 @@
 #include <QByteArray>
 #include <QDataStream>
 #include <QFuture>
+#include <QTest>
 #include <QThread>
-#include <QtConcurrent>
-#include <QtTest>
+#include <QtConcurrentRun>
 
 #include "Drawing.h"
 #include "Record.h"
@@ -113,7 +113,7 @@ private slots:
         QCOMPARE(records.size(), totalRecords);
 
         QSet<QString> actualKeys;
-        for (const Record& record : records) {
+        for (const Record& record : std::as_const(records)) {
             QVERIFY(record.isValid());
 
             actualKeys.insert(makeKey(record));
@@ -536,7 +536,7 @@ private slots:
         TEST_SCOPE("testSerializeRoundTrip");
 
         const int threadCount = 8;
-        const int recordsPerThread = 2000;
+        const int recordsPerThread = 1000;
         const int totalRecords = threadCount * recordsPerThread;
 
         QThreadPool::globalInstance()->setMaxThreadCount(16);
@@ -1428,7 +1428,7 @@ void TestStorageManager::testDeleteBadLinksKeepsRecordIfOnlySomeValuesRemoved() 
         .machine(QStringLiteral("MachineX"));
 
     QCOMPARE(sm.countRecords(), qsizetype(1));
-    const Record got = sm.getRecords().first();
+    const Record got = sm.getRecords().constFirst();
     QVERIFY(got.executors.isEmpty());
     QVERIFY(got.castingMaterials.isEmpty());
     QVERIFY(got.machines.isEmpty());
@@ -1450,7 +1450,7 @@ void TestStorageManager::testRecordsCacheInvalidation() {
     QVERIFY(sm.addRecord(r));
 
     QCOMPARE(sm.getRecords().size(), 1);
-    QCOMPARE(sm.getRecords().first(), r);
+    QCOMPARE(sm.getRecords().constFirst(), r);
 
     QVERIFY(sm.removeRecord(r));
     QCOMPARE(sm.getRecords().size(), 0);

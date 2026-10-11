@@ -6,10 +6,11 @@
 #include <QString>
 
 #include "Record.h"
+#include "Storage.h"
 #include "StorageLists.h"
 #include "StorageRecordsLinks.h"
 
-class StorageManager final {
+class StorageManager final : public Storage {
 public:
     class Adder {
     public:
@@ -354,7 +355,7 @@ public:
         return true;
     }
 
-    QList<Record> getRecords() const {
+    const QList<Record> getRecords() const {
         {
             const QReadLocker readLocker(&m_lock);
             if (m_recordsIsValid) {
@@ -484,13 +485,13 @@ public:
         m_recordsIsValid = false;
     }
 
-    void serialize(QDataStream& out) const {
+    void serialize(QDataStream& out) const override {
         const QReadLocker locker(&m_lock);
         m_storageRecordsLinks.serialize(out);
         m_storageLists.serialize(out);
     }
 
-    void deserialize(QDataStream& in) {
+    void deserialize(QDataStream& in) override {
         const QWriteLocker locker(&m_lock);
         m_storageRecordsLinks.deserialize(in);
         m_storageLists.deserialize(in);

@@ -1,6 +1,6 @@
 ﻿#include <QByteArray>
 #include <QDataStream>
-#include <QtTest>
+#include <QTest>
 
 #include "Exceptions.h"
 #include "RecordLink.h"

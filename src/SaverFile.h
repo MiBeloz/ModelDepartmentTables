@@ -15,8 +15,7 @@
 
 #include "Saver.h"
 
-template<typename T>
-class SaverFile final : public Saver<T> {
+class SaverFile final : public Saver {
 public:
     SaverFile(QString fileName, QString tempFileName)
         : m_fileName(std::move(fileName))
@@ -26,7 +25,7 @@ public:
         QFile::remove(m_tempFileName);
     }
 
-    [[nodiscard]] bool prepare(const T &storage) override {
+    [[nodiscard]] bool prepare(const Storage &storage) override {
         const QWriteLocker locker(&m_lock);
 
         QFile temp(m_tempFileName);
@@ -59,7 +58,7 @@ public:
         return true;
     }
 
-    [[nodiscard]] bool read(T &storage) override {
+    [[nodiscard]] bool read(Storage &storage) override {
         const QReadLocker locker(&m_lock);
 
         QFile file(m_fileName);
@@ -70,9 +69,8 @@ public:
         QDataStream stream(&file);
         stream.setVersion(QDataStream::Qt_6_0);
 
-        T tmp { };
         try {
-            tmp.deserialize(stream);
+            storage.deserialize(stream);
         } catch (...) {
             file.close();
             throw;
@@ -84,7 +82,6 @@ public:
             return false;
         }
 
-        storage = std::move(tmp);
         return true;
     }
 

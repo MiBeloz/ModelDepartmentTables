@@ -2,8 +2,10 @@
 
 #include <QDebug>
 #include <QHostInfo>
+#include <QRandomGenerator>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QTime>
 
 DatabaseManager::DatabaseManager(QObject* parent) : QObject(parent) {
     m_activeConnections = 0;
@@ -82,7 +84,7 @@ bool DatabaseManager::connect() {
 
     // Подключаем таймер к лямбда-функции
     m_monitorTimer = new QTimer(this);
-    QObject::connect(m_monitorTimer, &QTimer::timeout, [this]() {
+    QObject::connect(m_monitorTimer, &QTimer::timeout, this, [this]() {
         // Получаем текущее время
         QString currentTime = QTime::currentTime().toString("hh:mm:ss");
 

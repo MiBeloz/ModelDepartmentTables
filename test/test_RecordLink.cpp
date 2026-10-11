@@ -1,9 +1,9 @@
 ﻿#include <QByteArray>
 #include <QDataStream>
 #include <QSet>
+#include <QTest>
 #include <QThread>
-#include <QtConcurrent/QtConcurrent>
-#include <QtTest>
+#include <QtConcurrentRun>
 
 #include "Exceptions.h"
 #include "RecordLink.h"
