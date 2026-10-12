@@ -1,5 +1,4 @@
-﻿#include <QDebug>
-#include <QObject>
+﻿#include <QObject>
 #include <QTest>
 
 #include "DatesList.h"

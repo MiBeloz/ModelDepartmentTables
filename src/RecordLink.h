@@ -5,78 +5,18 @@
 #include <QReadWriteLock>
 #include <QSet>
 
+enum class IdsList : quint8 {
+    Executors,
+    Authors,
+    CastingMaterials,
+    ModelMaterials,
+    Machines,
+    Notes
+};
+
 class RecordLink {
 public:
-    class Adder {
-    public:
-        explicit Adder(RecordLink& link);
-
-        Adder& idsExecutors(const QSet<qint32>& ids);
-        Adder& idsAuthors(const QSet<qint32>& ids);
-        Adder& idsCastingMaterials(const QSet<qint32>& ids);
-        Adder& idsModelMaterials(const QSet<qint32>& ids);
-        Adder& idsMachines(const QSet<qint32>& ids);
-        Adder& idsNotes(const QSet<qint32>& ids);
-
-    private:
-        RecordLink& m_link;
-    };
-
-    class Remover {
-    public:
-        explicit Remover(RecordLink& link);
-
-        Remover& idsExecutors(const QSet<qint32>& ids);
-        Remover& idsAuthors(const QSet<qint32>& ids);
-        Remover& idsCastingMaterials(const QSet<qint32>& ids);
-        Remover& idsModelMaterials(const QSet<qint32>& ids);
-        Remover& idsMachines(const QSet<qint32>& ids);
-        Remover& idsNotes(const QSet<qint32>& ids);
-
-    private:
-        RecordLink& m_link;
-    };
-
-    class Getter {
-    public:
-        explicit Getter(const RecordLink& link);
-
-        qint32 idDate() const;
-        qint32 idDrawing() const;
-        qint32 idAmount() const;
-        QSet<qint32> idsExecutors() const;
-        QSet<qint32> idsAuthors() const;
-        QSet<qint32> idsCastingMaterials() const;
-        QSet<qint32> idsModelMaterials() const;
-        QSet<qint32> idsMachines() const;
-        QSet<qint32> idsNotes() const;
-
-    private:
-        const RecordLink& m_link;
-    };
-
-    class Replacer {
-    public:
-        explicit Replacer(RecordLink& link);
-
-        Replacer& idDate(qint32 newIdDate);
-        Replacer& idDrawing(qint32 newIdDrawing);
-        Replacer& idAmount(qint32 newIdAmount);
-        Replacer& idsExecutors(const QSet<qint32>& newIdsExecutors);
-        Replacer& idsAuthors(const QSet<qint32>& newIdsAuthors);
-        Replacer& idsCastingMaterials(const QSet<qint32>& newIdsCastingMaterials);
-        Replacer& idsModelMaterials(const QSet<qint32>& newIdsModelMaterials);
-        Replacer& idsMachines(const QSet<qint32>& newIdsMachines);
-        Replacer& idsNotes(const QSet<qint32>& newIdsNotes);
-
-    private:
-        RecordLink& m_link;
-    };
-
-    friend class Adder;
-    friend class Remover;
-    friend class Getter;
-    friend class Replacer;
+    RecordLink() = default;
 
     explicit RecordLink(qint32 idDate,
                         qint32 idDrawing,
@@ -98,10 +38,16 @@ public:
 
     void swap(RecordLink& other);
 
-    [[nodiscard]] Adder add();
-    [[nodiscard]] Remover remove();
-    [[nodiscard]] Getter get() const;
-    [[nodiscard]] Replacer replace();
+    void setIdDate(qint32 idDate);
+    void setIdDrawing(qint32 idDrawing);
+    void setIdAmount(qint32 idAmount);
+    void addIds(IdsList idsList, const QSet<qint32>& ids);
+    void removeIds(IdsList idsList, const QSet<qint32>& ids);
+    qint32 getIdDate() const;
+    qint32 getIdDrawing() const;
+    qint32 getIdAmount() const;
+    const QSet<qint32>& getIds(IdsList idsList) const;
+    void replaceIds(IdsList idsList, const QSet<qint32>& newIds);
 
     void serialize(QDataStream& out) const;
     void deserialize(QDataStream& in);
@@ -120,44 +66,6 @@ private:
     QSet<qint32> m_idsModelMaterials;
     QSet<qint32> m_idsMachines;
     QSet<qint32> m_idsNotes;
-
-    RecordLink();
-
-    void setIdDate(qint32 idDate);
-    void setIdDrawing(qint32 idDrawing);
-    void setIdAmount(qint32 idAmount);
-
-    void addExecutors(const QSet<qint32>& idsExecutors);
-    void addAuthors(const QSet<qint32>& idsAuthors);
-    void addCastingMaterials(const QSet<qint32>& idsCastingMaterials);
-    void addModelMaterials(const QSet<qint32>& idsModelMaterials);
-    void addMachines(const QSet<qint32>& idsMachines);
-    void addNotes(const QSet<qint32>& idsNotes);
-
-    void removeExecutors(const QSet<qint32>& idsExecutors);
-    void removeAuthors(const QSet<qint32>& idsAuthors);
-    void removeCastingMaterials(const QSet<qint32>& idsCastingMaterials);
-    void removeModelMaterials(const QSet<qint32>& idsModelMaterials);
-    void removeMachines(const QSet<qint32>& idsMachines);
-    void removeNotes(const QSet<qint32>& idsNotes);
-
-    void replaceExecutors(const QSet<qint32>& idsExecutors);
-    void replaceAuthors(const QSet<qint32>& idsAuthors);
-    void replaceCastingMaterials(const QSet<qint32>& idsCastingMaterials);
-    void replaceModelMaterials(const QSet<qint32>& idsModelMaterials);
-    void replaceMachines(const QSet<qint32>& idsMachines);
-    void replaceNotes(const QSet<qint32>& idsNotes);
-
-    qint32 getIdDate() const;
-    qint32 getIdDrawing() const;
-    qint32 getIdAmount() const;
-
-    QSet<qint32> getIdsExecutors() const;
-    QSet<qint32> getIdsAuthors() const;
-    QSet<qint32> getIdsCastingMaterials() const;
-    QSet<qint32> getIdsModelMaterials() const;
-    QSet<qint32> getIdsMachines() const;
-    QSet<qint32> getIdsNotes() const;
 
     void throwStreamError(QDataStream::Status status) const;
 

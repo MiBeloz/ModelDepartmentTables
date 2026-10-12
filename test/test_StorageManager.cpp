@@ -348,7 +348,7 @@ private slots:
             futures.append(QtConcurrent::run([&, t]() {
                 for (int i = 0; i < recordsPerThread; ++i) {
                     const Record r = createRecord(t, i);
-                    sm.remove().date(r.date).drawing(r.drawing).amount(r.amount);
+                    sm.remove().date(r.date()).drawing(r.drawing()).amount(r.amount());
                     removed.fetchAndAddOrdered(1);
                 }
             }));
@@ -1131,52 +1131,52 @@ private:
     }
 
     QString makeKey(const Record& r) const {
-        return QStringList { r.date,
-                             r.drawing.getNumber(),
-                             r.drawing.getTitle(),
-                             QString::number(r.amount),
-                             r.executors.join(","),
-                             r.authors.join(","),
-                             r.castingMaterials.join(","),
-                             r.modelMaterials.join(","),
-                             r.machines.join(","),
-                             r.notes.join(",") }
+        return QStringList { r.date(),
+                             r.drawing().getNumber(),
+                             r.drawing().getTitle(),
+                             QString::number(r.amount()),
+                             r.executors().join(","),
+                             r.authors().join(","),
+                             r.castingMaterials().join(","),
+                             r.modelMaterials().join(","),
+                             r.machines().join(","),
+                             r.notes().join(",") }
             .join("|");
     }
 
     void verifyRecordIntegrity(const Record& r, const StorageManager& sm) const {
         // ---------- 1. Базовые проверки ---
-        QVERIFY2(!r.date.isEmpty(), "date пустой");
-        QVERIFY2(DatesList::checkDate(r.date), "date не проходит checkDate");
-        QVERIFY2(r.drawing.isValid(), "drawing невалиден");
-        QVERIFY2(!r.drawing.getNumber().isEmpty(), "drawing.number пуст");
-        QVERIFY2(!r.drawing.getTitle().isEmpty(), "drawing.title пуст");
-        QVERIFY2(r.amount >= 1, "amount < 1");
+        QVERIFY2(!r.date().isEmpty(), "date пустой");
+        QVERIFY2(DatesList::checkDate(r.date()), "date не проходит checkDate");
+        QVERIFY2(r.drawing().isValid(), "drawing невалиден");
+        QVERIFY2(!r.drawing().getNumber().isEmpty(), "drawing.number пуст");
+        QVERIFY2(!r.drawing().getTitle().isEmpty(), "drawing.title пуст");
+        QVERIFY2(r.amount() >= 1, "amount < 1");
 
         // ---------- 2. Консистентность со StorageLists ---
         //  Каждое значение из Record должно присутствовать в соответствующем
         //  списке StorageLists. Если оно оттуда пропало — значит, ссылка
         //  «полубитая»: RecordLink ещё ссылается на удалённый id.
         const auto allDates = sm.get().datesStr();
-        QVERIFY2(allDates.contains(r.date),
-                 qPrintable(QString("date '%1' отсутствует в StorageLists::dates").arg(r.date)));
+        QVERIFY2(allDates.contains(r.date()),
+                 qPrintable(QString("date '%1' отсутствует в StorageLists::dates").arg(r.date())));
 
         const auto allDrawings = sm.get().drawings();
         bool drawingFound = false;
         for (const auto& d : allDrawings) {
-            if (d == r.drawing) {
+            if (d == r.drawing()) {
                 drawingFound = true;
                 break;
             }
         }
         QVERIFY2(drawingFound,
                  qPrintable(QString("drawing '%1 / %2' отсутствует в StorageLists::drawings")
-                                .arg(r.drawing.getNumber(), r.drawing.getTitle())));
+                                .arg(r.drawing().getNumber(), r.drawing().getTitle())));
 
         const auto allAmounts = sm.get().amounts();
-        QVERIFY2(allAmounts.contains(r.amount),
+        QVERIFY2(allAmounts.contains(r.amount()),
                  qPrintable(
-                     QString("amount '%1' отсутствует в StorageLists::amounts").arg(r.amount)));
+                     QString("amount '%1' отсутствует в StorageLists::amounts").arg(r.amount())));
 
         auto checkList =
             [](const QStringList& values, const auto& allValues, const char* fieldName) {
@@ -1188,12 +1188,12 @@ private:
                 }
             };
 
-        checkList(r.executors, sm.get().executors(), "executor");
-        checkList(r.authors, sm.get().authors(), "author");
-        checkList(r.castingMaterials, sm.get().castingMaterials(), "castingMaterial");
-        checkList(r.modelMaterials, sm.get().modelMaterials(), "modelMaterial");
-        checkList(r.machines, sm.get().machines(), "machine");
-        checkList(r.notes, sm.get().notes(), "note");
+        checkList(r.executors(), sm.get().executors(), "executor");
+        checkList(r.authors(), sm.get().authors(), "author");
+        checkList(r.castingMaterials(), sm.get().castingMaterials(), "castingMaterial");
+        checkList(r.modelMaterials(), sm.get().modelMaterials(), "modelMaterial");
+        checkList(r.machines(), sm.get().machines(), "machine");
+        checkList(r.notes(), sm.get().notes(), "note");
     }
 };
 
@@ -1407,7 +1407,7 @@ void TestStorageManager::testDeleteBadLinksOnRemoverExecutor() {
     QCOMPARE(sm.countRecords(), qsizetype(1));
     const QList<Record> records = sm.getRecords();
     QCOMPARE(records.size(), 1);
-    QCOMPARE(records.first().executors, QStringList { QStringLiteral("ExecE2") });
+    QCOMPARE(records.first().executors(), QStringList { QStringLiteral("ExecE2") });
 }
 
 void TestStorageManager::testDeleteBadLinksKeepsRecordIfOnlySomeValuesRemoved() {
@@ -1429,13 +1429,13 @@ void TestStorageManager::testDeleteBadLinksKeepsRecordIfOnlySomeValuesRemoved() 
 
     QCOMPARE(sm.countRecords(), qsizetype(1));
     const Record got = sm.getRecords().constFirst();
-    QVERIFY(got.executors.isEmpty());
-    QVERIFY(got.castingMaterials.isEmpty());
-    QVERIFY(got.machines.isEmpty());
+    QVERIFY(got.executors().isEmpty());
+    QVERIFY(got.castingMaterials().isEmpty());
+    QVERIFY(got.machines().isEmpty());
 
-    QCOMPARE(got.authors, QStringList { QStringLiteral("AuthorX") });
-    QCOMPARE(got.modelMaterials, QStringList { QStringLiteral("ModelX") });
-    QCOMPARE(got.notes, QStringList { QStringLiteral("NoteX") });
+    QCOMPARE(got.authors(), QStringList { QStringLiteral("AuthorX") });
+    QCOMPARE(got.modelMaterials(), QStringList { QStringLiteral("ModelX") });
+    QCOMPARE(got.notes(), QStringList { QStringLiteral("NoteX") });
 }
 
 // ---------------------------------------------------------------------------

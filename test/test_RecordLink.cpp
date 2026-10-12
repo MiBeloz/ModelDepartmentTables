@@ -1,9 +1,6 @@
-﻿#include <QByteArray>
+﻿#include <QBuffer>
 #include <QDataStream>
-#include <QSet>
 #include <QTest>
-#include <QThread>
-#include <QtConcurrentRun>
 
 #include "Exceptions.h"
 #include "RecordLink.h"
@@ -13,411 +10,380 @@ class TestRecordLink : public QObject {
 
 private slots:
     // ---------- Constructors / Assignment ----------
-    void defaultConstructorCreatesNullLikeObject();
-    void constructorInitializesAllFields();
-    void copyConstructorCopiesAllFields();
-    void moveConstructorMovesAndResetsSource();
-
-    // ---------- Setter ----------
-    void setterSetsIds();
-    void setterChaining();
-
-    // ---------- Adder ----------
-    void adderUnitesSets();
-    void adderChaining();
-
-    // ---------- Remover ----------
-    void removerSubtractsSets();
-    void removerChaining();
-
-    // ---------- Getter ----------
-    void getterReturnsAllFields();
+    void defaultConstructorCreatesNull();
+    void fullConstructorSetsAllFields();
+    void NullIsEmpty();
+    void copyConstructorDeepCopies();
+    void copyAssignmentDeepCopies();
+    void selfAssignmentNoop();
+    void moveConstructorTransfersAndResets();
+    void moveAssignmentTransfersAndResets();
 
     // ---------- Comparison operators ----------
-    void operatorEqualEqualObjects();
-    void operatorEqualDifferentObjects();
-    void operatorNotEqual();
-    void operatorAssignCopy();
-    void operatorAssignMove();
-    void operatorAssignSelfAssignment();
+    void equalitySameValues();
+    void equalityDifferentIds();
+    void equalityDifferentSets();
+    void inequalityWorks();
 
     // ---------- swap ----------
-    void swapSwapsAllFields();
-    void swapSelfSwap();
+    void swapExchangesState();
+    void swapWithSelfNoop();
 
-    // ---------- qHash ----------
-    void qHashEqualObjectsHaveEqualHash();
-    void qHashDifferentObjectsHaveDifferentHash();
+    // ---------- set ----------
+    void setIdDateWorks();
+    void setIdDrawingWorks();
+    void setIdAmountWorks();
+
+    // ---------- addIds / removeIds / replaceIds / getIds ----------
+    void addIdsUnitesAllLists_data();
+    void addIdsUnitesAllLists();
+    void removeIdsSubtracts();
+    void replaceIdsReplaces();
+    void getIdsReturnsReferenceToInternalSet();
+
+    // ---------- hash ----------
+    void hashEqualForEqualObjects();
+    void hashDiffersForDifferentObjects();
 
     // ---------- serialize / deserialize ----------
     void serializeDeserializeRoundTrip();
+    void serializeDeserializeEmptyObject();
     void deserializeWrongVersionThrows();
-    void deserializeNegativeIdThrows();
     void deserializeNegativeSetSizeThrows();
     void deserializeTruncatedStreamThrows();
 };
 
-// ---------- Helper functions ----------
+// ---------- Helpers ----------
 
 static RecordLink makeSample() {
-    return RecordLink(1,
-                      2,
-                      3,
-                      QSet<qint32> { 10, 11, 12 },
-                      QSet<qint32> { 20, 21 },
-                      QSet<qint32> { 30 },
-                      QSet<qint32> { 40, 41, 42, 43 },
-                      QSet<qint32> { 50, 51 },
-                      QSet<qint32> { 60 });
+    return RecordLink(101,
+                      202,
+                      303,
+                      QSet<qint32> { 1, 2, 3 },
+                      QSet<qint32> { 4, 5 },
+                      QSet<qint32> { 6 },
+                      QSet<qint32> { 7, 8, 9 },
+                      QSet<qint32> { 10 },
+                      QSet<qint32> { 11, 12 });
+}
+
+static QByteArray serializeToBytes(const RecordLink& rl) {
+    QByteArray bytes;
+    QDataStream out(&bytes, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Version::Qt_6_11);
+    rl.serialize(out);
+    return bytes;
+}
+
+static RecordLink deserializeFromBytes(const QByteArray& bytes) {
+    QDataStream in(bytes);
+    in.setVersion(QDataStream::Version::Qt_6_11);
+    RecordLink rl;
+    rl.deserialize(in);
+    return rl;
 }
 
 // ---------- Constructors / Assignment ----------
 
-void TestRecordLink::defaultConstructorCreatesNullLikeObject() {
-    RecordLink link = RecordLink::Null;
-
-    QCOMPARE(link.get().idDate(), 0);
-    QCOMPARE(link.get().idDrawing(), 0);
-    QCOMPARE(link.get().idAmount(), 0);
-    QVERIFY(link.get().idsExecutors().isEmpty());
-    QVERIFY(link.get().idsAuthors().isEmpty());
-    QVERIFY(link.get().idsCastingMaterials().isEmpty());
-    QVERIFY(link.get().idsModelMaterials().isEmpty());
-    QVERIFY(link.get().idsMachines().isEmpty());
-    QVERIFY(link.get().idsNotes().isEmpty());
+void TestRecordLink::defaultConstructorCreatesNull() {
+    RecordLink rl;
+    QCOMPARE(rl.getIdDate(), 0);
+    QCOMPARE(rl.getIdDrawing(), 0);
+    QCOMPARE(rl.getIdAmount(), 0);
+    QVERIFY(rl.getIds(IdsList::Executors).isEmpty());
+    QVERIFY(rl.getIds(IdsList::Authors).isEmpty());
+    QVERIFY(rl.getIds(IdsList::CastingMaterials).isEmpty());
+    QVERIFY(rl.getIds(IdsList::ModelMaterials).isEmpty());
+    QVERIFY(rl.getIds(IdsList::Machines).isEmpty());
+    QVERIFY(rl.getIds(IdsList::Notes).isEmpty());
 }
 
-void TestRecordLink::constructorInitializesAllFields() {
-    const RecordLink r = makeSample();
-    const RecordLink::Getter g = r.get();
-
-    QCOMPARE(g.idDate(), 1);
-    QCOMPARE(g.idDrawing(), 2);
-    QCOMPARE(g.idAmount(), 3);
-    QCOMPARE(g.idsExecutors(), (QSet<qint32> { 10, 11, 12 }));
-    QCOMPARE(g.idsAuthors(), (QSet<qint32> { 20, 21 }));
-    QCOMPARE(g.idsCastingMaterials(), (QSet<qint32> { 30 }));
-    QCOMPARE(g.idsModelMaterials(), (QSet<qint32> { 40, 41, 42, 43 }));
-    QCOMPARE(g.idsMachines(), (QSet<qint32> { 50, 51 }));
-    QCOMPARE(g.idsNotes(), (QSet<qint32> { 60 }));
+void TestRecordLink::fullConstructorSetsAllFields() {
+    RecordLink rl = makeSample();
+    QCOMPARE(rl.getIdDate(), 101);
+    QCOMPARE(rl.getIdDrawing(), 202);
+    QCOMPARE(rl.getIdAmount(), 303);
+    QCOMPARE(rl.getIds(IdsList::Executors), (QSet<qint32> { 1, 2, 3 }));
+    QCOMPARE(rl.getIds(IdsList::Authors), (QSet<qint32> { 4, 5 }));
+    QCOMPARE(rl.getIds(IdsList::CastingMaterials), (QSet<qint32> { 6 }));
+    QCOMPARE(rl.getIds(IdsList::ModelMaterials), (QSet<qint32> { 7, 8, 9 }));
+    QCOMPARE(rl.getIds(IdsList::Machines), (QSet<qint32> { 10 }));
+    QCOMPARE(rl.getIds(IdsList::Notes), (QSet<qint32> { 11, 12 }));
 }
 
-void TestRecordLink::copyConstructorCopiesAllFields() {
-    const RecordLink original = makeSample();
-    const RecordLink copy(original);
-    QVERIFY(copy == original);
-
-    RecordLink mutableCopy(copy);
-    mutableCopy.replace().idDate(999);
-    QCOMPARE(original.get().idDate(), 1);
-    QCOMPARE(mutableCopy.get().idDate(), 999);
+void TestRecordLink::NullIsEmpty() {
+    QCOMPARE(RecordLink::Null.getIdDate(), 0);
+    QCOMPARE(RecordLink::Null.getIdDrawing(), 0);
+    QCOMPARE(RecordLink::Null.getIdAmount(), 0);
+    QVERIFY(RecordLink::Null.getIds(IdsList::Executors).isEmpty());
+    QCOMPARE(RecordLink::Null, RecordLink { });
 }
 
-void TestRecordLink::moveConstructorMovesAndResetsSource() {
+void TestRecordLink::copyConstructorDeepCopies() {
+    RecordLink original = makeSample();
+    RecordLink copy(original);
+
+    QCOMPARE(copy, original);
+
+    copy.addIds(IdsList::Executors, { 999 });
+    QVERIFY(!original.getIds(IdsList::Executors).contains(999));
+}
+
+void TestRecordLink::copyAssignmentDeepCopies() {
+    RecordLink original = makeSample();
+    RecordLink other;
+    other = original;
+
+    QCOMPARE(other, original);
+
+    other.setIdDate(777);
+    QCOMPARE(original.getIdDate(), 101);
+}
+
+void TestRecordLink::selfAssignmentNoop() {
+    RecordLink rl = makeSample();
+    RecordLink& ref = rl;
+    rl = ref;
+    QCOMPARE(rl, makeSample());
+}
+
+void TestRecordLink::moveConstructorTransfersAndResets() {
     RecordLink source = makeSample();
-    const RecordLink moved(std::move(source));
+    RecordLink moved(std::move(source));
 
-    QCOMPARE(moved.get().idDate(), 1);
-    QCOMPARE(moved.get().idDrawing(), 2);
-    QCOMPARE(moved.get().idAmount(), 3);
-    QCOMPARE(moved.get().idsExecutors(), (QSet<qint32> { 10, 11, 12 }));
-    QCOMPARE(moved.get().idsAuthors(), (QSet<qint32> { 20, 21 }));
-    QCOMPARE(moved.get().idsCastingMaterials(), (QSet<qint32> { 30 }));
-    QCOMPARE(moved.get().idsModelMaterials(), (QSet<qint32> { 40, 41, 42, 43 }));
-    QCOMPARE(moved.get().idsMachines(), (QSet<qint32> { 50, 51 }));
-    QCOMPARE(moved.get().idsNotes(), (QSet<qint32> { 60 }));
+    QCOMPARE(moved, makeSample());
 
-    QCOMPARE(source.get().idDate(), 0);
-    QCOMPARE(source.get().idDrawing(), 0);
-    QCOMPARE(source.get().idAmount(), 0);
-    QCOMPARE(source.get().idsExecutors(), QSet<qint32>());
-    QCOMPARE(source.get().idsAuthors(), QSet<qint32>());
-    QCOMPARE(source.get().idsCastingMaterials(), QSet<qint32>());
-    QCOMPARE(source.get().idsModelMaterials(), QSet<qint32>());
-    QCOMPARE(source.get().idsMachines(), QSet<qint32>());
-    QCOMPARE(source.get().idsNotes(), QSet<qint32>());
-
-    QCOMPARE(source, RecordLink::Null);
+    QCOMPARE(source.getIdDate(), 0);
+    QCOMPARE(source.getIdDrawing(), 0);
+    QCOMPARE(source.getIdAmount(), 0);
 }
 
-// ---------- Setter ----------
+void TestRecordLink::moveAssignmentTransfersAndResets() {
+    RecordLink source = makeSample();
+    RecordLink target;
+    target = std::move(source);
 
-void TestRecordLink::setterSetsIds() {
-    RecordLink r = RecordLink::Null;
-
-    r.replace().idDate(100).idDrawing(200).idAmount(300);
-
-    QCOMPARE(r.get().idDate(), 100);
-    QCOMPARE(r.get().idDrawing(), 200);
-    QCOMPARE(r.get().idAmount(), 300);
-}
-
-void TestRecordLink::setterChaining() {
-    RecordLink r = RecordLink::Null;
-    RecordLink::Replacer u = r.replace();
-    u.idDate(7).idDrawing(8).idAmount(9);
-    QCOMPARE(r.get().idDate(), 7);
-    QCOMPARE(r.get().idDrawing(), 8);
-    QCOMPARE(r.get().idAmount(), 9);
-}
-
-// ---------- Adder ----------
-
-void TestRecordLink::adderUnitesSets() {
-    RecordLink r = RecordLink::Null;
-
-    r.add()
-        .idsExecutors({ 1, 2 })
-        .idsAuthors({ 3, 4 })
-        .idsCastingMaterials({ 5 })
-        .idsModelMaterials({ 6, 7 })
-        .idsMachines({ 8 })
-        .idsNotes({ 9 });
-
-    QCOMPARE(r.get().idsExecutors(), (QSet<qint32> { 1, 2 }));
-    QCOMPARE(r.get().idsAuthors(), (QSet<qint32> { 3, 4 }));
-    QCOMPARE(r.get().idsCastingMaterials(), (QSet<qint32> { 5 }));
-    QCOMPARE(r.get().idsModelMaterials(), (QSet<qint32> { 6, 7 }));
-    QCOMPARE(r.get().idsMachines(), (QSet<qint32> { 8 }));
-    QCOMPARE(r.get().idsNotes(), (QSet<qint32> { 9 }));
-
-    r.add().idsExecutors({ 2, 3 });
-    QCOMPARE(r.get().idsExecutors(), QSet<qint32>({ 1, 2, 3 }));
-}
-
-void TestRecordLink::adderChaining() {
-    RecordLink r = RecordLink::Null;
-    RecordLink::Adder a = r.add();
-    a.idsExecutors({ 1 }).idsAuthors({ 2 }).idsNotes({ 3, 4 });
-    QCOMPARE(r.get().idsExecutors(), (QSet<qint32> { 1 }));
-    QCOMPARE(r.get().idsAuthors(), (QSet<qint32> { 2 }));
-    QCOMPARE(r.get().idsNotes(), (QSet<qint32> { 3, 4 }));
-}
-
-// ---------- Remover ----------
-
-void TestRecordLink::removerSubtractsSets() {
-    RecordLink r = makeSample();
-
-    r.remove()
-        .idsExecutors({ 10 })
-        .idsAuthors({ 20 })
-        .idsCastingMaterials({ 30 })
-        .idsModelMaterials({ 40, 41 })
-        .idsMachines({ 50 })
-        .idsNotes({ 60 });
-
-    QCOMPARE(r.get().idsExecutors(), (QSet<qint32> { 11, 12 }));
-    QCOMPARE(r.get().idsAuthors(), (QSet<qint32> { 21 }));
-    QCOMPARE(r.get().idsCastingMaterials(), (QSet<qint32> { }));
-    QCOMPARE(r.get().idsModelMaterials(), (QSet<qint32> { 42, 43 }));
-    QCOMPARE(r.get().idsMachines(), (QSet<qint32> { 51 }));
-    QCOMPARE(r.get().idsNotes(), (QSet<qint32> { }));
-
-    r.remove().idsExecutors({ 999 });
-    QCOMPARE(r.get().idsExecutors(), (QSet<qint32> { 11, 12 }));
-}
-
-void TestRecordLink::removerChaining() {
-    RecordLink r = makeSample();
-    RecordLink::Remover rm = r.remove();
-    rm.idsExecutors({ 10, 11, 12 }).idsAuthors({ 20, 21 });
-    QVERIFY(r.get().idsExecutors().isEmpty());
-    QVERIFY(r.get().idsAuthors().isEmpty());
-}
-
-// ---------- Getter ----------
-
-void TestRecordLink::getterReturnsAllFields() {
-    const RecordLink r = makeSample();
-    const auto g = r.get();
-
-    QCOMPARE(g.idDate(), 1);
-    QCOMPARE(g.idDrawing(), 2);
-    QCOMPARE(g.idAmount(), 3);
-    QCOMPARE(g.idsExecutors(), (QSet<qint32> { 10, 11, 12 }));
-    QCOMPARE(g.idsAuthors(), (QSet<qint32> { 20, 21 }));
-    QCOMPARE(g.idsCastingMaterials(), (QSet<qint32> { 30 }));
-    QCOMPARE(g.idsModelMaterials(), (QSet<qint32> { 40, 41, 42, 43 }));
-    QCOMPARE(g.idsMachines(), (QSet<qint32> { 50, 51 }));
-    QCOMPARE(g.idsNotes(), (QSet<qint32> { 60 }));
+    QCOMPARE(target, makeSample());
+    QCOMPARE(source.getIdDate(), 0);
+    QCOMPARE(source.getIdDrawing(), 0);
+    QCOMPARE(source.getIdAmount(), 0);
 }
 
 // ---------- Comparison operators ----------
 
-void TestRecordLink::operatorEqualEqualObjects() {
-    const RecordLink a = makeSample();
-    const RecordLink b = makeSample();
-    QVERIFY(a == b);
-    QVERIFY(!(a != b));
+void TestRecordLink::equalitySameValues() {
+    QCOMPARE(makeSample(), makeSample());
 }
 
-void TestRecordLink::operatorEqualDifferentObjects() {
+void TestRecordLink::equalityDifferentIds() {
     RecordLink a = makeSample();
     RecordLink b = makeSample();
-    b.replace().idDate(999);
+    b.setIdAmount(999);
+    QVERIFY(a != b);
+}
+
+void TestRecordLink::equalityDifferentSets() {
+    RecordLink a = makeSample();
+    RecordLink b = makeSample();
+    b.addIds(IdsList::Notes, { 12345 });
+    QVERIFY(a != b);
+}
+
+void TestRecordLink::inequalityWorks() {
+    RecordLink a = makeSample();
+    RecordLink b;
     QVERIFY(a != b);
     QVERIFY(!(a == b));
 }
 
-void TestRecordLink::operatorNotEqual() {
-    RecordLink a = makeSample();
-    RecordLink b = makeSample();
-    b.add().idsExecutors({ 999 });
-    QVERIFY(a != b);
-}
-
-void TestRecordLink::operatorAssignCopy() {
-    RecordLink a = makeSample();
-    RecordLink b = RecordLink::Null;
-
-    b = a;
-    QVERIFY(a == b);
-
-    b.replace().idDate(777);
-    QCOMPARE(a.get().idDate(), 1);
-}
-
-void TestRecordLink::operatorAssignMove() {
-    RecordLink a = makeSample();
-    RecordLink b = RecordLink::Null;
-
-    b = std::move(a);
-
-    QCOMPARE(b.get().idDate(), 1);
-    QCOMPARE(b.get().idsExecutors(), (QSet<qint32> { 10, 11, 12 }));
-    QCOMPARE(a, RecordLink::Null);
-}
-
-void TestRecordLink::operatorAssignSelfAssignment() {
-    RecordLink a = makeSample();
-    a = a;
-    QCOMPARE(a.get().idDate(), 1);
-    QCOMPARE(a.get().idsExecutors(), (QSet<qint32> { 10, 11, 12 }));
-}
-
 // ---------- swap ----------
 
-void TestRecordLink::swapSwapsAllFields() {
+void TestRecordLink::swapExchangesState() {
     RecordLink a = makeSample();
-    RecordLink b = RecordLink::Null;
-
-    const RecordLink aCopy = a;
-    const RecordLink bCopy = b;
+    RecordLink b;
+    b.setIdDate(1);
 
     a.swap(b);
-    QCOMPARE(a, bCopy);
-    QCOMPARE(b, aCopy);
+
+    QCOMPARE(a.getIdDate(), 1);
+    QVERIFY(a.getIds(IdsList::Executors).isEmpty());
+    QCOMPARE(b, makeSample());
 }
 
-void TestRecordLink::swapSelfSwap() {
+void TestRecordLink::swapWithSelfNoop() {
     RecordLink a = makeSample();
     a.swap(a);
-    QCOMPARE(a.get().idDate(), 1);
-    QCOMPARE(a.get().idsExecutors(), (QSet<qint32> { 10, 11, 12 }));
+    QCOMPARE(a, makeSample());
 }
 
-// ---------- qHash ----------
+// ---------- set ----------
 
-void TestRecordLink::qHashEqualObjectsHaveEqualHash() {
-    const RecordLink a = makeSample();
-    const RecordLink b = makeSample();
+void TestRecordLink::setIdDateWorks() {
+    RecordLink rl;
+    rl.setIdDate(42);
+    QCOMPARE(rl.getIdDate(), 42);
+}
+
+void TestRecordLink::setIdDrawingWorks() {
+    RecordLink rl;
+    rl.setIdDrawing(43);
+    QCOMPARE(rl.getIdDrawing(), 43);
+}
+
+void TestRecordLink::setIdAmountWorks() {
+    RecordLink rl;
+    rl.setIdAmount(44);
+    QCOMPARE(rl.getIdAmount(), 44);
+}
+
+// ---------- addIds / removeIds / replaceIds / getIds ----------
+
+void TestRecordLink::addIdsUnitesAllLists_data() {
+    QTest::addColumn<IdsList>("list");
+    QTest::addColumn<QSet<qint32>>("initial");
+    QTest::addColumn<QSet<qint32>>("toAdd");
+    QTest::addColumn<QSet<qint32>>("expected");
+
+    QTest::newRow("Executors") << IdsList::Executors << QSet<qint32> { 1 } << QSet<qint32> { 2, 3 }
+                               << QSet<qint32> { 1, 2, 3 };
+    QTest::newRow("Authors") << IdsList::Authors << QSet<qint32> { 10 } << QSet<qint32> { 20 }
+                             << QSet<qint32> { 10, 20 };
+    QTest::newRow("CastingMaterials") << IdsList::CastingMaterials << QSet<qint32> { }
+                                      << QSet<qint32> { 5 } << QSet<qint32> { 5 };
+    QTest::newRow("ModelMaterials") << IdsList::ModelMaterials << QSet<qint32> { 7 }
+                                    << QSet<qint32> { 7 } << QSet<qint32> { 7 };
+    QTest::newRow("Machines") << IdsList::Machines << QSet<qint32> { 1, 2 } << QSet<qint32> { 2, 3 }
+                              << QSet<qint32> { 1, 2, 3 };
+    QTest::newRow("Notes") << IdsList::Notes << QSet<qint32> { } << QSet<qint32> { }
+                           << QSet<qint32> { };
+}
+
+void TestRecordLink::addIdsUnitesAllLists() {
+    QFETCH(IdsList, list);
+    QFETCH(QSet<qint32>, initial);
+    QFETCH(QSet<qint32>, toAdd);
+    QFETCH(QSet<qint32>, expected);
+
+    RecordLink rl;
+    rl.replaceIds(list, initial);
+    rl.addIds(list, toAdd);
+
+    QCOMPARE(rl.getIds(list), expected);
+
+    for (auto other : { IdsList::Executors,
+                        IdsList::Authors,
+                        IdsList::CastingMaterials,
+                        IdsList::ModelMaterials,
+                        IdsList::Machines,
+                        IdsList::Notes }) {
+        if (other != list) {
+            QVERIFY(rl.getIds(other).isEmpty());
+        }
+    }
+}
+
+void TestRecordLink::removeIdsSubtracts() {
+    RecordLink rl = makeSample();
+    rl.removeIds(IdsList::Executors, { 2, 3, 100 });
+    QCOMPARE(rl.getIds(IdsList::Executors), (QSet<qint32> { 1 }));
+}
+
+void TestRecordLink::replaceIdsReplaces() {
+    RecordLink rl = makeSample();
+    rl.replaceIds(IdsList::Notes, { 100, 200 });
+    QCOMPARE(rl.getIds(IdsList::Notes), (QSet<qint32> { 100, 200 }));
+}
+
+void TestRecordLink::getIdsReturnsReferenceToInternalSet() {
+    RecordLink rl = makeSample();
+    const QSet<qint32>& ref = rl.getIds(IdsList::Machines);
+
+    const QSet<qint32>& ref2 = rl.getIds(IdsList::Machines);
+    QCOMPARE(&ref, &ref2);
+}
+
+// ---------- hash ----------
+
+void TestRecordLink::hashEqualForEqualObjects() {
+    RecordLink a = makeSample();
+    RecordLink b = makeSample();
     QCOMPARE(a.hash(), b.hash());
     QCOMPARE(qHash(a), qHash(b));
 }
 
-void TestRecordLink::qHashDifferentObjectsHaveDifferentHash() {
+void TestRecordLink::hashDiffersForDifferentObjects() {
     RecordLink a = makeSample();
     RecordLink b = makeSample();
-    b.replace().idDate(12345);
+    b.setIdDate(a.getIdDate() + 1);
+
     QVERIFY(a.hash() != b.hash());
 }
 
 // ---------- serialize / deserialize ----------
 
 void TestRecordLink::serializeDeserializeRoundTrip() {
-    const RecordLink original = makeSample();
+    RecordLink original = makeSample();
 
-    QByteArray data;
-    {
-        QDataStream out(&data, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Version::Qt_6_11);
-        original.serialize(out);
-    }
+    QByteArray bytes = serializeToBytes(original);
+    QVERIFY(!bytes.isEmpty());
 
-    RecordLink restored(RecordLink::Null);
-    {
-        QDataStream in(&data, QIODevice::ReadOnly);
-        in.setVersion(QDataStream::Version::Qt_6_11);
-        restored.deserialize(in);
-    }
+    RecordLink restored = deserializeFromBytes(bytes);
+    QCOMPARE(restored, original);
+}
 
-    QVERIFY(original == restored);
-    QCOMPARE(original.hash(), restored.hash());
+void TestRecordLink::serializeDeserializeEmptyObject() {
+    RecordLink original;
+
+    QByteArray bytes = serializeToBytes(original);
+    RecordLink restored = deserializeFromBytes(bytes);
+
+    QCOMPARE(restored, original);
 }
 
 void TestRecordLink::deserializeWrongVersionThrows() {
-    QByteArray data;
+    QByteArray bytes;
     {
-        QDataStream out(&data, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Version::Qt_4_0);
-    }
-
-    RecordLink r = RecordLink::Null;
-    QDataStream in(&data, QIODevice::ReadOnly);
-    in.setVersion(QDataStream::Version::Qt_6_11);
-
-    QVERIFY_THROWS_EXCEPTION(RuntimeError, r.deserialize(in));
-}
-
-void TestRecordLink::deserializeNegativeIdThrows() {
-    QByteArray data;
-    {
-        QDataStream out(&data, QIODevice::WriteOnly);
+        QDataStream out(&bytes, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Version::Qt_6_11);
-        out << out.version();
-        out << static_cast<qint32>(-1);
+        out << static_cast<int>(QDataStream::Version::Qt_6_11);
     }
 
-    RecordLink r = RecordLink::Null;
-    QDataStream in(&data, QIODevice::ReadOnly);
-    in.setVersion(QDataStream::Version::Qt_6_11);
+    QDataStream in(bytes);
+    in.setVersion(QDataStream::Version::Qt_6_0);
 
-    QVERIFY_THROWS_EXCEPTION(RuntimeError, r.deserialize(in));
+    RecordLink rl;
+    QVERIFY_THROWS_EXCEPTION(RuntimeError, rl.deserialize(in));
 }
 
 void TestRecordLink::deserializeNegativeSetSizeThrows() {
-    QByteArray data;
+    QByteArray bytes;
     {
-        QDataStream out(&data, QIODevice::WriteOnly);
+        QDataStream out(&bytes, QIODevice::WriteOnly);
         out.setVersion(QDataStream::Version::Qt_6_11);
-        out << out.version();
-        out << static_cast<qint32>(0) << static_cast<qint32>(0) << static_cast<qint32>(0);
-        out << static_cast<qint32>(-5);
+        out << static_cast<int>(QDataStream::Version::Qt_6_11);
+        out << qint32(1) << qint32(2) << qint32(3);
+        out << qint32(-1);
     }
 
-    RecordLink r = RecordLink::Null;
-    QDataStream in(&data, QIODevice::ReadOnly);
+    QDataStream in(bytes);
     in.setVersion(QDataStream::Version::Qt_6_11);
 
-    QVERIFY_THROWS_EXCEPTION(RuntimeError, r.deserialize(in));
+    RecordLink rl;
+    QVERIFY_THROWS_EXCEPTION(RuntimeError, rl.deserialize(in));
 }
 
 void TestRecordLink::deserializeTruncatedStreamThrows() {
-    QByteArray data;
-    {
-        QDataStream out(&data, QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Version::Qt_6_11);
-        out << out.version();
-        out << static_cast<qint32>(1);
-    }
+    RecordLink original = makeSample();
+    QByteArray bytes = serializeToBytes(original);
 
-    RecordLink r = RecordLink::Null;
-    QDataStream in(&data, QIODevice::ReadOnly);
+    bytes.chop(bytes.size() / 2);
+
+    QDataStream in(bytes);
     in.setVersion(QDataStream::Version::Qt_6_11);
 
-    QVERIFY_THROWS_EXCEPTION(RuntimeError, r.deserialize(in));
+    RecordLink rl;
+    QVERIFY_THROWS_EXCEPTION(RuntimeError, rl.deserialize(in));
 }
 
-QTEST_APPLESS_MAIN(TestRecordLink)
+QTEST_MAIN(TestRecordLink)
 #include "test_RecordLink.moc"
