@@ -17,84 +17,26 @@ enum class CustomStorage : quint8 {
 
 class StorageLists final : public Storage {
 public:
-    StorageLists() {
-        for (int i = 0; i < 6; ++i) {
-            m_customStorage.append(ServiceCustomList<QString>());
-        }
-    }
+    StorageLists();
 
-    ServiceDatesList& dates() {
-        return m_dateStorage;
-    }
-    const ServiceDatesList& dates() const {
-        return m_dateStorage;
-    }
+    ServiceDatesList& dates();
+    const ServiceDatesList& dates() const;
 
-    ServiceCustomList<Drawing>& drawings() {
-        return m_drawingStorage;
-    }
-    const ServiceCustomList<Drawing>& drawings() const {
-        return m_drawingStorage;
-    }
+    ServiceCustomList<Drawing>& drawings();
+    const ServiceCustomList<Drawing>& drawings() const;
 
-    ServiceCustomList<qint32>& amounts() {
-        return m_amountStorage;
-    }
-    const ServiceCustomList<qint32>& amounts() const {
-        return m_amountStorage;
-    }
+    ServiceCustomList<qint32>& amounts();
+    const ServiceCustomList<qint32>& amounts() const;
 
-    ServiceCustomList<QString>& customStorage(CustomStorage customStorage) {
-        return m_customStorage[static_cast<qsizetype>(customStorage)];
-    }
-    const ServiceCustomList<QString>& customStorage(CustomStorage customStorage) const {
-        return m_customStorage[static_cast<qsizetype>(customStorage)];
-    }
+    ServiceCustomList<QString>& customStorage(CustomStorage customStorage);
+    const ServiceCustomList<QString>& customStorage(CustomStorage customStorage) const;
 
-    void reset() {
-        m_dateStorage.reset();
-        m_drawingStorage.reset();
-        m_amountStorage.reset();
-        for (auto& it : m_customStorage) {
-            it.reset();
-        }
-    }
+    void reset();
+    void commit();
+    void clear();
 
-    void commit() {
-        m_dateStorage.commit();
-        m_drawingStorage.commit();
-        m_amountStorage.commit();
-        for (auto& it : m_customStorage) {
-            it.commit();
-        }
-    }
-
-    void clear() {
-        m_dateStorage.clear();
-        m_drawingStorage.clear();
-        m_amountStorage.clear();
-        for (auto& it : m_customStorage) {
-            it.clear();
-        }
-    }
-
-    void serialize(QDataStream& out) const override {
-        m_dateStorage.serialize(out);
-        m_drawingStorage.serialize(out);
-        m_amountStorage.serialize(out);
-        for (auto& it : m_customStorage) {
-            it.serialize(out);
-        }
-    }
-
-    void deserialize(QDataStream& in) override {
-        m_dateStorage.deserialize(in);
-        m_drawingStorage.deserialize(in);
-        m_amountStorage.deserialize(in);
-        for (auto& it : m_customStorage) {
-            it.deserialize(in);
-        }
-    }
+    void serialize(QDataStream& out) const override;
+    void deserialize(QDataStream& in) override;
 
 private:
     ServiceDatesList m_dateStorage;

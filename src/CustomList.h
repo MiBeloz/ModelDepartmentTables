@@ -32,12 +32,12 @@ public:
     virtual std::optional<T> getValue(qint32 id) const;
     virtual QList<T> getAllValues() const;
 
+    void clear();
     void reset();
     void commit();
 
     qsizetype size() const;
     qsizetype sizeCommitted() const;
-    void clear();
 
     void serialize(QDataStream& out) const;
     void deserialize(QDataStream& in);
@@ -211,6 +211,14 @@ inline QList<T> CustomList<T>::getAllValues() const {
 }
 
 template<typename T>
+inline void CustomList<T>::clear() {
+    m_listTmp.clear();
+    m_emptyIdTmp.clear();
+    m_idTmp = 0;
+    m_commit = false;
+}
+
+template<typename T>
 inline void CustomList<T>::reset() {
     m_listTmp = m_list;
     m_idTmp = m_id;
@@ -234,14 +242,6 @@ inline qsizetype CustomList<T>::size() const {
 template<typename T>
 inline qsizetype CustomList<T>::sizeCommitted() const {
     return m_list.size();
-}
-
-template<typename T>
-inline void CustomList<T>::clear() {
-    m_listTmp.clear();
-    m_emptyIdTmp.clear();
-    m_idTmp = 0;
-    m_commit = false;
 }
 
 template<typename T>

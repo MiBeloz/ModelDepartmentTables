@@ -23,13 +23,12 @@ public:
     void remove(const RecordLink& recordLink);
     QSet<RecordLink> get() const;
 
+    void clear();
     void reset();
     void commit();
 
     qsizetype count() const;
     qsizetype countCommitted() const;
-
-    void clear();
 
     void serialize(QDataStream& out) const override;
     void deserialize(QDataStream& in) override;

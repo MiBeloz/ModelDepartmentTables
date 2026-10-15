@@ -10,33 +10,17 @@ public:
     using ServiceCustomList<qint32, DatesList>::remove;
     using ServiceCustomList<qint32, DatesList>::findId;
 
-    ServiceDatesList() : ServiceCustomList() { }
+    ServiceDatesList();
 
-    virtual ~ServiceDatesList() = default;
+    virtual ~ServiceDatesList();
 
-    std::optional<qint32> add(const QString& date) {
-        return m_list.insert(date);
-    }
+    std::optional<qint32> add(const QString& date);
+    bool remove(const QString& date);
+    std::optional<qint32> findId(const QString& date) const;
+    std::optional<QString> findStrValue(qint32 id) const;
+    QList<QString> findAllStrValues() const;
 
-    bool remove(const QString& date) {
-        return m_list.remove(date);
-    }
-
-    std::optional<qint32> findId(const QString& date) const {
-        return m_list.getId(date);
-    }
-
-    std::optional<QString> findStrValue(qint32 id) const {
-        return m_list.getStrValue(id);
-    }
-
-    QList<QString> findAllStrValues() const {
-        return m_list.getAllStrValues();
-    }
-
-    DatesList::ErrorType lastError() const {
-        return m_list.lastError();
-    }
+    DatesList::ErrorType lastError() const;
 };
 
 #endif // ServiceDatesList_H

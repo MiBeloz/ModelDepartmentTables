@@ -75,6 +75,11 @@ QSet<RecordLink> StorageRecordsLinks::get() const {
     return m_setRecordLinkTmp;
 }
 
+void StorageRecordsLinks::clear() {
+    m_setRecordLinkTmp.clear();
+    m_commit = false;
+}
+
 void StorageRecordsLinks::reset() {
     m_setRecordLinkTmp = m_setRecordLink;
     m_commit = true;
@@ -91,11 +96,6 @@ qsizetype StorageRecordsLinks::count() const {
 
 qsizetype StorageRecordsLinks::countCommitted() const {
     return m_setRecordLink.count();
-}
-
-void StorageRecordsLinks::clear() {
-    m_setRecordLinkTmp.clear();
-    m_commit = false;
 }
 
 void StorageRecordsLinks::serialize(QDataStream &out) const {
