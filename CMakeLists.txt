@@ -1,29 +1,43 @@
 ﻿cmake_minimum_required(VERSION 3.19)
-project(ModelDepartmentTables LANGUAGES CXX)
-
-set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 0)
-set(PROJECT_VERSION_PATCH 1)
-set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+project(ModelDepartmentTables VERSION 0.0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_compile_definitions(
-    APP_VERSION=${CMAKE_PROJECT_VERSION}
-    APP_NAME=${CMAKE_PROJECT_NAME}
+    APP_VERSION="${PROJECT_VERSION}"
+    APP_NAME="${PROJECT_NAME}"
 )
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets LinguistTools Sql Network Concurrent)
 
 qt_standard_project_setup()
 
-add_subdirectory(src)
-add_subdirectory(test)
+set(QT_NO_PRIVATE_MODULE_WARNING ON)
+include(FetchContent)
+FetchContent_Declare(
+  QXlsx
+  GIT_REPOSITORY https://github.com/QtExcel/QXlsx.git
+  GIT_TAG        v1.5.1.1
+  SOURCE_SUBDIR  QXlsx
+  EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(QXlsx)
 
-add_executable(ModelDepartmentTables WIN32 MACOSX_BUNDLE)
-target_sources(ModelDepartmentTables PRIVATE src/main.cpp)
-target_link_libraries(ModelDepartmentTables PRIVATE ModelDepartmentTables_lib)
+include(CTest)
+if(BUILD_TESTING)
+    add_subdirectory(test)
+endif()
+
+add_executable(ModelDepartmentTables WIN32 MACOSX_BUNDLE
+    src/main.cpp
+)
+
+add_subdirectory(src build/src)
+
+target_link_libraries(ModelDepartmentTables PRIVATE
+    ModelDepartmentTables_lib
+    QXlsx::QXlsx)
 
 qt_add_translations(
     TARGETS ModelDepartmentTables
