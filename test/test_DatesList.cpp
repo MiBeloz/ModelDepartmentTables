@@ -3,6 +3,9 @@
 
 #include "DatesList.h"
 
+using mdt::RuntimeError;
+using mdt::work::DatesList;
+
 class TestDatesList : public QObject {
     Q_OBJECT
 
@@ -322,7 +325,7 @@ void TestDatesList::strToDateValid() {
     QVERIFY(excel.has_value());
 
     QDate expected = QDate::fromString(kDateStr1(), kDefaultFormat());
-    QDate base = QDate::fromJulianDay(START_EXCEL_DATE);
+    QDate base = QDate::fromJulianDay(mdt::work::START_EXCEL_DATE);
     QCOMPARE(excel.value(), qint32(expected.toJulianDay() - base.toJulianDay()));
 }
 

@@ -1,10 +1,21 @@
-﻿#include <QFile>
+﻿#include <QElapsedTimer>
+#include <QFile>
+#include <QFuture>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QtConcurrentRun>
 
 #include "Exceptions.h"
+#include "Record.h"
 #include "SaverFile.h"
-#include "Storage.h"
+#include "StorageManager.h"
+
+using mdt::Drawing;
+using mdt::RuntimeError;
+using mdt::SaverFile;
+using mdt::Storage;
+using mdt::work::Record;
+using mdt::work::StorageManager;
 
 struct TestData : public Storage {
     int value = 0;
@@ -68,10 +79,38 @@ private slots:
     // ---------- Destructor ----------
     void destructorRemovesTempFile();
 
+    // ---------- write / read records ----------
+    void writeReadRecords();
+
 private:
     QTemporaryDir *m_dir = nullptr;
     QString m_filePath;
     QString m_tempPath;
+
+    // ---------- write / read records helpers ----------
+
+    Record createRecord(int threadId, int index) const {
+        return Record(makeDate(threadId, index),
+                      makeDrawing(threadId, index),
+                      index + 1,
+                      QStringList { QString("Exec_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString("Auth_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString("Cast_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString("Model_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString("Mach_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString("Note_%1_%2").arg(threadId).arg(index) });
+    }
+
+    QString makeDate(int threadId, int index) const {
+        QDate base(2000, 1, 1);
+        QDate d = base.addDays(threadId * 1000 + index);
+        return d.toString("dd.MM.yyyy");
+    }
+
+    Drawing makeDrawing(int threadId, int index) const {
+        return Drawing(QString("DWG-%1-%2").arg(threadId).arg(index),
+                       QString("Title-%1-%2").arg(threadId).arg(index));
+    }
 };
 
 void TestSaverFile::init() {
@@ -269,6 +308,111 @@ void TestSaverFile::destructorRemovesTempFile() {
     }
 
     QVERIFY(!QFile::exists(m_tempPath));
+}
+
+// ---------- write / read records ----------
+
+void TestSaverFile::writeReadRecords() {
+    QElapsedTimer timerCommon;
+    QElapsedTimer timer;
+
+    StorageManager sm;
+
+    timerCommon.start();
+    timer.start();
+
+    for (int t = 0; t < 4; ++t) {
+        for (int i = 0; i < 500; ++i) {
+            sm.addRecord(createRecord(t, i));
+        }
+    }
+
+    const qint64 elapsedFilling = timer.restart();
+
+    auto records = sm.getRecords();
+
+    const qint64 elapsedCopy = timer.restart();
+
+    QCOMPARE(records.size(), static_cast<qsizetype>(2000));
+    QVERIFY(records.contains(createRecord(0, 0)));
+    QVERIFY(records.contains(createRecord(2, 250)));
+    QVERIFY(records.contains(createRecord(3, 499)));
+    QVERIFY(!records.contains(createRecord(3, 500)));
+    QVERIFY(!records.contains(createRecord(4, 499)));
+
+    const qint64 elapsedCheck = timer.restart();
+
+    SaverFile saver(m_filePath, m_tempPath);
+    QVERIFY(saver.prepare(sm));
+    QVERIFY(saver.write());
+
+    const qint64 elapsedSave = timer.restart();
+
+    StorageManager sm2;
+    QVERIFY(saver.read(sm2));
+
+    const qint64 elapsedLoad = timer.restart();
+
+    auto records2 = sm2.getRecords();
+
+    const qint64 elapsedCopy2 = timer.restart();
+
+    QCOMPARE(records2.size(), static_cast<qsizetype>(2000));
+    QVERIFY(records2.contains(createRecord(0, 0)));
+    QVERIFY(records2.contains(createRecord(2, 250)));
+    QVERIFY(records2.contains(createRecord(3, 499)));
+    QVERIFY(!records2.contains(createRecord(3, 500)));
+    QVERIFY(!records2.contains(createRecord(4, 499)));
+
+    const qint64 elapsedCheck2 = timer.restart();
+
+    std::sort(records.begin(), records.end(), [](const Record &recOne, const Record &recTwo) {
+        return recOne < recTwo;
+    });
+
+    const qint64 elapsedSort = timer.restart();
+
+    std::sort(records2.begin(), records2.end(), [](const Record &recOne, const Record &recTwo) {
+        return recOne < recTwo;
+    });
+
+    const qint64 elapsedSort2 = timer.restart();
+
+    bool fail = false;
+    for (int i = 0; i < 2000; ++i) {
+        if (records[i] != records2[i]) {
+            fail = true;
+            qDebug() << "ERROR COMPARE AT INDEX" << i << ':';
+            qDebug() << '\t' << records[i].date() << records[i].drawing().getNumber()
+                     << records[i].drawing().getTitle() << records[i].amount()
+                     << records[i].executors() << records[i].authors()
+                     << records[i].castingMaterials() << records[i].modelMaterials()
+                     << records[i].machines() << records[i].notes();
+            qDebug() << '\t' << records2[i].date() << records2[i].drawing().getNumber()
+                     << records2[i].drawing().getTitle() << records2[i].amount()
+                     << records2[i].executors() << records2[i].authors()
+                     << records2[i].castingMaterials() << records2[i].modelMaterials()
+                     << records2[i].machines() << records2[i].notes();
+        }
+    }
+
+    const qint64 elapsedCompare = timer.elapsed();
+    const qint64 elapsedCommon = timerCommon.elapsed();
+
+    qDebug() << "Filling:" << elapsedFilling;
+    qDebug() << "Copy one:" << elapsedCopy;
+    qDebug() << "Check one:" << elapsedCheck;
+    qDebug() << "Save:" << elapsedSave;
+    qDebug() << "Load:" << elapsedLoad;
+    qDebug() << "Copy two:" << elapsedCopy2;
+    qDebug() << "Check two:" << elapsedCheck2;
+    qDebug() << "Sort one:" << elapsedSort;
+    qDebug() << "Sort two:" << elapsedSort2;
+    qDebug() << "Compare:" << elapsedCompare;
+    qDebug() << "------------------";
+    qDebug() << "Common:" << elapsedCommon;
+
+    QVERIFY(!fail);
 }
 
 QTEST_APPLESS_MAIN(TestSaverFile)

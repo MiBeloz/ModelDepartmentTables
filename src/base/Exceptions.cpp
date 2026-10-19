@@ -1,31 +1,33 @@
 ﻿#include "Exceptions.h"
 
-Exception::Exception(const QString &message) noexcept : m_message { message } { }
+namespace mdt {
+    Exception::Exception(const QString &message) noexcept : m_message { message } { }
 
-Exception *Exception::clone() const {
-    return new Exception(*this);
-}
+    Exception *Exception::clone() const {
+        return new Exception(*this);
+    }
 
-void Exception::raise() const {
-    throw *this;
-}
+    void Exception::raise() const {
+        throw *this;
+    }
 
-QString Exception::message() const noexcept {
-    return m_message;
-}
+    QString Exception::message() const noexcept {
+        return m_message;
+    }
 
-RuntimeError *RuntimeError::clone() const {
-    return new RuntimeError(*this);
-}
+    RuntimeError *RuntimeError::clone() const {
+        return new RuntimeError(*this);
+    }
 
-void RuntimeError::raise() const {
-    throw *this;
-}
+    void RuntimeError::raise() const {
+        throw *this;
+    }
 
-InvalidArgument *InvalidArgument::clone() const {
-    return new InvalidArgument(*this);
-}
+    InvalidArgument *InvalidArgument::clone() const {
+        return new InvalidArgument(*this);
+    }
 
-void InvalidArgument::raise() const {
-    throw *this;
-}
+    void InvalidArgument::raise() const {
+        throw *this;
+    }
+} // namespace mdt

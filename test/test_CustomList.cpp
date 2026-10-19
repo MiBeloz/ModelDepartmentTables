@@ -5,6 +5,10 @@
 #include "CustomList.h"
 #include "Drawing.h"
 
+using mdt::Drawing;
+using mdt::RuntimeError;
+using mdt::work::CustomList;
+
 class TestCustomList : public QObject {
     Q_OBJECT
 

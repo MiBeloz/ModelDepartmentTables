@@ -4,6 +4,8 @@
 
 #include "Drawing.h"
 
+using mdt::Drawing;
+
 class TestDrawing : public QObject {
     Q_OBJECT
 

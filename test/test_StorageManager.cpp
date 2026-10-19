@@ -11,6 +11,11 @@
 #include "StorageManager.h"
 #include "TestStats.h"
 
+using mdt::Drawing;
+using mdt::work::DatesList;
+using mdt::work::Record;
+using mdt::work::StorageManager;
+
 class TestStorageManager : public QObject {
     Q_OBJECT
 

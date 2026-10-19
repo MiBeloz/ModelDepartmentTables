@@ -6,6 +6,10 @@
 #include "RecordLink.h"
 #include "StorageRecordsLinks.h"
 
+using mdt::RuntimeError;
+using mdt::work::RecordLink;
+using mdt::work::StorageRecordsLinks;
+
 class TestStorageRecordsLinks : public QObject {
     Q_OBJECT
 

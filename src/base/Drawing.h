@@ -3,50 +3,52 @@
 
 #include <QHash>
 
-class Drawing final {
-public:
-    Drawing() = default;
+namespace mdt {
+    class Drawing final {
+    public:
+        Drawing() = default;
 
-    explicit Drawing(const QString& number, const QString& title);
+        explicit Drawing(const QString& number, const QString& title);
 
-    bool operator ==(const Drawing& other) const;
-    bool operator !=(const Drawing& other) const;
-    bool operator <(const Drawing& other) const;
-    bool operator >(const Drawing& other) const;
-    bool operator <=(const Drawing& other) const;
-    bool operator >=(const Drawing& other) const;
+        bool operator ==(const Drawing& other) const;
+        bool operator !=(const Drawing& other) const;
+        bool operator <(const Drawing& other) const;
+        bool operator >(const Drawing& other) const;
+        bool operator <=(const Drawing& other) const;
+        bool operator >=(const Drawing& other) const;
 
-    const QString& getNumber() const;
-    const QString& getTitle() const;
+        const QString& getNumber() const;
+        const QString& getTitle() const;
 
-    void setNumber(const QString& number);
-    void setTitle(const QString& title);
+        void setNumber(const QString& number);
+        void setTitle(const QString& title);
 
-    bool isValid() const;
+        bool isValid() const;
 
-    static const Drawing Null;
+        static const Drawing Null;
 
-private:
-    QString m_number;
-    QString m_title;
+    private:
+        QString m_number;
+        QString m_title;
 
-    friend QDataStream& operator <<(QDataStream& out, const Drawing& drawing);
-    friend QDataStream& operator >>(QDataStream& in, Drawing& drawing);
-};
+        friend QDataStream& operator <<(QDataStream& out, const Drawing& drawing);
+        friend QDataStream& operator >>(QDataStream& in, Drawing& drawing);
+    };
 
-inline const Drawing Drawing::Null { };
+    inline const Drawing Drawing::Null { };
 
-inline size_t qHash(const Drawing& drawing, size_t seed = 0) {
-    return qHashMulti(seed, drawing.getNumber(), drawing.getTitle());
-}
+    inline size_t qHash(const Drawing& drawing, size_t seed = 0) {
+        return qHashMulti(seed, drawing.getNumber(), drawing.getTitle());
+    }
 
-inline QDataStream& operator <<(QDataStream& out, const Drawing& drawing) {
-    return out << drawing.m_number << drawing.m_title;
-}
+    inline QDataStream& operator <<(QDataStream& out, const Drawing& drawing) {
+        return out << drawing.m_number << drawing.m_title;
+    }
 
-inline QDataStream& operator >>(QDataStream& in, Drawing& drawing) {
-    in >> drawing.m_number >> drawing.m_title;
-    return in;
-}
+    inline QDataStream& operator >>(QDataStream& in, Drawing& drawing) {
+        in >> drawing.m_number >> drawing.m_title;
+        return in;
+    }
+} // namespace mdt
 
 #endif // DRAWING_H

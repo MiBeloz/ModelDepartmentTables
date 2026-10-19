@@ -5,6 +5,10 @@
 #include "Exceptions.h"
 #include "RecordLink.h"
 
+using mdt::RuntimeError;
+using mdt::work::IdsList;
+using mdt::work::RecordLink;
+
 class TestRecordLink : public QObject {
     Q_OBJECT
 

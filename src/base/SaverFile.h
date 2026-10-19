@@ -8,23 +8,25 @@
 
 #include "Saver.h"
 
-class SaverFile final : public Saver {
-public:
-    SaverFile(QString fileName, QString tempFileName);
+namespace mdt {
+    class SaverFile final : public Saver {
+    public:
+        SaverFile(QString fileName, QString tempFileName);
 
-    ~SaverFile() override;
+        ~SaverFile() override;
 
-    [[nodiscard]] bool prepare(const Storage &storage) override;
+        [[nodiscard]] bool prepare(const Storage &storage) override;
 
-    [[nodiscard]] bool read(Storage &storage) override;
+        [[nodiscard]] bool read(Storage &storage) override;
 
-    [[nodiscard]] bool write() override;
+        [[nodiscard]] bool write() override;
 
-private:
-    const QString m_fileName;
-    const QString m_tempFileName;
-    bool m_dirty = false;
-    QReadWriteLock m_lock;
-};
+    private:
+        const QString m_fileName;
+        const QString m_tempFileName;
+        bool m_dirty = false;
+        QReadWriteLock m_lock;
+    };
+} // namespace mdt
 
 #endif // SAVERFILE_H
