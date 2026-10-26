@@ -1,17 +1,11 @@
 ﻿cmake_minimum_required(VERSION 3.19)
 project(ModelDepartmentTables
-  VERSION 0.2.0
   LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(BUILD_TESTING ON)
-
-# add_compile_definitions(
-#     APP_VERSION="${PROJECT_VERSION}"
-#     APP_NAME="${PROJECT_NAME}"
-# )
 
 set(QT_NO_PRIVATE_MODULE_WARNING ON)
 include(FetchContent)
