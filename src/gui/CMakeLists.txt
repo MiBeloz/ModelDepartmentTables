@@ -1,4 +1,4 @@
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets LinguistTools Sql Network Concurrent)
+﻿find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets LinguistTools Sql Network Concurrent)
 
 qt_standard_project_setup()
 
@@ -9,7 +9,7 @@ file(GLOB_RECURSE UI_FILES "*.ui")
 list(FILTER SRC_SOURCES EXCLUDE REGEX "main\\.cpp$")
 
 add_library(mdt_gui STATIC ${SRC_SOURCES} ${SRC_HEADERS} ${UI_FILES})
-qt6_add_ui(mdt_gui SOURCES MainWindow.ui NewItemWindow.ui SettingsWindow.ui)
+qt6_add_ui(mdt_gui SOURCES MainWindow.ui AboutDialog.ui NewItemWindow.ui SettingsWindow.ui)
 
 target_include_directories(mdt_gui
     PUBLIC

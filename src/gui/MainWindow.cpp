@@ -280,3 +280,14 @@ void MainWindow::init() {
 
     // ui->TV_items->resizeColumnsToContents();
 }
+
+void MainWindow::on_actionAbout_triggered() {
+    // About dialog
+    if (m_aboutDlg) {
+        m_aboutDlg->activateWindow();
+    } else {
+        m_aboutDlg = new AboutDialog(this);
+        m_aboutDlg->setAttribute(Qt::WA_DeleteOnClose);
+        m_aboutDlg->show();
+    }
+}
