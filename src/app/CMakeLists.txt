@@ -12,7 +12,6 @@ target_link_libraries(mdt_app PRIVATE
     Qt6::Sql
     Qt6::Network
     Qt6::Concurrent
-    mdt_base
     mdt_gui
     QXlsx::QXlsx)
 
