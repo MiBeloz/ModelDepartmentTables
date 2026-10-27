@@ -12,8 +12,7 @@ target_link_libraries(mdt_app PRIVATE
     Qt6::Sql
     Qt6::Network
     Qt6::Concurrent
-    mdt_gui
-    QXlsx::QXlsx)
+    mdt_gui)
 
 qt_add_translations(
     TARGETS mdt_app

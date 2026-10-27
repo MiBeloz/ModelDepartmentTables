@@ -1,5 +1,5 @@
-﻿#ifndef SETTINGSWINDOW_H
-#define SETTINGSWINDOW_H
+﻿#ifndef SETTINGSDIALOG_H
+#define SETTINGSDIALOG_H
 
 #include <QDialog>
 
@@ -29,14 +29,17 @@ struct Language {
     bool isRTL;
 };
 
-namespace Ui { class SettingsWindow; }
+namespace Ui {
+    class SettingsDialog;
+}
 
-class SettingsWindow : public QDialog {
+class SettingsDialog final : public QDialog {
     Q_OBJECT
+    Q_DISABLE_COPY_MOVE(SettingsDialog)
 
 public:
-    explicit SettingsWindow(QWidget *parent = nullptr);
-    ~SettingsWindow();
+    explicit SettingsDialog(QWidget *parent = nullptr);
+    ~SettingsDialog();
 
 signals:
     void sig_resizeMainWindow(int width, int height);
@@ -45,7 +48,7 @@ public Q_SLOTS:
     void open() override;
 
 private:
-    Ui::SettingsWindow *ui;
+    Ui::SettingsDialog *m_ui;
 
     QList<Language> m_languages;
     SettingsSaver *m_settingsSaver;
@@ -65,4 +68,4 @@ private slots:
     void rec_saveParameters();
 };
 
-#endif // SETTINGSWINDOW_H
+#endif // SETTINGSDIALOG_H

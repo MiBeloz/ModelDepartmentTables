@@ -1,10 +1,10 @@
-﻿#include "SettingsWindow.h"
+﻿#include "SettingsDialog.h"
 
 #include "Constants.h"
-#include "ui_SettingsWindow.h"
+#include "ui_SettingsDialog.h"
 
-SettingsWindow::SettingsWindow(QWidget *parent) : QDialog(parent), ui(new Ui::SettingsWindow()) {
-    ui->setupUi(this);
+SettingsDialog::SettingsDialog(QWidget *parent) : QDialog(parent), m_ui(new Ui::SettingsDialog()) {
+    m_ui->setupUi(this);
 
     m_settingsSaver = new SettingsSaver(mdt::AppSettings::SettingFilename, this);
     m_appSettings = new SettingsGroup(mdt::AppSettings::GroupName, this);
@@ -13,39 +13,39 @@ SettingsWindow::SettingsWindow(QWidget *parent) : QDialog(parent), ui(new Ui::Se
     init();
 }
 
-SettingsWindow::~SettingsWindow() {
-    delete ui;
+SettingsDialog::~SettingsDialog() {
+    delete m_ui;
 }
 
-void SettingsWindow::open() {
+void SettingsDialog::open() {
     fillAppSettingsTab();
     fillConnectionSettingsTab();
 
-    ui->LineEdit_password->setEchoMode(QLineEdit::EchoMode::Password);
-    ui->PushButton_showPassword->setIcon(QIcon("icon_eye.png"));
+    m_ui->LineEdit_password->setEchoMode(QLineEdit::EchoMode::Password);
+    m_ui->PushButton_showPassword->setIcon(QIcon("icon_eye.png"));
 
     QDialog::open();
 }
 
-void SettingsWindow::init() {
+void SettingsDialog::init() {
     initLanguages();
     initAppSettings();
     initConnectionSettings();
 
-    connect(ui->PushButton_save, &QPushButton::clicked, this, &SettingsWindow::rec_saveParameters);
-    connect(ui->PushButton_cancel, &QPushButton::clicked, this, [this] { QDialog::close(); });
-    connect(ui->PushButton_showPassword, &QPushButton::clicked, this, [this] {
-        if (ui->LineEdit_password->echoMode() == QLineEdit::EchoMode::Normal) {
-            ui->LineEdit_password->setEchoMode(QLineEdit::EchoMode::Password);
-            ui->PushButton_showPassword->setIcon(QIcon("icon_eye.png"));
+    connect(m_ui->PushButton_save, &QPushButton::clicked, this, &SettingsDialog::rec_saveParameters);
+    connect(m_ui->PushButton_cancel, &QPushButton::clicked, this, [this] { QDialog::close(); });
+    connect(m_ui->PushButton_showPassword, &QPushButton::clicked, this, [this] {
+        if (m_ui->LineEdit_password->echoMode() == QLineEdit::EchoMode::Normal) {
+            m_ui->LineEdit_password->setEchoMode(QLineEdit::EchoMode::Password);
+            m_ui->PushButton_showPassword->setIcon(QIcon("icon_eye.png"));
         } else {
-            ui->LineEdit_password->setEchoMode(QLineEdit::EchoMode::Normal);
-            ui->PushButton_showPassword->setIcon(QIcon("icon_hide.png"));
+            m_ui->LineEdit_password->setEchoMode(QLineEdit::EchoMode::Normal);
+            m_ui->PushButton_showPassword->setIcon(QIcon("icon_hide.png"));
         }
     });
 }
 
-void SettingsWindow::initLanguages() {
+void SettingsDialog::initLanguages() {
     Language newLang;
     newLang.name = "Automatic language recognition";
     newLang.code = "auto";
@@ -60,7 +60,7 @@ void SettingsWindow::initLanguages() {
     m_languages.append(newLang);
 }
 
-void SettingsWindow::initAppSettings() {
+void SettingsDialog::initAppSettings() {
     m_appSettings->addParameters(QList<SettingsGroup::Parameter> {
         SettingsGroup::Parameter(mdt::AppSettings::Language,
                                  mdt::AppSettings::LanguageDefaultValue,
@@ -81,7 +81,7 @@ void SettingsWindow::initAppSettings() {
     m_settingsSaver->readGroup(*m_appSettings);
 }
 
-void SettingsWindow::initConnectionSettings() {
+void SettingsDialog::initConnectionSettings() {
     m_connectionSettings->addParameters(QList<SettingsGroup::Parameter> {
         SettingsGroup::Parameter(mdt::ConnectionSettings::Host,
                                  mdt::ConnectionSettings::HostDefaultValue,
@@ -108,90 +108,90 @@ void SettingsWindow::initConnectionSettings() {
     m_settingsSaver->readGroup(*m_connectionSettings);
 }
 
-void SettingsWindow::fillAppSettingsTab() {
+void SettingsDialog::fillAppSettingsTab() {
     int langIndex = 0;
     for (int i = 0; i < m_languages.count(); i++) {
-        ui->ComboBox_language->addItem(m_languages.at(i).name, m_languages.at(i).code);
+        m_ui->ComboBox_language->addItem(m_languages.at(i).name, m_languages.at(i).code);
         if (m_languages.at(i).code ==
             m_appSettings->readParameter(mdt::AppSettings::Language).toString()) {
             langIndex = i;
         }
     }
-    ui->ComboBox_language->setCurrentIndex(langIndex);
-    ui->SpinBox_mainWindowWidth->setValue(
+    m_ui->ComboBox_language->setCurrentIndex(langIndex);
+    m_ui->SpinBox_mainWindowWidth->setValue(
         m_appSettings->readParameter(mdt::AppSettings::Width).toInt());
-    ui->SpinBox_mainWindowHeight->setValue(
+    m_ui->SpinBox_mainWindowHeight->setValue(
         m_appSettings->readParameter(mdt::AppSettings::Height).toInt());
-    ui->CheckBox_restoreMainWindow->setChecked(
+    m_ui->CheckBox_restoreMainWindow->setChecked(
         m_appSettings->readParameter(mdt::AppSettings::RestoreMainWindow).toBool());
-    ui->LineEdit_dateFormat->setText(
+    m_ui->LineEdit_dateFormat->setText(
         m_appSettings->readParameter(mdt::AppSettings::DateFormat).toString());
 }
 
-void SettingsWindow::fillConnectionSettingsTab() {
-    ui->LineEdit_host->setText(
+void SettingsDialog::fillConnectionSettingsTab() {
+    m_ui->LineEdit_host->setText(
         m_connectionSettings->readParameter(mdt::ConnectionSettings::Host).toString());
-    ui->SpinBox_port->setValue(
+    m_ui->SpinBox_port->setValue(
         m_connectionSettings->readParameter(mdt::ConnectionSettings::Port).toInt());
-    ui->LineEdit_dbName->setText(
+    m_ui->LineEdit_dbName->setText(
         m_connectionSettings->readParameter(mdt::ConnectionSettings::DatabaseName).toString());
-    ui->LineEdit_user->setText(
+    m_ui->LineEdit_user->setText(
         m_connectionSettings->readParameter(mdt::ConnectionSettings::User).toString());
-    ui->LineEdit_password->setText(
+    m_ui->LineEdit_password->setText(
         m_connectionSettings->readParameter(mdt::ConnectionSettings::Password).toString());
-    ui->CheckBox_savePassword->setChecked(
+    m_ui->CheckBox_savePassword->setChecked(
         m_connectionSettings->readParameter(mdt::ConnectionSettings::SavePassword).toBool());
-    ui->CheckBox_autoConnect->setChecked(
+    m_ui->CheckBox_autoConnect->setChecked(
         m_connectionSettings->readParameter(mdt::ConnectionSettings::AutoConnect).toBool());
 }
 
-void SettingsWindow::saveAppSettings() {
+void SettingsDialog::saveAppSettings() {
     int width = m_appSettings->readParameter(mdt::AppSettings::Width).toInt();
     int height = m_appSettings->readParameter(mdt::AppSettings::Height).toInt();
-    if (width != ui->SpinBox_mainWindowWidth->value() ||
-        height != ui->SpinBox_mainWindowHeight->value()) {
-        emit sig_resizeMainWindow(ui->SpinBox_mainWindowWidth->value(),
-                                  ui->SpinBox_mainWindowHeight->value());
+    if (width != m_ui->SpinBox_mainWindowWidth->value() ||
+        height != m_ui->SpinBox_mainWindowHeight->value()) {
+        emit sig_resizeMainWindow(m_ui->SpinBox_mainWindowWidth->value(),
+                                  m_ui->SpinBox_mainWindowHeight->value());
     }
     m_appSettings->writeParameter(mdt::AppSettings::Language,
-                                  ui->ComboBox_language->currentData().toString());
-    bool rw = ui->CheckBox_restoreMainWindow->isChecked();
+                                  m_ui->ComboBox_language->currentData().toString());
+    bool rw = m_ui->CheckBox_restoreMainWindow->isChecked();
     m_appSettings->writeParameter(mdt::AppSettings::RestoreMainWindow, rw);
     if (rw) {
-        m_appSettings->writeParameter(mdt::AppSettings::Width, ui->SpinBox_mainWindowWidth->value());
+        m_appSettings->writeParameter(mdt::AppSettings::Width, m_ui->SpinBox_mainWindowWidth->value());
         m_appSettings->writeParameter(mdt::AppSettings::Height,
-                                      ui->SpinBox_mainWindowHeight->value());
+                                      m_ui->SpinBox_mainWindowHeight->value());
     } else {
         m_appSettings->writeParameter(mdt::AppSettings::Width, mdt::AppSettings::WidthDefaultValue);
         m_appSettings->writeParameter(mdt::AppSettings::Height,
                                       mdt::AppSettings::HeightDefaultValue);
     }
-    m_appSettings->writeParameter(mdt::AppSettings::DateFormat, ui->LineEdit_dateFormat->text());
+    m_appSettings->writeParameter(mdt::AppSettings::DateFormat, m_ui->LineEdit_dateFormat->text());
 
     m_settingsSaver->writeGroup(*m_appSettings);
 }
 
-void SettingsWindow::saveConnectionSettings() {
-    m_connectionSettings->writeParameter(mdt::ConnectionSettings::Host, ui->LineEdit_host->text());
-    m_connectionSettings->writeParameter(mdt::ConnectionSettings::Port, ui->SpinBox_port->text());
+void SettingsDialog::saveConnectionSettings() {
+    m_connectionSettings->writeParameter(mdt::ConnectionSettings::Host, m_ui->LineEdit_host->text());
+    m_connectionSettings->writeParameter(mdt::ConnectionSettings::Port, m_ui->SpinBox_port->text());
     m_connectionSettings->writeParameter(mdt::ConnectionSettings::DatabaseName,
-                                         ui->LineEdit_dbName->text());
-    m_connectionSettings->writeParameter(mdt::ConnectionSettings::User, ui->LineEdit_user->text());
-    if (ui->CheckBox_savePassword->isChecked()) {
+                                         m_ui->LineEdit_dbName->text());
+    m_connectionSettings->writeParameter(mdt::ConnectionSettings::User, m_ui->LineEdit_user->text());
+    if (m_ui->CheckBox_savePassword->isChecked()) {
         m_connectionSettings->writeParameter(mdt::ConnectionSettings::Password,
-                                             ui->LineEdit_password->text());
+                                             m_ui->LineEdit_password->text());
     } else {
         m_connectionSettings->writeParameter(mdt::ConnectionSettings::Password, QString());
     }
     m_connectionSettings->writeParameter(mdt::ConnectionSettings::SavePassword,
-                                         ui->CheckBox_savePassword->isChecked());
+                                         m_ui->CheckBox_savePassword->isChecked());
     m_connectionSettings->writeParameter(mdt::ConnectionSettings::AutoConnect,
-                                         ui->CheckBox_autoConnect->isChecked());
+                                         m_ui->CheckBox_autoConnect->isChecked());
 
     m_settingsSaver->writeGroup(*m_connectionSettings);
 }
 
-void SettingsWindow::rec_saveParameters() {
+void SettingsDialog::rec_saveParameters() {
     saveAppSettings();
     saveConnectionSettings();
 

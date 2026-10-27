@@ -7,15 +7,16 @@ namespace Ui {
     class AboutDialog;
 }
 
-class AboutDialog : public QDialog {
+class AboutDialog final : public QDialog {
     Q_OBJECT
+    Q_DISABLE_COPY_MOVE(AboutDialog)
 
 public:
     explicit AboutDialog(QWidget *parent = nullptr);
-    ~AboutDialog();
+    ~AboutDialog() override;
 
 private:
-    Ui::AboutDialog *ui;
+    Ui::AboutDialog *m_ui;
 };
 
 #endif // ABOUTDIALOG_H

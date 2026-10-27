@@ -3,19 +3,15 @@
 #include "ItemsModel.h"
 #include "ui_MainWindow.h"
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
-    ui->setupUi(this);
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), m_ui(new Ui::MainWindow) {
+    m_ui->setupUi(this);
     m_itemsModel = new ItemsModel(this);
-    m_newItemWindow = new NewItemWindow(this);
-    m_settingsWindow = new SettingsWindow(this);
-    m_dbManager = new DatabaseManager(this);
-    //m_cacheManager = new CacheManager(this);
 
     init();
 }
 
 MainWindow::~MainWindow() {
-    delete ui;
+    delete m_ui;
 }
 
 // void MainWindow::rec_handleNewItem(const ItemData &newItem) {
@@ -190,18 +186,16 @@ MainWindow::~MainWindow() {
 // }
 
 void MainWindow::init() {
-    connect(ui->actionSettings, &QAction::triggered, this, [&]() { m_settingsWindow->open(); });
-    connect(ui->PB_addItem, &QPushButton::clicked, this, [&]() { m_newItemWindow->open(); });
     // connect(m_newItemWindow,
     //         &NewItemWindow::sig_handleNewItem,
     //         this,
     //         &MainWindow::rec_handleNewItem);
 
-    ui->TV_items->setModel(m_itemsModel);
-    ui->TV_items->verticalHeader()->hide();
-    ui->TV_items->setSortingEnabled(true);
-    ui->TV_items->resizeColumnsToContents();
-    ui->TV_items->sortByColumn(0, Qt::SortOrder::AscendingOrder);
+    m_ui->TV_items->setModel(m_itemsModel);
+    m_ui->TV_items->verticalHeader()->hide();
+    m_ui->TV_items->setSortingEnabled(true);
+    m_ui->TV_items->resizeColumnsToContents();
+    m_ui->TV_items->sortByColumn(0, Qt::SortOrder::AscendingOrder);
 
     // auto dateCache = m_cacheManager->getTypedCache<size_t>(CacheManager::Column::cDate);
     // auto drawingCache = m_cacheManager->getTypedCache<Drawing>(CacheManager::Column::cDrawing);
@@ -281,13 +275,35 @@ void MainWindow::init() {
     // ui->TV_items->resizeColumnsToContents();
 }
 
-void MainWindow::on_actionAbout_triggered() {
-    // About dialog
-    if (m_aboutDlg) {
-        m_aboutDlg->activateWindow();
+// New Item dialog
+void MainWindow::on_PB_addItem_clicked() {
+    if (m_newItemDialog) {
+        m_newItemDialog->activateWindow();
     } else {
-        m_aboutDlg = new AboutDialog(this);
-        m_aboutDlg->setAttribute(Qt::WA_DeleteOnClose);
-        m_aboutDlg->show();
+        m_newItemDialog = new NewItemDialog(this);
+        m_newItemDialog->setAttribute(Qt::WA_DeleteOnClose);
+        m_newItemDialog->show();
+    }
+}
+
+// Settings dialog
+void MainWindow::on_actionSettings_triggered() {
+    if (m_settingsDialog) {
+        m_settingsDialog->activateWindow();
+    } else {
+        m_settingsDialog = new SettingsDialog(this);
+        m_settingsDialog->setAttribute(Qt::WA_DeleteOnClose);
+        m_settingsDialog->show();
+    }
+}
+
+// About dialog
+void MainWindow::on_actionAbout_triggered() {
+    if (m_aboutDialog) {
+        m_aboutDialog->activateWindow();
+    } else {
+        m_aboutDialog = new AboutDialog(this);
+        m_aboutDialog->setAttribute(Qt::WA_DeleteOnClose);
+        m_aboutDialog->show();
     }
 }

@@ -1,17 +1,17 @@
-﻿#include "NewItemWindow.h"
+﻿#include "NewItemDialog.h"
 
-#include "ui_NewItemWindow.h"
+#include "ui_NewItemDialog.h"
 
-NewItemWindow::NewItemWindow(QWidget *parent) : QDialog(parent), ui(new Ui::NewItemWindow) {
-    ui->setupUi(this);
+NewItemDialog::NewItemDialog(QWidget *parent) : QDialog(parent), m_ui(new Ui::NewItemDialog) {
+    m_ui->setupUi(this);
     init();
 }
 
-NewItemWindow::~NewItemWindow() {
-    delete ui;
+NewItemDialog::~NewItemDialog() {
+    delete m_ui;
 }
 
-// void NewItemWindow::rec_onPB_okClicked() {
+// void NewItemDialog::rec_onPB_okClicked() {
 //     Drawing *drawing = new Drawing(ui->LE_drawingNumber->text(), ui->LE_title->text());
 
 //     Item item;
@@ -33,15 +33,15 @@ NewItemWindow::~NewItemWindow() {
 //     accept();
 // }
 
-void NewItemWindow::rec_onPB_cancelClicked() {
+void NewItemDialog::rec_onPB_cancelClicked() {
     reject();
 }
 
-void NewItemWindow::init() {
+void NewItemDialog::init() {
     //connect(ui->PB_ok, &QPushButton::clicked, this, &NewItemWindow::rec_onPB_okClicked);
-    connect(ui->PB_cancel, &QPushButton::clicked, this, &NewItemWindow::rec_onPB_cancelClicked);
+    connect(m_ui->PB_cancel, &QPushButton::clicked, this, &NewItemDialog::rec_onPB_cancelClicked);
 
-    ui->DE_date->setDate(QDate::currentDate());
+    m_ui->DE_date->setDate(QDate::currentDate());
     //ui->DE_date->setDisplayFormat(Item::dateFormat);
-    ui->DE_date->setCalendarPopup(true);
+    m_ui->DE_date->setCalendarPopup(true);
 }

@@ -6,11 +6,8 @@
 #include <QPointer>
 
 #include "AboutDialog.h"
-#include "DatabaseManager.h"
-#include "NewItemWindow.h"
-#include "SettingsWindow.h"
-
-//class AboutDialog;
+#include "NewItemDialog.h"
+#include "SettingsDialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -28,16 +25,16 @@ public:
 private slots:
     //void rec_handleNewItem(const ItemData &newItem);
 
+    void on_PB_addItem_clicked();
+    void on_actionSettings_triggered();
     void on_actionAbout_triggered();
 
 private:
-    Ui::MainWindow *ui;
-    QPointer<AboutDialog> m_aboutDlg;
-    NewItemWindow *m_newItemWindow;
-    SettingsWindow *m_settingsWindow;
-    QAbstractProxyModel *m_itemsModel;
-
-    DatabaseManager *m_dbManager;
+    Ui::MainWindow *m_ui;
+    QPointer<AboutDialog> m_aboutDialog;
+    QPointer<NewItemDialog> m_newItemDialog;
+    QPointer<SettingsDialog> m_settingsDialog;
+    QPointer<QAbstractProxyModel> m_itemsModel;
 
     void init();
 };

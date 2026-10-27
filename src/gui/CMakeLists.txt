@@ -9,7 +9,7 @@ file(GLOB_RECURSE UI_FILES "*.ui")
 list(FILTER SRC_SOURCES EXCLUDE REGEX "main\\.cpp$")
 
 add_library(mdt_gui STATIC ${SRC_SOURCES} ${SRC_HEADERS} ${UI_FILES})
-qt6_add_ui(mdt_gui SOURCES MainWindow.ui AboutDialog.ui NewItemWindow.ui SettingsWindow.ui)
+qt6_add_ui(mdt_gui SOURCES MainWindow.ui AboutDialog.ui NewItemDialog.ui SettingsDialog.ui)
 
 target_include_directories(mdt_gui
     PUBLIC

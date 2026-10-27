@@ -1,4 +1,4 @@
-file(GLOB_RECURSE SRC_SOURCES "*.cpp")
+﻿file(GLOB_RECURSE SRC_SOURCES "*.cpp")
 file(GLOB_RECURSE SRC_HEADERS "*.h" "*.hpp")
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core)
@@ -16,4 +16,5 @@ target_include_directories(mdt_base
 target_link_libraries(mdt_base
     PUBLIC
         Qt6::Core
+        QXlsx::QXlsx
 )
