@@ -1,13 +1,15 @@
-﻿#include "NewItemDialog.h"
+﻿#include "NewRecordDialog.h"
 
-#include "ui_NewItemDialog.h"
+#include "DatesList.h"
+#include "Record.h"
+#include "ui_NewRecordDialog.h"
 
-NewItemDialog::NewItemDialog(QWidget *parent) : QDialog(parent), m_ui(new Ui::NewItemDialog) {
+NewRecordDialog::NewRecordDialog(QWidget *parent) : QDialog(parent), m_ui(new Ui::NewRecordDialog) {
     m_ui->setupUi(this);
     init();
 }
 
-NewItemDialog::~NewItemDialog() {
+NewRecordDialog::~NewRecordDialog() {
     delete m_ui;
 }
 
@@ -33,15 +35,15 @@ NewItemDialog::~NewItemDialog() {
 //     accept();
 // }
 
-void NewItemDialog::rec_onPB_cancelClicked() {
+void NewRecordDialog::rec_onPB_cancelClicked() {
     reject();
 }
 
-void NewItemDialog::init() {
+void NewRecordDialog::init() {
     //connect(ui->PB_ok, &QPushButton::clicked, this, &NewItemWindow::rec_onPB_okClicked);
-    connect(m_ui->PB_cancel, &QPushButton::clicked, this, &NewItemDialog::rec_onPB_cancelClicked);
+    connect(m_ui->PB_cancel, &QPushButton::clicked, this, &NewRecordDialog::rec_onPB_cancelClicked);
 
     m_ui->DE_date->setDate(QDate::currentDate());
-    //ui->DE_date->setDisplayFormat(Item::dateFormat);
+    m_ui->DE_date->setDisplayFormat(mdt::work::DatesList::getDateFormat());
     m_ui->DE_date->setCalendarPopup(true);
 }

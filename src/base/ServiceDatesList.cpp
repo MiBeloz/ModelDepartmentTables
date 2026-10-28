@@ -4,8 +4,6 @@ namespace mdt {
     namespace work {
         ServiceDatesList::ServiceDatesList() : ServiceCustomList() { }
 
-        ServiceDatesList::~ServiceDatesList() = default;
-
         std::optional<qint32> ServiceDatesList::add(const QString &date) {
             return m_list.insert(date);
         }

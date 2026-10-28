@@ -6,8 +6,9 @@
 #include <QPointer>
 
 #include "AboutDialog.h"
-#include "NewItemDialog.h"
+#include "NewRecordDialog.h"
 #include "SettingsDialog.h"
+#include "StorageManager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -32,9 +33,10 @@ private slots:
 private:
     Ui::MainWindow *m_ui;
     QPointer<AboutDialog> m_aboutDialog;
-    QPointer<NewItemDialog> m_newItemDialog;
+    QPointer<NewRecordDialog> m_newRecordDialog;
     QPointer<SettingsDialog> m_settingsDialog;
     QPointer<QAbstractProxyModel> m_itemsModel;
+    mdt::work::StorageManager m_storageWork;
 
     void init();
 };

@@ -1,6 +1,8 @@
 ﻿#include "MainWindow.h"
 
+#include "Constants.h"
 #include "ItemsModel.h"
+#include "SaverFile.h"
 #include "ui_MainWindow.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), m_ui(new Ui::MainWindow) {
@@ -191,6 +193,32 @@ void MainWindow::init() {
     //         this,
     //         &MainWindow::rec_handleNewItem);
 
+    mdt::SaverFile saver(mdt::SaverSettings::SAVER_STORAGE_FILENAME,
+                         mdt::SaverSettings::SAVER_STORAGE_FILENAME_TMP);
+    if (!saver.read(m_storageWork)) {
+        throw mdt::RuntimeError(u"Error read storage"_s);
+    }
+
+    auto records = m_storageWork.getRecords();
+    for (auto &record : records) {
+        auto model = m_itemsModel->sourceModel();
+
+        model->insertRow(0);
+
+        model->setData(QModelIndex(model->index(0, 0)), record.date());
+        model->setData(QModelIndex(model->index(0, 1)), record.drawing().getNumber());
+        model->setData(QModelIndex(model->index(0, 2)), record.drawing().getTitle());
+        model->setData(QModelIndex(model->index(0, 3)), record.amount());
+        model->setData(QModelIndex(model->index(0, 4)), record.executors().join(u", "));
+        model->setData(QModelIndex(model->index(0, 5)), record.authors().join(u", "));
+        model->setData(QModelIndex(model->index(0, 6)), record.castingMaterials().join(u", "));
+        model->setData(QModelIndex(model->index(0, 7)), record.modelMaterials().join(u", "));
+        model->setData(QModelIndex(model->index(0, 8)), record.machines().join(u", "));
+        model->setData(QModelIndex(model->index(0, 9)), record.notes().join(u", "));
+
+        m_ui->TV_items->resizeColumnsToContents();
+    }
+
     m_ui->TV_items->setModel(m_itemsModel);
     m_ui->TV_items->verticalHeader()->hide();
     m_ui->TV_items->setSortingEnabled(true);
@@ -277,12 +305,12 @@ void MainWindow::init() {
 
 // New Item dialog
 void MainWindow::on_PB_addItem_clicked() {
-    if (m_newItemDialog) {
-        m_newItemDialog->activateWindow();
+    if (m_newRecordDialog) {
+        m_newRecordDialog->activateWindow();
     } else {
-        m_newItemDialog = new NewItemDialog(this);
-        m_newItemDialog->setAttribute(Qt::WA_DeleteOnClose);
-        m_newItemDialog->show();
+        m_newRecordDialog = new NewRecordDialog(this);
+        m_newRecordDialog->setAttribute(Qt::WA_DeleteOnClose);
+        m_newRecordDialog->show();
     }
 }
 

@@ -41,16 +41,16 @@ public:
 private:
     TestStats() {
         const QString dir = QCoreApplication::applicationDirPath();
-        m_filePath = dir + '/' +
-                     QDateTime::currentDateTime().toString(QString("dd-MM-yyyy_hh-mm-ss")) +
-                     "_testStats.txt";
+        m_filePath = dir + u'/' +
+                     QDateTime::currentDateTime().toString(QString(u"dd-MM-yyyy_hh-mm-ss")) +
+                     u"_testStats.txt";
 
         QFile f(m_filePath);
         if (f.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
             QTextStream out(&f);
             out << "==================================================\n";
             out << "Test run: "
-                << QDateTime::currentDateTime().toString(QString("dd-MM-yyyy - hh-mm-ss")) << "\n";
+                << QDateTime::currentDateTime().toString(QString(u"dd-MM-yyyy - hh-mm-ss")) << "\n";
             out << "==================================================\n";
         }
     }

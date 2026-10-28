@@ -3,12 +3,13 @@
 #include "Constants.h"
 #include "ui_SettingsDialog.h"
 
+using namespace Qt::Literals::StringLiterals;
+
 SettingsDialog::SettingsDialog(QWidget *parent) : QDialog(parent), m_ui(new Ui::SettingsDialog()) {
     m_ui->setupUi(this);
 
     m_settingsSaver = new SettingsSaver(mdt::AppSettings::SettingFilename, this);
     m_appSettings = new SettingsGroup(mdt::AppSettings::GroupName, this);
-    m_connectionSettings = new SettingsGroup(mdt::ConnectionSettings::GroupName, this);
 
     init();
 }
@@ -19,10 +20,9 @@ SettingsDialog::~SettingsDialog() {
 
 void SettingsDialog::open() {
     fillAppSettingsTab();
-    fillConnectionSettingsTab();
 
     m_ui->LineEdit_password->setEchoMode(QLineEdit::EchoMode::Password);
-    m_ui->PushButton_showPassword->setIcon(QIcon("icon_eye.png"));
+    m_ui->PushButton_showPassword->setIcon(QIcon(u"icon_eye.png"_s));
 
     QDialog::open();
 }
@@ -30,25 +30,24 @@ void SettingsDialog::open() {
 void SettingsDialog::init() {
     initLanguages();
     initAppSettings();
-    initConnectionSettings();
 
     connect(m_ui->PushButton_save, &QPushButton::clicked, this, &SettingsDialog::rec_saveParameters);
     connect(m_ui->PushButton_cancel, &QPushButton::clicked, this, [this] { QDialog::close(); });
     connect(m_ui->PushButton_showPassword, &QPushButton::clicked, this, [this] {
         if (m_ui->LineEdit_password->echoMode() == QLineEdit::EchoMode::Normal) {
             m_ui->LineEdit_password->setEchoMode(QLineEdit::EchoMode::Password);
-            m_ui->PushButton_showPassword->setIcon(QIcon("icon_eye.png"));
+            m_ui->PushButton_showPassword->setIcon(QIcon(u"icon_eye.png"_s));
         } else {
             m_ui->LineEdit_password->setEchoMode(QLineEdit::EchoMode::Normal);
-            m_ui->PushButton_showPassword->setIcon(QIcon("icon_hide.png"));
+            m_ui->PushButton_showPassword->setIcon(QIcon(u"icon_hide.png"_s));
         }
     });
 }
 
 void SettingsDialog::initLanguages() {
     Language newLang;
-    newLang.name = "Automatic language recognition";
-    newLang.code = "auto";
+    newLang.name = u"Automatic language recognition"_s;
+    newLang.code = u"auto"_s;
     m_languages.append(newLang);
 
     // newLang.name = "English";
@@ -56,7 +55,7 @@ void SettingsDialog::initLanguages() {
     // m_languages.append(newLang);
 
     newLang.name = QString::fromUtf8("Русский");
-    newLang.code = "ru";
+    newLang.code = u"ru"_s;
     m_languages.append(newLang);
 }
 
@@ -81,33 +80,6 @@ void SettingsDialog::initAppSettings() {
     m_settingsSaver->readGroup(*m_appSettings);
 }
 
-void SettingsDialog::initConnectionSettings() {
-    m_connectionSettings->addParameters(QList<SettingsGroup::Parameter> {
-        SettingsGroup::Parameter(mdt::ConnectionSettings::Host,
-                                 mdt::ConnectionSettings::HostDefaultValue,
-                                 mdt::ConnectionSettings::HostDefaultValue),
-        SettingsGroup::Parameter(mdt::ConnectionSettings::Port,
-                                 mdt::ConnectionSettings::PortDefaultValue,
-                                 mdt::ConnectionSettings::PortDefaultValue),
-        SettingsGroup::Parameter(mdt::ConnectionSettings::DatabaseName,
-                                 mdt::ConnectionSettings::DatabaseNameDefaultValue,
-                                 mdt::ConnectionSettings::DatabaseNameDefaultValue),
-        SettingsGroup::Parameter(mdt::ConnectionSettings::User,
-                                 mdt::ConnectionSettings::UserDefaultValue,
-                                 mdt::ConnectionSettings::UserDefaultValue),
-        SettingsGroup::Parameter(mdt::ConnectionSettings::Password,
-                                 mdt::ConnectionSettings::PasswordDefaultValue,
-                                 mdt::ConnectionSettings::PasswordDefaultValue),
-        SettingsGroup::Parameter(mdt::ConnectionSettings::SavePassword,
-                                 mdt::ConnectionSettings::SavePasswordDefaultValue,
-                                 mdt::ConnectionSettings::SavePasswordDefaultValue),
-        SettingsGroup::Parameter(mdt::ConnectionSettings::AutoConnect,
-                                 mdt::ConnectionSettings::AutoConnectDefaultValue,
-                                 mdt::ConnectionSettings::AutoConnectDefaultValue),
-    });
-    m_settingsSaver->readGroup(*m_connectionSettings);
-}
-
 void SettingsDialog::fillAppSettingsTab() {
     int langIndex = 0;
     for (int i = 0; i < m_languages.count(); i++) {
@@ -126,23 +98,6 @@ void SettingsDialog::fillAppSettingsTab() {
         m_appSettings->readParameter(mdt::AppSettings::RestoreMainWindow).toBool());
     m_ui->LineEdit_dateFormat->setText(
         m_appSettings->readParameter(mdt::AppSettings::DateFormat).toString());
-}
-
-void SettingsDialog::fillConnectionSettingsTab() {
-    m_ui->LineEdit_host->setText(
-        m_connectionSettings->readParameter(mdt::ConnectionSettings::Host).toString());
-    m_ui->SpinBox_port->setValue(
-        m_connectionSettings->readParameter(mdt::ConnectionSettings::Port).toInt());
-    m_ui->LineEdit_dbName->setText(
-        m_connectionSettings->readParameter(mdt::ConnectionSettings::DatabaseName).toString());
-    m_ui->LineEdit_user->setText(
-        m_connectionSettings->readParameter(mdt::ConnectionSettings::User).toString());
-    m_ui->LineEdit_password->setText(
-        m_connectionSettings->readParameter(mdt::ConnectionSettings::Password).toString());
-    m_ui->CheckBox_savePassword->setChecked(
-        m_connectionSettings->readParameter(mdt::ConnectionSettings::SavePassword).toBool());
-    m_ui->CheckBox_autoConnect->setChecked(
-        m_connectionSettings->readParameter(mdt::ConnectionSettings::AutoConnect).toBool());
 }
 
 void SettingsDialog::saveAppSettings() {
@@ -171,29 +126,8 @@ void SettingsDialog::saveAppSettings() {
     m_settingsSaver->writeGroup(*m_appSettings);
 }
 
-void SettingsDialog::saveConnectionSettings() {
-    m_connectionSettings->writeParameter(mdt::ConnectionSettings::Host, m_ui->LineEdit_host->text());
-    m_connectionSettings->writeParameter(mdt::ConnectionSettings::Port, m_ui->SpinBox_port->text());
-    m_connectionSettings->writeParameter(mdt::ConnectionSettings::DatabaseName,
-                                         m_ui->LineEdit_dbName->text());
-    m_connectionSettings->writeParameter(mdt::ConnectionSettings::User, m_ui->LineEdit_user->text());
-    if (m_ui->CheckBox_savePassword->isChecked()) {
-        m_connectionSettings->writeParameter(mdt::ConnectionSettings::Password,
-                                             m_ui->LineEdit_password->text());
-    } else {
-        m_connectionSettings->writeParameter(mdt::ConnectionSettings::Password, QString());
-    }
-    m_connectionSettings->writeParameter(mdt::ConnectionSettings::SavePassword,
-                                         m_ui->CheckBox_savePassword->isChecked());
-    m_connectionSettings->writeParameter(mdt::ConnectionSettings::AutoConnect,
-                                         m_ui->CheckBox_autoConnect->isChecked());
-
-    m_settingsSaver->writeGroup(*m_connectionSettings);
-}
-
 void SettingsDialog::rec_saveParameters() {
     saveAppSettings();
-    saveConnectionSettings();
 
     QDialog::close();
 }

@@ -1,8 +1,8 @@
 ﻿find_package(Qt6 REQUIRED COMPONENTS Test Concurrent)
 
-set(CMAKE_AUTOMOC ON)
+#set(CMAKE_AUTOMOC ON)
 
-enable_testing()
+enable_testing(true)
 
 add_custom_target(check
     COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
@@ -12,19 +12,46 @@ add_custom_target(check
 
 include_directories("../src")
 
-file(GLOB test_Files "test_*.cpp")
+set(testFiles
+    test_CustomList.cpp
+    test_DatesList.cpp
+    test_Drawing.cpp
+    test_RecordLink.cpp
+    test_StorageRecordsLinks.cpp
+)
 
-foreach(test_File ${test_Files})
-    get_filename_component(test_Filename "${test_File}" NAME_WLE)
+set(testFilesWithConcurrent
+    test_SaverFile.cpp
+    test_StorageManager.cpp
+)
+
+set(testStats TestStats.h)
+
+foreach(testFile ${testFiles})
+    get_filename_component(testFilename "${testFile}" NAME_WLE)
     
-    add_executable("${test_Filename}" "${test_File}")
-    target_link_libraries("${test_Filename}" 
+    add_executable("${testFilename}" "${testFile}")
+    target_link_libraries("${testFilename}"
+        PRIVATE
+            Qt6::Test
+            mdt_base
+    )
+    add_test(NAME "${testFilename}" COMMAND "${testFilename}")
+    
+    add_dependencies(check "${testFilename}")
+endforeach()
+
+foreach(testFile ${testFilesWithConcurrent})
+    get_filename_component(testFilename "${testFile}" NAME_WLE)
+
+    add_executable("${testFilename}" "${testFile}" ${testStats})
+    target_link_libraries("${testFilename}"
         PRIVATE
             Qt6::Test
             Qt6::Concurrent
             mdt_base
     )
-    add_test(NAME "${test_Filename}" COMMAND "${test_Filename}")
-    
-    add_dependencies(check "${test_Filename}")
+    add_test(NAME "${testFilename}" COMMAND "${testFilename}")
+
+    add_dependencies(check "${testFilename}")
 endforeach()

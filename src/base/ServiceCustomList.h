@@ -9,6 +9,7 @@ namespace mdt {
         class ServiceCustomList {
         public:
             ServiceCustomList();
+            virtual ~ServiceCustomList() = default;
 
             virtual std::optional<qint32> add(const ValueType &value);
             virtual bool remove(const ValueType &value);

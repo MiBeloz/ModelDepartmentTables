@@ -5,6 +5,7 @@
 #include "Drawing.h"
 
 using mdt::Drawing;
+using namespace Qt::Literals::StringLiterals;
 
 class TestDrawing : public QObject {
     Q_OBJECT
@@ -75,47 +76,47 @@ void TestDrawing::defaultConstructorCreatesInvalidEmptyDrawing() {
 }
 
 void TestDrawing::parameterizedConstructorSetField() {
-    Drawing d("", "Корпус");
+    Drawing d(u""_s, u"Корпус"_s);
     QVERIFY(d.getNumber().isEmpty());
-    QCOMPARE(d.getTitle(), QString("Корпус"));
+    QCOMPARE(d.getTitle(), u"Корпус"_s);
     QVERIFY(!d.isValid());
 }
 
 void TestDrawing::parameterizedConstructorSetsFields() {
-    Drawing d("A-001", "Корпус");
-    QCOMPARE(d.getNumber(), QString("A-001"));
-    QCOMPARE(d.getTitle(), QString("Корпус"));
+    Drawing d(u"A-001"_s, u"Корпус"_s);
+    QCOMPARE(d.getNumber(), u"A-001"_s);
+    QCOMPARE(d.getTitle(), u"Корпус"_s);
     QVERIFY(d.isValid());
 }
 
 void TestDrawing::parameterizedConstructorAcceptsEmptyStrings() {
-    Drawing d("", "");
+    Drawing d(u""_s, u""_s);
     QVERIFY(!d.isValid());
 }
 
 // ---------- get / set ----------
 
 void TestDrawing::gettersReturnInitialValues() {
-    Drawing d("B-42", "Крышка");
-    QCOMPARE(d.getNumber(), QString("B-42"));
-    QCOMPARE(d.getTitle(), QString("Крышка"));
+    Drawing d(u"B-42"_s, u"Крышка"_s);
+    QCOMPARE(d.getNumber(), u"B-42"_s);
+    QCOMPARE(d.getTitle(), u"Крышка"_s);
 }
 
 void TestDrawing::settersUpdateValues() {
     Drawing d;
-    d.setNumber("C-7");
-    d.setTitle("Опора");
-    QCOMPARE(d.getNumber(), QString("C-7"));
-    QCOMPARE(d.getTitle(), QString("Опора"));
+    d.setNumber(u"C-7"_s);
+    d.setTitle(u"Опора"_s);
+    QCOMPARE(d.getNumber(), u"C-7"_s);
+    QCOMPARE(d.getTitle(), u"Опора"_s);
     QVERIFY(d.isValid());
 }
 
 void TestDrawing::settersAcceptEmptyStrings() {
-    Drawing d("X", "Y");
-    d.setNumber("");
+    Drawing d(u"X"_s, u"Y"_s);
+    d.setNumber(u""_s);
     QVERIFY(!d.isValid());
-    d.setNumber("X");
-    d.setTitle("");
+    d.setNumber(u"X"_s);
+    d.setTitle(u""_s);
     QVERIFY(!d.isValid());
 }
 
@@ -149,13 +150,15 @@ void TestDrawing::equality_data() {
     QTest::addColumn<Drawing>("b");
     QTest::addColumn<bool>("expected");
 
-    QTest::newRow("identical") << Drawing("A-1", "T") << Drawing("A-1", "T") << true;
-    QTest::newRow("same number") << Drawing("A-1", "T1") << Drawing("A-1", "T2") << false;
-    QTest::newRow("same title") << Drawing("A-1", "T") << Drawing("A-2", "T") << false;
+    QTest::newRow("identical") << Drawing(u"A-1"_s, u"T"_s) << Drawing(u"A-1"_s, u"T"_s) << true;
+    QTest::newRow("same number") << Drawing(u"A-1"_s, u"T1"_s) << Drawing(u"A-1"_s, u"T2"_s)
+                                 << false;
+    QTest::newRow("same title") << Drawing(u"A-1"_s, u"T"_s) << Drawing(u"A-2"_s, u"T"_s) << false;
     QTest::newRow("both empty") << Drawing() << Drawing() << true;
-    QTest::newRow("empty vs filled") << Drawing() << Drawing("A", "T") << false;
-    QTest::newRow("case differs") << Drawing("a-1", "T") << Drawing("A-1", "T") << false;
-    QTest::newRow("null") << Drawing::Null << Drawing("", "") << true;
+    QTest::newRow("empty vs filled") << Drawing() << Drawing(u"A"_s, u"T"_s) << false;
+    QTest::newRow("case differs") << Drawing(u"a-1"_s, u"T"_s) << Drawing(u"A-1"_s, u"T"_s)
+                                  << false;
+    QTest::newRow("null") << Drawing::Null << Drawing(u""_s, u""_s) << true;
 }
 
 void TestDrawing::equality() {
@@ -187,15 +190,17 @@ void TestDrawing::lessThan_data() {
     QTest::addColumn<Drawing>("b");
     QTest::addColumn<bool>("expected");
 
-    QTest::newRow("number less") << Drawing("A-1", "Z") << Drawing("A-2", "A") << true;
-    QTest::newRow("number greater") << Drawing("B-1", "A") << Drawing("A-2", "Z") << false;
-    QTest::newRow("number equal, title less") << Drawing("A-1", "A") << Drawing("A-1", "B") << true;
+    QTest::newRow("number less") << Drawing(u"A-1"_s, u"Z"_s) << Drawing(u"A-2"_s, u"A"_s) << true;
+    QTest::newRow("number greater")
+        << Drawing(u"B-1"_s, u"A"_s) << Drawing(u"A-2"_s, u"Z"_s) << false;
+    QTest::newRow("number equal, title less")
+        << Drawing(u"A-1"_s, u"A"_s) << Drawing(u"A-1"_s, u"B"_s) << true;
     QTest::newRow("number equal, title greater")
-        << Drawing("A-1", "B") << Drawing("A-1", "A") << false;
-    QTest::newRow("fully equal") << Drawing("A-1", "T") << Drawing("A-1", "T") << false;
-    QTest::newRow("empty < filled") << Drawing() << Drawing("A", "T") << true;
+        << Drawing(u"A-1"_s, u"B"_s) << Drawing(u"A-1"_s, u"A"_s) << false;
+    QTest::newRow("fully equal") << Drawing(u"A-1"_s, u"T"_s) << Drawing(u"A-1"_s, u"T"_s) << false;
+    QTest::newRow("empty < filled") << Drawing() << Drawing(u"A"_s, u"T"_s) << true;
     QTest::newRow("case sensitive")
-        << Drawing("A", "T") << Drawing("a", "T") << true; // 'A'(0x41) < 'a'(0x61)
+        << Drawing(u"A"_s, u"T"_s) << Drawing(u"a"_s, u"T"_s) << true; // 'A'(0x41) < 'a'(0x61)
 }
 
 void TestDrawing::lessThan() {
@@ -211,7 +216,11 @@ void TestDrawing::lessThanIsStrictWeakOrdering() {
     //  2) asymmetry:      a < b  =>  !(b < a)
     //  3) transitivity:   a < b && b < c  =>  a < c
     const QVector<Drawing> items = {
-        Drawing(), Drawing("A", "A"), Drawing("A", "B"), Drawing("B", "A"), Drawing("B", "B"),
+        Drawing(),
+        Drawing(u"A"_s, u"A"_s),
+        Drawing(u"A"_s, u"B"_s),
+        Drawing(u"B"_s, u"A"_s),
+        Drawing(u"B"_s, u"B"_s),
     };
 
     for (const Drawing& a : items) {
@@ -240,16 +249,17 @@ void TestDrawing::greaterThan_data() {
     QTest::addColumn<Drawing>("b");
     QTest::addColumn<bool>("expected");
 
-    QTest::newRow("number less") << Drawing("A-1", "Z") << Drawing("A-2", "A") << false;
-    QTest::newRow("number greater") << Drawing("B-1", "A") << Drawing("A-2", "Z") << true;
+    QTest::newRow("number less") << Drawing(u"A-1"_s, u"Z"_s) << Drawing(u"A-2"_s, u"A"_s) << false;
+    QTest::newRow("number greater")
+        << Drawing(u"B-1"_s, u"A"_s) << Drawing(u"A-2"_s, u"Z"_s) << true;
     QTest::newRow("number equal, title less")
-        << Drawing("A-1", "A") << Drawing("A-1", "B") << false;
+        << Drawing(u"A-1"_s, u"A"_s) << Drawing(u"A-1"_s, u"B"_s) << false;
     QTest::newRow("number equal, title greater")
-        << Drawing("A-1", "B") << Drawing("A-1", "A") << true;
-    QTest::newRow("fully equal") << Drawing("A-1", "T") << Drawing("A-1", "T") << false;
-    QTest::newRow("empty > filled") << Drawing() << Drawing("A", "T") << false;
+        << Drawing(u"A-1"_s, u"B"_s) << Drawing(u"A-1"_s, u"A"_s) << true;
+    QTest::newRow("fully equal") << Drawing(u"A-1"_s, u"T"_s) << Drawing(u"A-1"_s, u"T"_s) << false;
+    QTest::newRow("empty > filled") << Drawing() << Drawing(u"A"_s, u"T"_s) << false;
     QTest::newRow("case sensitive")
-        << Drawing("A", "T") << Drawing("a", "T") << false; // 'A'(0x41) > 'a'(0x61)
+        << Drawing(u"A"_s, u"T"_s) << Drawing(u"a"_s, u"T"_s) << false; // 'A'(0x41) > 'a'(0x61)
 }
 
 void TestDrawing::greaterThan() {
@@ -265,7 +275,11 @@ void TestDrawing::greaterThanIsStrictWeakOrdering() {
     //  2) asymmetry:      b > a  =>  !(a > b)
     //  3) transitivity:   b > a && c > b  =>  c > a
     const QVector<Drawing> items = {
-        Drawing(), Drawing("A", "A"), Drawing("A", "B"), Drawing("B", "A"), Drawing("B", "B"),
+        Drawing(),
+        Drawing(u"A"_s, u"A"_s),
+        Drawing(u"A"_s, u"B"_s),
+        Drawing(u"B"_s, u"A"_s),
+        Drawing(u"B"_s, u"B"_s),
     };
 
     for (const Drawing& a : items) {
@@ -294,15 +308,17 @@ void TestDrawing::lessOrEqual_data() {
     QTest::addColumn<Drawing>("b");
     QTest::addColumn<bool>("expected");
 
-    QTest::newRow("number less") << Drawing("A-1", "Z") << Drawing("A-2", "A") << true;
-    QTest::newRow("number greater") << Drawing("B-1", "A") << Drawing("A-2", "Z") << false;
-    QTest::newRow("number equal, title less") << Drawing("A-1", "A") << Drawing("A-1", "B") << true;
+    QTest::newRow("number less") << Drawing(u"A-1"_s, u"Z"_s) << Drawing(u"A-2"_s, u"A"_s) << true;
+    QTest::newRow("number greater")
+        << Drawing(u"B-1"_s, u"A"_s) << Drawing(u"A-2"_s, u"Z"_s) << false;
+    QTest::newRow("number equal, title less")
+        << Drawing(u"A-1"_s, u"A"_s) << Drawing(u"A-1"_s, u"B"_s) << true;
     QTest::newRow("number equal, title greater")
-        << Drawing("A-1", "B") << Drawing("A-1", "A") << false;
-    QTest::newRow("fully equal") << Drawing("A-1", "T") << Drawing("A-1", "T") << true;
-    QTest::newRow("empty < filled") << Drawing() << Drawing("A", "T") << true;
-    QTest::newRow("filled > empty") << Drawing("A", "T") << Drawing() << false;
-    QTest::newRow("case sensitive") << Drawing("A", "T") << Drawing("a", "T") << true;
+        << Drawing(u"A-1"_s, u"B"_s) << Drawing(u"A-1"_s, u"A"_s) << false;
+    QTest::newRow("fully equal") << Drawing(u"A-1"_s, u"T"_s) << Drawing(u"A-1"_s, u"T"_s) << true;
+    QTest::newRow("empty < filled") << Drawing() << Drawing(u"A"_s, u"T"_s) << true;
+    QTest::newRow("filled > empty") << Drawing(u"A"_s, u"T"_s) << Drawing() << false;
+    QTest::newRow("case sensitive") << Drawing(u"A"_s, u"T"_s) << Drawing(u"a"_s, u"T"_s) << true;
 }
 
 void TestDrawing::lessOrEqual() {
@@ -315,8 +331,12 @@ void TestDrawing::lessOrEqual() {
 
 void TestDrawing::lessOrEqualIsLessOrEqual() {
     const QVector<Drawing> items = {
-        Drawing(),         Drawing("A", "A"), Drawing("A", "B"),
-        Drawing("B", "A"), Drawing("B", "B"), Drawing("A-1", "T"),
+        Drawing(),
+        Drawing(u"A"_s, u"A"_s),
+        Drawing(u"A"_s, u"B"_s),
+        Drawing(u"B"_s, u"A"_s),
+        Drawing(u"B"_s, u"B"_s),
+        Drawing(u"A-1"_s, u"T"_s),
     };
 
     for (const Drawing& a : items) {
@@ -331,16 +351,17 @@ void TestDrawing::greaterOrEqual_data() {
     QTest::addColumn<Drawing>("b");
     QTest::addColumn<bool>("expected");
 
-    QTest::newRow("number less") << Drawing("A-1", "Z") << Drawing("A-2", "A") << false;
-    QTest::newRow("number greater") << Drawing("B-1", "A") << Drawing("A-2", "Z") << true;
+    QTest::newRow("number less") << Drawing(u"A-1"_s, u"Z"_s) << Drawing(u"A-2"_s, u"A"_s) << false;
+    QTest::newRow("number greater")
+        << Drawing(u"B-1"_s, u"A"_s) << Drawing(u"A-2"_s, u"Z"_s) << true;
     QTest::newRow("number equal, title less")
-        << Drawing("A-1", "A") << Drawing("A-1", "B") << false;
+        << Drawing(u"A-1"_s, u"A"_s) << Drawing(u"A-1"_s, u"B"_s) << false;
     QTest::newRow("number equal, title greater")
-        << Drawing("A-1", "B") << Drawing("A-1", "A") << true;
-    QTest::newRow("fully equal") << Drawing("A-1", "T") << Drawing("A-1", "T") << true;
-    QTest::newRow("empty < filled") << Drawing() << Drawing("A", "T") << false;
-    QTest::newRow("filled > empty") << Drawing("A", "T") << Drawing() << true;
-    QTest::newRow("case sensitive") << Drawing("A", "T") << Drawing("a", "T") << false;
+        << Drawing(u"A-1"_s, u"B"_s) << Drawing(u"A-1"_s, u"A"_s) << true;
+    QTest::newRow("fully equal") << Drawing(u"A-1"_s, u"T"_s) << Drawing(u"A-1"_s, u"T"_s) << true;
+    QTest::newRow("empty < filled") << Drawing() << Drawing(u"A"_s, u"T"_s) << false;
+    QTest::newRow("filled > empty") << Drawing(u"A"_s, u"T"_s) << Drawing() << true;
+    QTest::newRow("case sensitive") << Drawing(u"A"_s, u"T"_s) << Drawing(u"a"_s, u"T"_s) << false;
 }
 
 void TestDrawing::greaterOrEqual() {
@@ -353,8 +374,12 @@ void TestDrawing::greaterOrEqual() {
 
 void TestDrawing::greaterOrEqualIsGreaterOrEqual() {
     const QVector<Drawing> items = {
-        Drawing(),         Drawing("A", "A"), Drawing("A", "B"),
-        Drawing("B", "A"), Drawing("B", "B"), Drawing("A-1", "T"),
+        Drawing(),
+        Drawing(u"A"_s, u"A"_s),
+        Drawing(u"A"_s, u"B"_s),
+        Drawing(u"B"_s, u"A"_s),
+        Drawing(u"B"_s, u"B"_s),
+        Drawing(u"A-1"_s, u"T"_s),
     };
 
     for (const Drawing& a : items) {
@@ -366,8 +391,14 @@ void TestDrawing::greaterOrEqualIsGreaterOrEqual() {
 
 void TestDrawing::comparisonOperatorsAreConsistent() {
     const QVector<Drawing> items = {
-        Drawing(),         Drawing("A", "A"),   Drawing("A", "B"),   Drawing("B", "A"),
-        Drawing("B", "B"), Drawing("A-1", "T"), Drawing("A-2", "T"), Drawing("B-1", "A"),
+        Drawing(),
+        Drawing(u"A"_s, u"A"_s),
+        Drawing(u"A"_s, u"B"_s),
+        Drawing(u"B"_s, u"A"_s),
+        Drawing(u"B"_s, u"B"_s),
+        Drawing(u"A-1"_s, u"T"_s),
+        Drawing(u"A-2"_s, u"T"_s),
+        Drawing(u"B-1"_s, u"A"_s),
     };
 
     for (const Drawing& a : items) {
@@ -404,8 +435,8 @@ void TestDrawing::comparisonOperatorsAreConsistent() {
 // ---------- qHash ----------
 
 void TestDrawing::qHashEqualObjectsHaveEqualHash() {
-    Drawing a("A-1", "T");
-    Drawing b("A-1", "T");
+    Drawing a(u"A-1"_s, u"T"_s);
+    Drawing b(u"A-1"_s, u"T"_s);
     QCOMPARE(a, b);
     QCOMPARE(qHash(a), qHash(b));
 
@@ -417,28 +448,28 @@ void TestDrawing::qHashEqualObjectsHaveEqualHash() {
 
 void TestDrawing::qHashWorksInQHash() {
     QHash<Drawing, int> map;
-    map.insert(Drawing("A-1", "T1"), 1);
-    map.insert(Drawing("A-2", "T2"), 2);
+    map.insert(Drawing(u"A-1"_s, u"T1"_s), 1);
+    map.insert(Drawing(u"A-2"_s, u"T2"_s), 2);
 
     QCOMPARE(map.size(), 2);
-    QCOMPARE(map.value(Drawing("A-1", "T1")), 1);
-    QCOMPARE(map.value(Drawing("A-2", "T2")), 2);
+    QCOMPARE(map.value(Drawing(u"A-1"_s, u"T1"_s)), 1);
+    QCOMPARE(map.value(Drawing(u"A-2"_s, u"T2"_s)), 2);
 
-    map.insert(Drawing("A-1", "T1"), 10);
+    map.insert(Drawing(u"A-1"_s, u"T1"_s), 10);
     QCOMPARE(map.size(), 2);
-    QCOMPARE(map.value(Drawing("A-1", "T1")), 10);
+    QCOMPARE(map.value(Drawing(u"A-1"_s, u"T1"_s)), 10);
 }
 
 void TestDrawing::qHashWorksInQSet() {
     QSet<Drawing> set;
-    set.insert(Drawing("A-1", "T"));
-    set.insert(Drawing("A-1", "T"));
-    set.insert(Drawing("A-1", "U"));
+    set.insert(Drawing(u"A-1"_s, u"T"_s));
+    set.insert(Drawing(u"A-1"_s, u"T"_s));
+    set.insert(Drawing(u"A-1"_s, u"U"_s));
 
     QCOMPARE(set.size(), 2);
-    QVERIFY(set.contains(Drawing("A-1", "T")));
-    QVERIFY(set.contains(Drawing("A-1", "U")));
-    QVERIFY(!set.contains(Drawing("A-1", "V")));
+    QVERIFY(set.contains(Drawing(u"A-1"_s, u"T"_s)));
+    QVERIFY(set.contains(Drawing(u"A-1"_s, u"U"_s)));
+    QVERIFY(!set.contains(Drawing(u"A-1"_s, u"V"_s)));
 }
 
 // ---------- QDataStream ----------
@@ -462,13 +493,13 @@ static Drawing deserialize(const QByteArray& data) {
 void TestDrawing::serializationRoundTrip_data() {
     QTest::addColumn<Drawing>("drawing");
 
-    QTest::newRow("regular") << Drawing("A-001", "Корпус");
+    QTest::newRow("regular") << Drawing(u"A-001"_s, u"Корпус"_s);
     QTest::newRow("empty") << Drawing();
-    QTest::newRow("only number") << Drawing("A-001", "");
-    QTest::newRow("only title") << Drawing("", "Корпус");
-    QTest::newRow("unicode") << Drawing("№1", "Чертёж «Основа»");
-    QTest::newRow("long strings") << Drawing(QString(1000, 'n'), QString(1000, 't'));
-    QTest::newRow("special chars") << Drawing("a\tb\nc", "x\"y\\z");
+    QTest::newRow("only number") << Drawing(u"A-001"_s, u""_s);
+    QTest::newRow("only title") << Drawing(u""_s, u"Корпус"_s);
+    QTest::newRow("unicode") << Drawing(u"№1"_s, u"Чертёж «Основа»"_s);
+    QTest::newRow("long strings") << Drawing(QString(1000, u'n'), QString(1000, u't'));
+    QTest::newRow("special chars") << Drawing(u"a\tb\nc"_s, u"x\"y\\z"_s);
 }
 
 void TestDrawing::serializationRoundTrip() {
@@ -496,10 +527,10 @@ void TestDrawing::serializationDefaultConstructed() {
 
 void TestDrawing::serializationMultipleObjects() {
     const QVector<Drawing> src = {
-        Drawing("A-1", "Alpha"),
-        Drawing("A-2", "Beta"),
+        Drawing(u"A-1"_s, u"Alpha"_s),
+        Drawing(u"A-2"_s, u"Beta"_s),
         Drawing(),
-        Drawing("B-1", "Gamma"),
+        Drawing(u"B-1"_s, u"Gamma"_s),
     };
 
     QByteArray data;

@@ -389,5 +389,5 @@ void TestRecordLink::deserializeTruncatedStreamThrows() {
     QVERIFY_THROWS_EXCEPTION(RuntimeError, rl.deserialize(in));
 }
 
-QTEST_MAIN(TestRecordLink)
+QTEST_APPLESS_MAIN(TestRecordLink)
 #include "test_RecordLink.moc"

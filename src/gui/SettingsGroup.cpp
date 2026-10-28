@@ -1,8 +1,8 @@
 ﻿#include "SettingsGroup.h"
 
 SettingsGroup::SettingsGroup(const QString& groupName, QObject* parent)
-    : m_groupName(groupName)
-    , QObject(parent) { }
+    : QObject(parent)
+    , m_groupName(groupName) { }
 
 bool SettingsGroup::operator ==(const SettingsGroup& other) const {
     return m_groupName == other.m_groupName && m_parameters == other.m_parameters;

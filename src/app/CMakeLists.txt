@@ -1,4 +1,4 @@
-﻿find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets LinguistTools Sql Network Concurrent)
+﻿find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets LinguistTools)
 
 qt_standard_project_setup()
 
@@ -7,12 +7,8 @@ add_executable(mdt_app WIN32 MACOSX_BUNDLE
 )
 
 target_link_libraries(mdt_app PRIVATE
-    Qt6::Gui
-    Qt6::Widgets
-    Qt6::Sql
-    Qt6::Network
-    Qt6::Concurrent
-    mdt_gui)
+    mdt_gui
+)
 
 qt_add_translations(
     TARGETS mdt_app

@@ -74,19 +74,19 @@ private:
 
 namespace {
     const QString& kDefaultFormat() {
-        static const QString str = QStringLiteral("dd.MM.yyyy");
+        static const QString str = u"dd.MM.yyyy"_s;
         return str;
     }
     const QString& kDateStr1() {
-        static const QString str = QStringLiteral("01.01.2000");
+        static const QString str = u"01.01.2000"_s;
         return str;
     }
     const QString& kDateStr2() {
-        static const QString str = QStringLiteral("15.06.2020");
+        static const QString str = u"15.06.2020"_s;
         return str;
     }
     const QString& kDateStr3() {
-        static const QString str = QStringLiteral("31.12.1999");
+        static const QString str = u"31.12.1999"_s;
         return str;
     }
 } // namespace
@@ -121,7 +121,7 @@ void TestDatesList::insertByStringValid() {
 }
 
 void TestDatesList::insertByStringInvalidFormat() {
-    auto id = m_list.insert("not-a-date");
+    auto id = m_list.insert(u"not-a-date"_s);
     QVERIFY(!id.has_value());
     QCOMPARE(m_list.lastError(), DatesList::FormatError);
     QCOMPARE(m_list.size(), 0);
@@ -182,7 +182,7 @@ void TestDatesList::removeByStringNotFound() {
 }
 
 void TestDatesList::removeByStringInvalidFormat() {
-    QVERIFY(!m_list.remove("bad-date"));
+    QVERIFY(!m_list.remove(u"bad-date"_s));
     QCOMPARE(m_list.lastError(), DatesList::FormatError);
 }
 
@@ -230,7 +230,7 @@ void TestDatesList::getIdByStringNotFound() {
 }
 
 void TestDatesList::getIdByStringInvalidFormat() {
-    auto got = m_list.getId("bad-date");
+    auto got = m_list.getId(u"bad-date"_s);
     QVERIFY(!got.has_value());
     QCOMPARE(m_list.lastError(), DatesList::FormatError);
 }
@@ -294,16 +294,16 @@ void TestDatesList::getStrValueInvalidId() {
 // ---------- format ----------
 
 void TestDatesList::setGetDateFormat() {
-    const QString newFormat = "yyyy-MM-dd";
+    const QString newFormat = u"yyyy-MM-dd"_s;
     m_list.setDateFormat(newFormat);
     QCOMPARE(m_list.getDateFormat(), newFormat);
 }
 
 void TestDatesList::customFormatRoundTrip() {
-    const QString newFormat = "yyyy-MM-dd";
+    const QString newFormat = u"yyyy-MM-dd"_s;
     m_list.setDateFormat(newFormat);
 
-    const QString dateStr = "2021-03-15";
+    const QString dateStr = u"2021-03-15"_s;
     auto id = m_list.insert(dateStr);
     QVERIFY(id.has_value());
     QCOMPARE(m_list.lastError(), DatesList::NoError);
@@ -313,7 +313,7 @@ void TestDatesList::customFormatRoundTrip() {
     QVERIFY(str.has_value());
     QCOMPARE(str.value(), dateStr);
 
-    auto bad = m_list.insert("15.03.2021");
+    auto bad = m_list.insert(u"15.03.2021"_s);
     QVERIFY(!bad.has_value());
     QCOMPARE(m_list.lastError(), DatesList::FormatError);
 }
@@ -330,8 +330,8 @@ void TestDatesList::strToDateValid() {
 }
 
 void TestDatesList::strToDateInvalid() {
-    QVERIFY(!DatesList::strToDate("bad-date").has_value());
-    QVERIFY(!DatesList::strToDate("2020-13-45").has_value());
+    QVERIFY(!DatesList::strToDate(u"bad-date"_s).has_value());
+    QVERIFY(!DatesList::strToDate(u"2020-13-45"_s).has_value());
 }
 
 void TestDatesList::dateToStrValid() {
@@ -367,9 +367,9 @@ void TestDatesList::checkDateInvalid() {
 }
 
 void TestDatesList::checkDateStrValid() {
-    auto str1 = QString("30.12.1899");
-    auto str2 = QString("31.12.9999");
-    auto str3 = QString("20.06.2072");
+    auto str1 = QString(u"30.12.1899"_s);
+    auto str2 = QString(u"31.12.9999"_s);
+    auto str3 = QString(u"20.06.2072"_s);
 
     QVERIFY(DatesList::checkDate(str1));
     QVERIFY(DatesList::checkDate(str2));
@@ -377,9 +377,9 @@ void TestDatesList::checkDateStrValid() {
 }
 
 void TestDatesList::checkDateStrInvalid() {
-    auto str1 = QString("29.12.1899");
-    auto str2 = QString("32.12.9999");
-    auto str3 = QString("15.15.1935");
+    auto str1 = QString(u"29.12.1899"_s);
+    auto str2 = QString(u"32.12.9999"_s);
+    auto str3 = QString(u"15.15.1935"_s);
 
     QVERIFY(!DatesList::checkDate(str1));
     QVERIFY(!DatesList::checkDate(str2));
@@ -389,7 +389,7 @@ void TestDatesList::checkDateStrInvalid() {
 // ---------- lastError ----------
 
 void TestDatesList::lastErrorResetOnSuccess() {
-    m_list.insert("bad-date");
+    m_list.insert(u"bad-date"_s);
     QCOMPARE(m_list.lastError(), DatesList::FormatError);
 
     auto id = m_list.insert(kDateStr1());

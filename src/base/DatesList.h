@@ -3,6 +3,8 @@
 
 #include "CustomList.h"
 
+using namespace Qt::Literals::StringLiterals;
+
 namespace mdt {
     namespace work {
         constexpr const int START_EXCEL_DATE = 2415019; // 30.12.1899
@@ -33,15 +35,15 @@ namespace mdt {
             static QString getDateFormat();
 
             static std::optional<QString> dateToStr(qint32 date,
-                                                    const QString &format = "dd.MM.yyyy");
+                                                    const QString &format = u"dd.MM.yyyy"_s);
             static std::optional<qint32> strToDate(const QString &date,
-                                                   const QString &format = "dd.MM.yyyy");
+                                                   const QString &format = u"dd.MM.yyyy"_s);
 
             static bool checkDate(qint32 date);
-            static bool checkDate(const QString &date, const QString &format = "dd.MM.yyyy");
+            static bool checkDate(const QString &date, const QString &format = u"dd.MM.yyyy"_s);
 
         private:
-            static inline QString m_format = "dd.MM.yyyy";
+            static inline QString m_format = u"dd.MM.yyyy"_s;
             mutable ErrorType m_error { ErrorType::NoError };
 
             void setError(ErrorType error) const {

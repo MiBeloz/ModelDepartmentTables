@@ -15,6 +15,7 @@ using mdt::Drawing;
 using mdt::work::DatesList;
 using mdt::work::Record;
 using mdt::work::StorageManager;
+using namespace Qt::Literals::StringLiterals;
 
 class TestStorageManager : public QObject {
     Q_OBJECT
@@ -96,13 +97,13 @@ private slots:
         qDebug() << "Elapsed:" << elapsed << "ms";
         qDebug() << "Success:" << successCount.loadAcquire() << "Fail:" << failCount.loadAcquire();
 
-        _scope.metric("threadCount", threadCount)
-            .metric("recordsPerThread", recordsPerThread)
-            .metric("totalRecords", totalRecords)
-            .metric("addOk", successCount.loadAcquire())
-            .metric("addFail", failCount.loadAcquire())
-            .metric("elapsedMs", elapsed)
-            .metric("finalRecords", storageManager.countRecords());
+        _scope.metric(u"threadCount"_s, threadCount)
+            .metric(u"recordsPerThread"_s, recordsPerThread)
+            .metric(u"totalRecords"_s, totalRecords)
+            .metric(u"addOk"_s, successCount.loadAcquire())
+            .metric(u"addFail"_s, failCount.loadAcquire())
+            .metric(u"elapsedMs"_s, elapsed)
+            .metric(u"finalRecords"_s, storageManager.countRecords());
 
         // === Проверки ===
 
@@ -184,13 +185,13 @@ private slots:
         const qint64 elapsed = timer.elapsed();
 
         qDebug() << "Elapsed:" << elapsed << "ms";
-        _scope.metric("threadCount", threadCount)
-            .metric("recordsPerThread", recordsPerThread)
-            .metric("totalRecords", totalRecords)
-            .metric("addOk", addSuccess.loadAcquire())
-            .metric("removeOk", removeSuccess.loadAcquire())
-            .metric("elapsedMs", elapsed)
-            .metric("finalRecords", sm.countRecords());
+        _scope.metric(u"threadCount"_s, threadCount)
+            .metric(u"recordsPerThread"_s, recordsPerThread)
+            .metric(u"totalRecords"_s, totalRecords)
+            .metric(u"addOk"_s, addSuccess.loadAcquire())
+            .metric(u"removeOk"_s, removeSuccess.loadAcquire())
+            .metric(u"elapsedMs"_s, elapsed)
+            .metric(u"finalRecords"_s, sm.countRecords());
 
         QCOMPARE(removeSuccess.loadAcquire(), totalRecords);
         QCOMPARE(sm.countRecords(), static_cast<qsizetype>(0));
@@ -245,13 +246,13 @@ private slots:
         const qint64 elapsed = timer.elapsed();
 
         qDebug() << "Elapsed:" << elapsed << "ms";
-        _scope.metric("threadCount", threadCount)
-            .metric("recordsPerThread", recordsPerThread)
-            .metric("totalRecords", totalRecords)
-            .metric("addOk", addSuccess.loadAcquire())
-            .metric("getterIter", getterIterations.loadAcquire())
-            .metric("elapsedMs", elapsed)
-            .metric("finalRecords", sm.countRecords());
+        _scope.metric(u"threadCount"_s, threadCount)
+            .metric(u"recordsPerThread"_s, recordsPerThread)
+            .metric(u"totalRecords"_s, totalRecords)
+            .metric(u"addOk"_s, addSuccess.loadAcquire())
+            .metric(u"getterIter"_s, getterIterations.loadAcquire())
+            .metric(u"elapsedMs"_s, elapsed)
+            .metric(u"finalRecords"_s, sm.countRecords());
 
         QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
         QVERIFY(getterIterations.loadAcquire() > 0);
@@ -281,12 +282,12 @@ private slots:
                         .date(makeDate(t, i))
                         .drawing(makeDrawing(t, i))
                         .amount(t * addsPerThread + i + 1)
-                        .executor(QString("E_%1_%2").arg(t).arg(i))
-                        .author(QString("A_%1_%2").arg(t).arg(i))
-                        .castingMaterial(QString("C_%1_%2").arg(t).arg(i))
-                        .modelMaterial(QString("M_%1_%2").arg(t).arg(i))
-                        .machine(QString("Mc_%1_%2").arg(t).arg(i))
-                        .note(QString("N_%1_%2").arg(t).arg(i));
+                        .executor(QString(u"E_%1_%2").arg(t).arg(i))
+                        .author(QString(u"A_%1_%2").arg(t).arg(i))
+                        .castingMaterial(QString(u"C_%1_%2").arg(t).arg(i))
+                        .modelMaterial(QString(u"M_%1_%2").arg(t).arg(i))
+                        .machine(QString(u"Mc_%1_%2").arg(t).arg(i))
+                        .note(QString(u"N_%1_%2").arg(t).arg(i));
                     success.fetchAndAddOrdered(1);
                 }
             }));
@@ -298,11 +299,11 @@ private slots:
         const qint64 elapsed = timer.elapsed();
 
         qDebug() << "Elapsed:" << elapsed << "ms";
-        _scope.metric("threadCount", threadCount)
-            .metric("total", total)
-            .metric("adderOk", success.loadAcquire())
-            .metric("elapsedMs", elapsed)
-            .metric("finalRecords", sm.countRecords());
+        _scope.metric(u"threadCount"_s, threadCount)
+            .metric(u"total"_s, total)
+            .metric(u"adderOk"_s, success.loadAcquire())
+            .metric(u"elapsedMs"_s, elapsed)
+            .metric(u"finalRecords"_s, sm.countRecords());
 
         QCOMPARE(sm.countRecords(), static_cast<qsizetype>(0));
 
@@ -365,13 +366,13 @@ private slots:
         const qint64 elapsed = timer.elapsed();
 
         qDebug() << "Elapsed:" << elapsed << "ms";
-        _scope.metric("threadCount", threadCount)
-            .metric("recordsPerThread", recordsPerThread)
-            .metric("totalRecords", totalRecords)
-            .metric("addOk", addSuccess.loadAcquire())
-            .metric("removerOk", removed.loadAcquire())
-            .metric("elapsedMs", elapsed)
-            .metric("finalRecords", sm.countRecords());
+        _scope.metric(u"threadCount"_s, threadCount)
+            .metric(u"recordsPerThread"_s, recordsPerThread)
+            .metric(u"totalRecords"_s, totalRecords)
+            .metric(u"addOk"_s, addSuccess.loadAcquire())
+            .metric(u"removerOk"_s, removed.loadAcquire())
+            .metric(u"elapsedMs"_s, elapsed)
+            .metric(u"finalRecords"_s, sm.countRecords());
 
         QCOMPARE(removed.loadAcquire(), totalRecords);
 
@@ -423,11 +424,11 @@ private slots:
         for (int t = 0; t < threadCount; ++t) {
             futures.append(QtConcurrent::run([&, t]() {
                 for (int i = 0; i < 10000; ++i) {
-                    const QString key = QString("E_%1_%2").arg(t).arg(i);
+                    const QString key = QString(u"E_%1_%2").arg(t).arg(i);
                     if (i % 2 == 0) {
                         sm.add().executor(key);
                     } else {
-                        sm.remove().executor(QString("E_%1_%2").arg(t).arg(i - 1));
+                        sm.remove().executor(QString(u"E_%1_%2").arg(t).arg(i - 1));
                     }
                     adderRemoverIters.fetchAndAddOrdered(1);
                 }
@@ -444,12 +445,12 @@ private slots:
         const qint64 elapsed = timer.elapsed();
 
         qDebug() << "Elapsed:" << elapsed << "ms";
-        _scope.metric("threadCount", threadCount)
-            .metric("adderRemoverIters", adderRemoverIters.loadAcquire())
-            .metric("getterIters", getterIters.loadAcquire())
-            .metric("counterIters", counterIters.loadAcquire())
-            .metric("elapsedMs", elapsed)
-            .metric("finalRecords", sm.countRecords());
+        _scope.metric(u"threadCount"_s, threadCount)
+            .metric(u"adderRemoverIters"_s, adderRemoverIters.loadAcquire())
+            .metric(u"getterIters"_s, getterIters.loadAcquire())
+            .metric(u"counterIters"_s, counterIters.loadAcquire())
+            .metric(u"elapsedMs"_s, elapsed)
+            .metric(u"finalRecords"_s, sm.countRecords());
 
         QVERIFY(getterIters.loadAcquire() > 0);
         QVERIFY(counterIters.loadAcquire() > 0);
@@ -505,11 +506,11 @@ private slots:
         const qint64 elapsed = timer.elapsed();
 
         qDebug() << "Elapsed:" << elapsed << "ms";
-        _scope.metric("threadCount", threadCount)
-            .metric("recordsPerThread", recordsPerThread)
-            .metric("totalRecords", totalRecords)
-            .metric("elapsedMs", elapsed)
-            .metric("finalRecords", sm.countRecords());
+        _scope.metric(u"threadCount"_s, threadCount)
+            .metric(u"recordsPerThread"_s, recordsPerThread)
+            .metric(u"totalRecords"_s, totalRecords)
+            .metric(u"elapsedMs"_s, elapsed)
+            .metric(u"finalRecords"_s, sm.countRecords());
 
         QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords * 2));
         QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(totalRecords * 2));
@@ -583,10 +584,10 @@ private slots:
 
         qDebug() << "ElapsedSerialize:" << elapsedSerialize << "ms";
         qDebug() << "ElapsedDeserialize:" << elapsedDeserialize << "ms";
-        _scope.metric("elapsedSerialize", elapsedSerialize)
-            .metric("elapsedDeserialize", elapsedDeserialize)
-            .metric("totalRecords", totalRecords)
-            .metric("finalRecords", sm.countRecords());
+        _scope.metric(u"elapsedSerialize"_s, elapsedSerialize)
+            .metric(u"elapsedDeserialize"_s, elapsedDeserialize)
+            .metric(u"totalRecords"_s, totalRecords)
+            .metric(u"finalRecords"_s, sm.countRecords());
 
         QCOMPARE(sm2.countRecords(), static_cast<qsizetype>(totalRecords));
 
@@ -646,11 +647,11 @@ private slots:
         const qint64 elapsed = timer.elapsed();
 
         qDebug() << "Elapsed:" << elapsed << "ms";
-        _scope.metric("threadCount", threadCount)
-            .metric("recordsPerThread", recordsPerThread)
-            .metric("totalRecords", totalRecords)
-            .metric("elapsedMs", elapsed)
-            .metric("finalRecords", sm.countRecords());
+        _scope.metric(u"threadCount"_s, threadCount)
+            .metric(u"recordsPerThread"_s, recordsPerThread)
+            .metric(u"totalRecords"_s, totalRecords)
+            .metric(u"elapsedMs"_s, elapsed)
+            .metric(u"finalRecords"_s, sm.countRecords());
 
         QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
         QVERIFY(serializations.loadAcquire() > 0);
@@ -703,11 +704,11 @@ private slots:
             const qint64 elapsedA = timerA.elapsed();
 
             qDebug() << "Elapsed:" << elapsedA << "ms";
-            _scope.metric("writerCount", writerCount)
-                .metric("recordsPerWriter", recordsPerWriter)
-                .metric("totalRecords", totalRecords)
-                .metric("elapsedMs", elapsedA)
-                .metric("finalRecords", sm.countRecords());
+            _scope.metric(u"writerCount"_s, writerCount)
+                .metric(u"recordsPerWriter"_s, recordsPerWriter)
+                .metric(u"totalRecords"_s, totalRecords)
+                .metric(u"elapsedMs"_s, elapsedA)
+                .metric(u"finalRecords"_s, sm.countRecords());
 
             QCOMPARE(success.loadAcquire(), totalRecords);
             QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
@@ -826,12 +827,12 @@ private slots:
                         .date(makeDate(2, i))
                         .drawing(makeDrawing(2, 200000 + i))
                         .amount(1000000 + i)
-                        .executor(QString("E_adder_%1").arg(i))
-                        .author(QString("A_adder_%1").arg(i))
-                        .castingMaterial(QString("C_adder_%1").arg(i))
-                        .modelMaterial(QString("M_adder_%1").arg(i))
-                        .machine(QString("Mc_adder_%1").arg(i))
-                        .note(QString("N_adder_%1").arg(i));
+                        .executor(QString(u"E_adder_%1").arg(i))
+                        .author(QString(u"A_adder_%1").arg(i))
+                        .castingMaterial(QString(u"C_adder_%1").arg(i))
+                        .modelMaterial(QString(u"M_adder_%1").arg(i))
+                        .machine(QString(u"Mc_adder_%1").arg(i))
+                        .note(QString(u"N_adder_%1").arg(i));
                     adderIters.fetchAndAddOrdered(1);
                     ++i;
 
@@ -846,12 +847,12 @@ private slots:
                 int i = 0;
                 while (!stopFlag.loadAcquire()) {
                     sm.remove()
-                        .executor(QString("E_adder_%1").arg(i))
-                        .author(QString("A_adder_%1").arg(i))
-                        .castingMaterial(QString("C_adder_%1").arg(i))
-                        .modelMaterial(QString("M_adder_%1").arg(i))
-                        .machine(QString("Mc_adder_%1").arg(i))
-                        .note(QString("N_adder_%1").arg(i));
+                        .executor(QString(u"E_adder_%1").arg(i))
+                        .author(QString(u"A_adder_%1").arg(i))
+                        .castingMaterial(QString(u"C_adder_%1").arg(i))
+                        .modelMaterial(QString(u"M_adder_%1").arg(i))
+                        .machine(QString(u"Mc_adder_%1").arg(i))
+                        .note(QString(u"N_adder_%1").arg(i));
                     removerIters.fetchAndAddOrdered(1);
                     ++i;
 
@@ -946,17 +947,17 @@ private slots:
                      << "counterIters:" << counterIters.loadAcquire()
                      << "serializeIters:" << serializeIters.loadAcquire() << "runTimeMs"
                      << runTimeMs;
-            _scope.metric("elapsed", elapsedB)
-                .metric("addOk", addOk.loadAcquire())
-                .metric("addFail", addFail.loadAcquire())
-                .metric("removeOk", removeOk.loadAcquire())
-                .metric("removeFail", removeFail.loadAcquire())
-                .metric("adderIters", adderIters.loadAcquire())
-                .metric("removerIters", removerIters.loadAcquire())
-                .metric("getterIters", getterIters.loadAcquire())
-                .metric("counterIters", counterIters.loadAcquire())
-                .metric("serializeIters", serializeIters.loadAcquire())
-                .metric("runTimeMs", runTimeMs);
+            _scope.metric(u"elapsed"_s, elapsedB)
+                .metric(u"addOk"_s, addOk.loadAcquire())
+                .metric(u"addFail"_s, addFail.loadAcquire())
+                .metric(u"removeOk"_s, removeOk.loadAcquire())
+                .metric(u"removeFail"_s, removeFail.loadAcquire())
+                .metric(u"adderIters"_s, adderIters.loadAcquire())
+                .metric(u"removerIters"_s, removerIters.loadAcquire())
+                .metric(u"getterIters"_s, getterIters.loadAcquire())
+                .metric(u"counterIters"_s, counterIters.loadAcquire())
+                .metric(u"serializeIters"_s, serializeIters.loadAcquire())
+                .metric(u"runTimeMs"_s, runTimeMs);
 
             {
                 // Все потоки стоят. Состояние sm фиксировано.
@@ -1102,7 +1103,7 @@ private slots:
 
 private:
     static Drawing makeValidDrawing(int n = 1);
-    static Record makeValidRecord(const QString& date = QStringLiteral("15.01.2024"),
+    static Record makeValidRecord(const QString& date = u"15.01.2024"_s,
                                   qint32 amount = 1,
                                   const QStringList& executors = { },
                                   const QStringList& authors = { },
@@ -1115,24 +1116,24 @@ private:
     QString makeDate(int threadId, int index) const {
         QDate base(2000, 1, 1);
         QDate d = base.addDays(threadId * 1000 + index);
-        return d.toString("dd.MM.yyyy");
+        return d.toString(u"dd.MM.yyyy");
     }
 
     Drawing makeDrawing(int threadId, int index) const {
-        return Drawing(QString("DWG-%1-%2").arg(threadId).arg(index),
-                       QString("Title-%1-%2").arg(threadId).arg(index));
+        return Drawing(QString(u"DWG-%1-%2").arg(threadId).arg(index),
+                       QString(u"Title-%1-%2").arg(threadId).arg(index));
     }
 
     Record createRecord(int threadId, int index) const {
         return Record(makeDate(threadId, index),
                       makeDrawing(threadId, index),
                       index + 1,
-                      QStringList { QString("Exec_%1_%2").arg(threadId).arg(index) },
-                      QStringList { QString("Auth_%1_%2").arg(threadId).arg(index) },
-                      QStringList { QString("Cast_%1_%2").arg(threadId).arg(index) },
-                      QStringList { QString("Model_%1_%2").arg(threadId).arg(index) },
-                      QStringList { QString("Mach_%1_%2").arg(threadId).arg(index) },
-                      QStringList { QString("Note_%1_%2").arg(threadId).arg(index) });
+                      QStringList { QString(u"Exec_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString(u"Auth_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString(u"Cast_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString(u"Model_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString(u"Mach_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString(u"Note_%1_%2").arg(threadId).arg(index) });
     }
 
     QString makeKey(const Record& r) const {
@@ -1140,13 +1141,13 @@ private:
                              r.drawing().getNumber(),
                              r.drawing().getTitle(),
                              QString::number(r.amount()),
-                             r.executors().join(","),
-                             r.authors().join(","),
-                             r.castingMaterials().join(","),
-                             r.modelMaterials().join(","),
-                             r.machines().join(","),
-                             r.notes().join(",") }
-            .join("|");
+                             r.executors().join(u","),
+                             r.authors().join(u","),
+                             r.castingMaterials().join(u","),
+                             r.modelMaterials().join(u","),
+                             r.machines().join(u","),
+                             r.notes().join(u",") }
+            .join(u"|");
     }
 
     void verifyRecordIntegrity(const Record& r, const StorageManager& sm) const {
@@ -1164,7 +1165,7 @@ private:
         //  «полубитая»: RecordLink ещё ссылается на удалённый id.
         const auto allDates = sm.get().datesStr();
         QVERIFY2(allDates.contains(r.date()),
-                 qPrintable(QString("date '%1' отсутствует в StorageLists::dates").arg(r.date())));
+                 qPrintable(QString(u"date '%1' отсутствует в StorageLists::dates").arg(r.date())));
 
         const auto allDrawings = sm.get().drawings();
         bool drawingFound = false;
@@ -1175,20 +1176,20 @@ private:
             }
         }
         QVERIFY2(drawingFound,
-                 qPrintable(QString("drawing '%1 / %2' отсутствует в StorageLists::drawings")
+                 qPrintable(QString(u"drawing '%1 / %2' отсутствует в StorageLists::drawings")
                                 .arg(r.drawing().getNumber(), r.drawing().getTitle())));
 
         const auto allAmounts = sm.get().amounts();
         QVERIFY2(allAmounts.contains(r.amount()),
                  qPrintable(
-                     QString("amount '%1' отсутствует в StorageLists::amounts").arg(r.amount())));
+                     QString(u"amount '%1' отсутствует в StorageLists::amounts").arg(r.amount())));
 
         auto checkList =
             [](const QStringList& values, const auto& allValues, const char* fieldName) {
                 for (const QString& v : values) {
                     if (!allValues.contains(v)) {
                         QFAIL(qPrintable(
-                            QString("%1 '%2' отсутствует в StorageLists").arg(fieldName, v)));
+                            QString(u"%1 '%2' отсутствует в StorageLists").arg(fieldName, v)));
                     }
                 }
             };
@@ -1203,7 +1204,7 @@ private:
 };
 
 Drawing TestStorageManager::makeValidDrawing(int n) {
-    return Drawing(QString::number(n), QStringLiteral("Title %1").arg(n));
+    return Drawing(QString::number(n), u"Title %1"_s.arg(n));
 }
 
 Record TestStorageManager::makeValidRecord(const QString& date,
@@ -1237,10 +1238,7 @@ void TestStorageManager::testEmptyOnCreate() {
 
 void TestStorageManager::testAddRecord() {
     StorageManager sm;
-    const Record r = makeValidRecord(QStringLiteral("15.01.2024"),
-                                     5,
-                                     { QStringLiteral("Ivanov") },
-                                     { QStringLiteral("Petrov") });
+    const Record r = makeValidRecord(u"15.01.2024"_s, 5, { u"Ivanov"_s }, { u"Petrov"_s });
 
     QVERIFY(sm.addRecord(r));
     QCOMPARE(sm.countRecords(), qsizetype(1));
@@ -1258,11 +1256,11 @@ void TestStorageManager::testAddInvalidRecord() {
     QVERIFY(!sm.addRecord(badDate));
 
     // Невалидный drawing (Drawing::Null)
-    const Record badDrawing(QStringLiteral("15.01.2024"), Drawing::Null, 1);
+    const Record badDrawing(u"15.01.2024"_s, Drawing::Null, 1);
     QVERIFY(!sm.addRecord(badDrawing));
 
     // amount < 1
-    const Record badAmount = makeValidRecord(QStringLiteral("15.01.2024"), 0);
+    const Record badAmount = makeValidRecord(u"15.01.2024"_s, 0);
     QVERIFY(!sm.addRecord(badAmount));
 
     QCOMPARE(sm.countRecords(), qsizetype(0));
@@ -1271,18 +1269,18 @@ void TestStorageManager::testAddInvalidRecord() {
 void TestStorageManager::testAddDuplicateValuesInList() {
     StorageManager sm;
 
-    sm.add().executor(QStringLiteral("Ivanov"));
-    sm.add().executor(QStringLiteral("Ivanov"));
-    sm.add().executor(QStringLiteral("Ivanov"));
+    sm.add().executor(u"Ivanov"_s);
+    sm.add().executor(u"Ivanov"_s);
+    sm.add().executor(u"Ivanov"_s);
 
     QCOMPARE(sm.count().executors(), 1);
     QCOMPARE(sm.get().executors().size(), 1);
-    QCOMPARE(sm.get().executors().first(), QStringLiteral("Ivanov"));
+    QCOMPARE(sm.get().executors().first(), u"Ivanov");
 }
 
 void TestStorageManager::testRemoveRecord() {
     StorageManager sm;
-    const Record r = makeValidRecord(QStringLiteral("20.02.2024"), 3, { QStringLiteral("Sidorov") });
+    const Record r = makeValidRecord(u"20.02.2024"_s, 3, { u"Sidorov"_s });
 
     QVERIFY(sm.addRecord(r));
     QCOMPARE(sm.countRecords(), qsizetype(1));
@@ -1294,7 +1292,7 @@ void TestStorageManager::testRemoveRecord() {
 
 void TestStorageManager::testRemoveNonexistentRecord() {
     StorageManager sm;
-    const Record r = makeValidRecord(QStringLiteral("20.02.2024"), 3);
+    const Record r = makeValidRecord(u"20.02.2024"_s, 3);
 
     QVERIFY(!sm.removeRecord(r));
     QCOMPARE(sm.countRecords(), qsizetype(0));
@@ -1308,15 +1306,15 @@ void TestStorageManager::testAdderFluent() {
     StorageManager sm;
 
     sm.add()
-        .date(QStringLiteral("01.03.2024"))
+        .date(u"01.03.2024"_s)
         .drawing(makeValidDrawing(2))
         .amount(10)
-        .executor(QStringLiteral("ExecA"))
-        .author(QStringLiteral("AuthorA"))
-        .castingMaterial(QStringLiteral("CastA"))
-        .modelMaterial(QStringLiteral("ModelA"))
-        .machine(QStringLiteral("MachineA"))
-        .note(QStringLiteral("NoteA"));
+        .executor(u"ExecA"_s)
+        .author(u"AuthorA"_s)
+        .castingMaterial(u"CastA"_s)
+        .modelMaterial(u"ModelA"_s)
+        .machine(u"MachineA"_s)
+        .note(u"NoteA"_s);
 
     QCOMPARE(sm.count().dates(), 1);
     QCOMPARE(sm.count().amounts(), 1);
@@ -1327,23 +1325,19 @@ void TestStorageManager::testAdderFluent() {
     QCOMPARE(sm.count().machines(), 1);
     QCOMPARE(sm.count().notes(), 1);
 
-    QCOMPARE(sm.get().datesStr().first(), QStringLiteral("01.03.2024"));
+    QCOMPARE(sm.get().datesStr().first(), u"01.03.2024"_s);
     QCOMPARE(sm.get().amounts().first(), 10);
-    QCOMPARE(sm.get().executors().first(), QStringLiteral("ExecA"));
+    QCOMPARE(sm.get().executors().first(), u"ExecA"_s);
 }
 
 void TestStorageManager::testRemoverFluent() {
     StorageManager sm;
-    sm.add()
-        .date(QStringLiteral("02.03.2024"))
-        .amount(1)
-        .executor(QStringLiteral("ExecB"))
-        .note(QStringLiteral("NoteB"));
+    sm.add().date(u"02.03.2024"_s).amount(1).executor(u"ExecB"_s).note(u"NoteB"_s);
 
     QCOMPARE(sm.count().executors(), 1);
     QCOMPARE(sm.count().notes(), 1);
 
-    sm.remove().executor(QStringLiteral("ExecB")).note(QStringLiteral("NoteB"));
+    sm.remove().executor(u"ExecB"_s).note(u"NoteB"_s);
 
     QCOMPARE(sm.count().executors(), 0);
     QCOMPARE(sm.count().notes(), 0);
@@ -1351,15 +1345,11 @@ void TestStorageManager::testRemoverFluent() {
 
 void TestStorageManager::testGetter() {
     StorageManager sm;
-    sm.add()
-        .date(QStringLiteral("01.04.2024"))
-        .amount(7)
-        .executor(QStringLiteral("ExecC"))
-        .author(QStringLiteral("AuthorC"));
+    sm.add().date(u"01.04.2024"_s).amount(7).executor(u"ExecC"_s).author(u"AuthorC"_s);
 
     const auto dates = sm.get().datesStr();
     QCOMPARE(dates.size(), 1);
-    QCOMPARE(dates.first(), QStringLiteral("01.04.2024"));
+    QCOMPARE(dates.first(), u"01.04.2024"_s);
 
     const auto amounts = sm.get().amounts();
     QCOMPARE(amounts.size(), 1);
@@ -1367,20 +1357,20 @@ void TestStorageManager::testGetter() {
 
     const auto execs = sm.get().executors();
     QCOMPARE(execs.size(), 1);
-    QCOMPARE(execs.first(), QStringLiteral("ExecC"));
+    QCOMPARE(execs.first(), u"ExecC"_s);
 
     const auto authors = sm.get().authors();
     QCOMPARE(authors.size(), 1);
-    QCOMPARE(authors.first(), QStringLiteral("AuthorC"));
+    QCOMPARE(authors.first(), u"AuthorC"_s);
 }
 
 void TestStorageManager::testCounter() {
     StorageManager sm;
 
-    sm.add().date(QStringLiteral("01.05.2024"));
-    sm.add().date(QStringLiteral("02.05.2024"));
-    sm.add().date(QStringLiteral("01.05.2024"));
-    sm.add().date(QStringLiteral("01.05.2024"));
+    sm.add().date(u"01.05.2024"_s);
+    sm.add().date(u"02.05.2024"_s);
+    sm.add().date(u"01.05.2024"_s);
+    sm.add().date(u"01.05.2024"_s);
 
     QCOMPARE(sm.count().dates(), 2);
 }
@@ -1391,46 +1381,41 @@ void TestStorageManager::testCounter() {
 
 void TestStorageManager::testDeleteBadLinksOnRemoverDate() {
     StorageManager sm;
-    const Record r = makeValidRecord(QStringLiteral("01.06.2024"), 4, { QStringLiteral("ExecD") });
+    const Record r = makeValidRecord(u"01.06.2024"_s, 4, { u"ExecD"_s });
     QVERIFY(sm.addRecord(r));
     QCOMPARE(sm.countRecords(), qsizetype(1));
 
-    sm.remove().date(QStringLiteral("01.06.2024"));
+    sm.remove().date(u"01.06.2024"_s);
     QCOMPARE(sm.countRecords(), qsizetype(0));
     QVERIFY(sm.getRecords().isEmpty());
 }
 
 void TestStorageManager::testDeleteBadLinksOnRemoverExecutor() {
     StorageManager sm;
-    const Record r = makeValidRecord(QStringLiteral("01.07.2024"),
-                                     2,
-                                     { QStringLiteral("ExecE1"), QStringLiteral("ExecE2") });
+    const Record r = makeValidRecord(u"01.07.2024"_s, 2, { u"ExecE1"_s, u"ExecE2"_s });
     QVERIFY(sm.addRecord(r));
 
-    sm.remove().executor(QStringLiteral("ExecE1"));
+    sm.remove().executor(u"ExecE1"_s);
 
     QCOMPARE(sm.countRecords(), qsizetype(1));
     const QList<Record> records = sm.getRecords();
     QCOMPARE(records.size(), 1);
-    QCOMPARE(records.first().executors(), QStringList { QStringLiteral("ExecE2") });
+    QCOMPARE(records.first().executors(), QStringList { u"ExecE2"_s });
 }
 
 void TestStorageManager::testDeleteBadLinksKeepsRecordIfOnlySomeValuesRemoved() {
     StorageManager sm;
-    const Record r = makeValidRecord(QStringLiteral("15.07.2024"),
+    const Record r = makeValidRecord(u"15.07.2024"_s,
                                      1,
-                                     { QStringLiteral("ExecX") },
-                                     { QStringLiteral("AuthorX") },
-                                     { QStringLiteral("CastX") },
-                                     { QStringLiteral("ModelX") },
-                                     { QStringLiteral("MachineX") },
-                                     { QStringLiteral("NoteX") });
+                                     { u"ExecX"_s },
+                                     { u"AuthorX"_s },
+                                     { u"CastX"_s },
+                                     { u"ModelX"_s },
+                                     { u"MachineX"_s },
+                                     { u"NoteX"_s });
     QVERIFY(sm.addRecord(r));
 
-    sm.remove()
-        .executor(QStringLiteral("ExecX"))
-        .castingMaterial(QStringLiteral("CastX"))
-        .machine(QStringLiteral("MachineX"));
+    sm.remove().executor(u"ExecX"_s).castingMaterial(u"CastX"_s).machine(u"MachineX"_s);
 
     QCOMPARE(sm.countRecords(), qsizetype(1));
     const Record got = sm.getRecords().constFirst();
@@ -1438,9 +1423,9 @@ void TestStorageManager::testDeleteBadLinksKeepsRecordIfOnlySomeValuesRemoved() 
     QVERIFY(got.castingMaterials().isEmpty());
     QVERIFY(got.machines().isEmpty());
 
-    QCOMPARE(got.authors(), QStringList { QStringLiteral("AuthorX") });
-    QCOMPARE(got.modelMaterials(), QStringList { QStringLiteral("ModelX") });
-    QCOMPARE(got.notes(), QStringList { QStringLiteral("NoteX") });
+    QCOMPARE(got.authors(), QStringList { u"AuthorX"_s });
+    QCOMPARE(got.modelMaterials(), QStringList { u"ModelX"_s });
+    QCOMPARE(got.notes(), QStringList { u"NoteX"_s });
 }
 
 // ---------------------------------------------------------------------------
@@ -1451,7 +1436,7 @@ void TestStorageManager::testRecordsCacheInvalidation() {
     StorageManager sm;
     QVERIFY(sm.getRecords().isEmpty());
 
-    const Record r = makeValidRecord(QStringLiteral("01.08.2024"), 1);
+    const Record r = makeValidRecord(u"01.08.2024"_s, 1);
     QVERIFY(sm.addRecord(r));
 
     QCOMPARE(sm.getRecords().size(), 1);
@@ -1467,12 +1452,8 @@ void TestStorageManager::testRecordsCacheInvalidation() {
 
 void TestStorageManager::testSerializeDeserialize() {
     StorageManager src;
-    QVERIFY(src.addRecord(makeValidRecord(QStringLiteral("01.09.2024"),
-                                          11,
-                                          { QStringLiteral("ExecF") },
-                                          { QStringLiteral("AuthorF") })));
-    QVERIFY(src.addRecord(
-        makeValidRecord(QStringLiteral("02.09.2024"), 22, { QStringLiteral("ExecG") })));
+    QVERIFY(src.addRecord(makeValidRecord(u"01.09.2024"_s, 11, { u"ExecF"_s }, { u"AuthorF"_s })));
+    QVERIFY(src.addRecord(makeValidRecord(u"02.09.2024"_s, 22, { u"ExecG"_s })));
 
     QByteArray data;
     {
@@ -1497,7 +1478,7 @@ void TestStorageManager::testSerializeDeserialize() {
 
 void TestStorageManager::testReset() {
     StorageManager sm;
-    QVERIFY(sm.addRecord(makeValidRecord(QStringLiteral("01.10.2024"), 1)));
+    QVERIFY(sm.addRecord(makeValidRecord(u"01.10.2024"_s, 1)));
     QCOMPARE(sm.countRecords(), qsizetype(1));
 
     sm.reset();
@@ -1510,7 +1491,7 @@ void TestStorageManager::testReset() {
 
 void TestStorageManager::testClear() {
     StorageManager sm;
-    QVERIFY(sm.addRecord(makeValidRecord(QStringLiteral("01.11.2024"), 1)));
+    QVERIFY(sm.addRecord(makeValidRecord(u"01.11.2024"_s, 1)));
     QCOMPARE(sm.countRecords(), qsizetype(1));
 
     sm.clear();

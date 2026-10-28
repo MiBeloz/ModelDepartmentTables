@@ -1,8 +1,6 @@
 ﻿file(GLOB_RECURSE SRC_SOURCES "*.cpp")
 file(GLOB_RECURSE SRC_HEADERS "*.h" "*.hpp")
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core)
-
 list(FILTER SRC_SOURCES EXCLUDE REGEX "main\\.cpp$")
 
 add_library(mdt_base STATIC ${SRC_SOURCES} ${SRC_HEADERS} ${UI_FILES})
@@ -17,4 +15,5 @@ target_link_libraries(mdt_base
     PUBLIC
         Qt6::Core
         QXlsx::QXlsx
+        mdt_common_cfg
 )

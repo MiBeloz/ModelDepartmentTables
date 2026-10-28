@@ -16,6 +16,7 @@ using mdt::SaverFile;
 using mdt::Storage;
 using mdt::work::Record;
 using mdt::work::StorageManager;
+using namespace Qt::Literals::StringLiterals;
 
 struct TestData : public Storage {
     int value = 0;
@@ -38,10 +39,10 @@ struct TestData : public Storage {
 
 struct ThrowingData : public Storage {
     void serialize(QDataStream &) const override {
-        throw RuntimeError("serialize failed");
+        throw RuntimeError(u"serialize failed"_s);
     }
     void deserialize(QDataStream &) override {
-        throw RuntimeError("deserialize failed");
+        throw RuntimeError(u"deserialize failed"_s);
     }
 };
 
@@ -93,31 +94,31 @@ private:
         return Record(makeDate(threadId, index),
                       makeDrawing(threadId, index),
                       index + 1,
-                      QStringList { QString("Exec_%1_%2").arg(threadId).arg(index) },
-                      QStringList { QString("Auth_%1_%2").arg(threadId).arg(index) },
-                      QStringList { QString("Cast_%1_%2").arg(threadId).arg(index) },
-                      QStringList { QString("Model_%1_%2").arg(threadId).arg(index) },
-                      QStringList { QString("Mach_%1_%2").arg(threadId).arg(index) },
-                      QStringList { QString("Note_%1_%2").arg(threadId).arg(index) });
+                      QStringList { QString(u"Exec_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString(u"Auth_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString(u"Cast_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString(u"Model_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString(u"Mach_%1_%2").arg(threadId).arg(index) },
+                      QStringList { QString(u"Note_%1_%2").arg(threadId).arg(index) });
     }
 
     QString makeDate(int threadId, int index) const {
         QDate base(2000, 1, 1);
         QDate d = base.addDays(threadId * 1000 + index);
-        return d.toString("dd.MM.yyyy");
+        return d.toString(u"dd.MM.yyyy");
     }
 
     Drawing makeDrawing(int threadId, int index) const {
-        return Drawing(QString("DWG-%1-%2").arg(threadId).arg(index),
-                       QString("Title-%1-%2").arg(threadId).arg(index));
+        return Drawing(QString(u"DWG-%1-%2").arg(threadId).arg(index),
+                       QString(u"Title-%1-%2").arg(threadId).arg(index));
     }
 };
 
 void TestSaverFile::init() {
     m_dir = new QTemporaryDir();
     QVERIFY(m_dir->isValid());
-    m_filePath = m_dir->filePath("data.bin");
-    m_tempPath = m_dir->filePath("data.bin.tmp");
+    m_filePath = m_dir->filePath(u"data.bin"_s);
+    m_tempPath = m_dir->filePath(u"data.bin.tmp"_s);
 }
 
 void TestSaverFile::cleanup() {
@@ -129,15 +130,14 @@ void TestSaverFile::cleanup() {
 
 void TestSaverFile::prepareCreatesTempFile() {
     SaverFile saver(m_filePath, m_tempPath);
-    TestData data { 42, "hello" };
-
+    TestData data { 42, u"hello"_s };
     QVERIFY(saver.prepare(data));
     QVERIFY(QFile::exists(m_tempPath));
 }
 
 void TestSaverFile::prepareSetsDirtyAndAllowsWrite() {
     SaverFile saver(m_filePath, m_tempPath);
-    TestData data { 7, "dirty" };
+    TestData data { 7, u"dirty"_s };
 
     QVERIFY(saver.prepare(data));
     QVERIFY(saver.write());
@@ -145,10 +145,10 @@ void TestSaverFile::prepareSetsDirtyAndAllowsWrite() {
 }
 
 void TestSaverFile::prepareInvalidPathReturnsFalse() {
-    const QString badPath = m_dir->filePath("no_such_dir/data.bin.tmp");
+    const QString badPath = m_dir->filePath(u"no_such_dir/data.bin.tmp"_s);
     SaverFile saver(m_filePath, badPath);
 
-    QVERIFY(!saver.prepare(TestData { 1, "x" }));
+    QVERIFY(!saver.prepare(TestData { 1, u"x"_s }));
 }
 
 void TestSaverFile::prepareThrowsPropagatesAndCleansTemp() {
@@ -161,14 +161,14 @@ void TestSaverFile::prepareThrowsPropagatesAndCleansTemp() {
 void TestSaverFile::prepareCalledTwiceOverwritesTemp() {
     SaverFile saver(m_filePath, m_tempPath);
 
-    QVERIFY(saver.prepare(TestData { 1, "first" }));
-    QVERIFY(saver.prepare(TestData { 2, "second" }));
+    QVERIFY(saver.prepare(TestData { 1, u"first"_s }));
+    QVERIFY(saver.prepare(TestData { 2, u"second"_s }));
     QVERIFY(saver.write());
 
     TestData out;
     QVERIFY(saver.read(out));
     QCOMPARE(out.value, 2);
-    QCOMPARE(out.text, QString("second"));
+    QCOMPARE(out.text, u"second"_s);
 }
 
 // ---------- read() ----------
@@ -183,7 +183,7 @@ void TestSaverFile::readMissingFileReturnsFalse() {
 void TestSaverFile::readRoundTripReturnsSameData() {
     SaverFile saver(m_filePath, m_tempPath);
 
-    const TestData original { 123, "round trip" };
+    const TestData original { 123, u"round trip"_s };
 
     QVERIFY(saver.prepare(original));
     QVERIFY(saver.write());
@@ -222,11 +222,11 @@ void TestSaverFile::readThrowsPropagates() {
 void TestSaverFile::readDoesNotModifyStorageOnFailure() {
     SaverFile saver(m_filePath, m_tempPath);
 
-    TestData out { 999, "unchanged" };
+    TestData out { 999, u"unchanged"_s };
     QVERIFY(!saver.read(out));
 
     QCOMPARE(out.value, 999);
-    QCOMPARE(out.text, QString("unchanged"));
+    QCOMPARE(out.text, u"unchanged"_s);
 }
 
 // ---------- write() ----------
@@ -241,7 +241,7 @@ void TestSaverFile::writeWithoutPrepareReturnsTrue() {
 void TestSaverFile::writeWithoutTempFileReturnsFalse() {
     SaverFile saver(m_filePath, m_tempPath);
 
-    QVERIFY(saver.prepare(TestData { 1, "x" }));
+    QVERIFY(saver.prepare(TestData { 1, u"x"_s }));
     QVERIFY(QFile::remove(m_tempPath));
 
     QVERIFY(!saver.write());
@@ -250,7 +250,7 @@ void TestSaverFile::writeWithoutTempFileReturnsFalse() {
 void TestSaverFile::writeAfterPrepareMovesFile() {
     SaverFile saver(m_filePath, m_tempPath);
 
-    QVERIFY(saver.prepare(TestData { 5, "move" }));
+    QVERIFY(saver.prepare(TestData { 5, u"move"_s }));
     QVERIFY(!QFile::exists(m_filePath));
 
     QVERIFY(saver.write());
@@ -260,7 +260,7 @@ void TestSaverFile::writeAfterPrepareMovesFile() {
 void TestSaverFile::writeRemovesTempFile() {
     SaverFile saver(m_filePath, m_tempPath);
 
-    QVERIFY(saver.prepare(TestData { 5, "x" }));
+    QVERIFY(saver.prepare(TestData { 5, u"x"_s }));
     QVERIFY(saver.write());
 
     QVERIFY(!QFile::exists(m_tempPath));
@@ -269,7 +269,7 @@ void TestSaverFile::writeRemovesTempFile() {
 void TestSaverFile::writeTwiceIsIdempotent() {
     SaverFile saver(m_filePath, m_tempPath);
 
-    QVERIFY(saver.prepare(TestData { 1, "a" }));
+    QVERIFY(saver.prepare(TestData { 1, u"a"_s }));
     QVERIFY(saver.write());
 
     QVERIFY(saver.write());
@@ -281,8 +281,8 @@ void TestSaverFile::writeTwiceIsIdempotent() {
 void TestSaverFile::fullCyclePrepareWriteRead() {
     SaverFile saver(m_filePath, m_tempPath);
 
-    const TestData a { 10, "alpha" };
-    const TestData b { 20, "beta" };
+    const TestData a { 10, u"alpha"_s };
+    const TestData b { 20, u"beta"_s };
 
     QVERIFY(saver.prepare(a));
     QVERIFY(saver.write());
@@ -303,7 +303,7 @@ void TestSaverFile::fullCyclePrepareWriteRead() {
 void TestSaverFile::destructorRemovesTempFile() {
     {
         SaverFile saver(m_filePath, m_tempPath);
-        QVERIFY(saver.prepare(TestData { 1, "x" }));
+        QVERIFY(saver.prepare(TestData { 1, u"x"_s }));
         QVERIFY(QFile::exists(m_tempPath));
     }
 

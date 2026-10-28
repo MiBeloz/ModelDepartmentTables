@@ -13,8 +13,7 @@ namespace mdt {
             using ServiceCustomList<qint32, DatesList>::findId;
 
             ServiceDatesList();
-
-            virtual ~ServiceDatesList();
+            ~ServiceDatesList() override = default;
 
             std::optional<qint32> add(const QString& date);
             bool remove(const QString& date);

@@ -1,16 +1,23 @@
 ﻿#include <QByteArray>
 #include <QDataStream>
+#include <QObject>
 #include <QTest>
 
 #include "CustomList.h"
 #include "Drawing.h"
 
+using namespace Qt::Literals::StringLiterals;
+
 using mdt::Drawing;
 using mdt::RuntimeError;
 using mdt::work::CustomList;
 
-class TestCustomList : public QObject {
+class TestCustomList final : public QObject {
     Q_OBJECT
+    Q_DISABLE_COPY_MOVE(TestCustomList)
+
+public:
+    TestCustomList() = default;
 
 private slots:
     void init();
@@ -975,34 +982,34 @@ void TestCustomList::workWithInt() {
 
 void TestCustomList::workWithQString() {
     CustomList<QString> list;
-    auto id1 = list.insert("hello");
-    auto id2 = list.insert("world");
+    auto id1 = list.insert(u"hello"_s);
+    auto id2 = list.insert(u"world"_s);
     list.commit();
 
     QVERIFY(id1 && id2);
 
     auto v = list.getValue(*id1);
     QVERIFY(v.has_value());
-    QCOMPARE(*v, QString("hello"));
+    QCOMPARE(*v, u"hello"_s);
 
-    QVERIFY(list.remove("world"));
+    QVERIFY(list.remove(u"world"_s));
     list.commit();
     QCOMPARE(list.size(), 1);
 }
 
 void TestCustomList::workWithDrawing() {
     CustomList<Drawing> list;
-    auto id1 = list.insert(Drawing("ИМН-001", "Корпус"));
-    auto id2 = list.insert(Drawing("105-02", "Крышка"));
+    auto id1 = list.insert(Drawing(u"ИМН-001"_s, u"Корпус"_s));
+    auto id2 = list.insert(Drawing(u"105-02"_s, u"Крышка"_s));
     list.commit();
 
     QVERIFY(id1 && id2);
 
     auto v = list.getValue(*id1);
     QVERIFY(v.has_value());
-    QCOMPARE(*v, Drawing("ИМН-001", "Корпус"));
+    QCOMPARE(*v, Drawing(u"ИМН-001"_s, u"Корпус"_s));
 
-    QVERIFY(list.remove(Drawing("105-02", "Крышка")));
+    QVERIFY(list.remove(Drawing(u"105-02"_s, u"Крышка"_s)));
     list.commit();
     QCOMPARE(list.size(), 1);
 }

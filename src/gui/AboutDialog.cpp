@@ -3,31 +3,33 @@
 #include "Version.h"
 #include "ui_AboutDialog.h"
 
+using namespace Qt::Literals::StringLiterals;
+
 AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent), m_ui(new Ui::AboutDialog) {
     m_ui->setupUi(this);
 
     // Title
-    m_ui->labelAppName->setText(QStringLiteral("<b><h2>ModelDepartmentTables:</h2></b>"));
+    m_ui->labelAppName->setText(u"<b><h2>ModelDepartmentTables:</h2></b>"_s);
     m_ui->labelAppVer->setText(
-        QStringLiteral("<b><h2>" MDT_VERSION_DISPLAY " (%1-bit)</h2></b>").arg(QT_POINTER_SIZE * 8));
+        QString(u"<b><h2>" MDT_VERSION_DISPLAY " (%1-bit)</h2></b>"_s).arg(QT_POINTER_SIZE * 8));
 
     // Compiler
-    QString compilerInfo = "Unknown Compiler";
+    QString compilerInfo = u"Unknown Compiler"_s;
 #if defined(Q_CC_GNU)
-    compilerInfo = QString("GCC %1").arg(__VERSION__);
+    compilerInfo = QString(u"GCC %1"_s).arg(__VERSION__);
 #elif defined(Q_CC_MSVC)
     int msvcVer = _MSC_VER;
     if (msvcVer >= 1930) {
-        compilerInfo = "MSVC 2022";
+        compilerInfo = u"MSVC 2022"_s;
     } else if (msvcVer >= 1920) {
-        compilerInfo = "MSVC 2019";
+        compilerInfo = u"MSVC 2019"_s;
     } else if (msvcVer >= 1910) {
-        compilerInfo = "MSVC 2017";
+        compilerInfo = u"MSVC 2017"_s;
     } else {
-        compilerInfo = QString("MSVC (Version %1)").arg(msvcVer);
+        compilerInfo = QString(u"MSVC (Version %1)"_s).arg(msvcVer);
     }
 #elif defined(Q_CC_CLANG)
-    compilerInfo = QString("Clang %1.%2").arg(__clang_major__).arg(__clang_minor__);
+    compilerInfo = QString(u"Clang %1.%2"_s).arg(__clang_major__).arg(__clang_minor__);
 #endif
     m_ui->labelCompilerVer->setText(compilerInfo);
 
