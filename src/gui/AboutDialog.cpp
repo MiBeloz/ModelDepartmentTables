@@ -35,6 +35,9 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent), m_ui(new Ui::AboutD
 
     // Qt
     m_ui->labelQtVer->setText(QStringLiteral(QT_VERSION_STR));
+
+    // QXlsx
+    m_ui->labelQXlsxVer->setText(QStringLiteral(QXLSX_VERSION_STRING));
 }
 
 AboutDialog::~AboutDialog() {

@@ -7,6 +7,8 @@ set(CMAKE_AUTORCC_OPTIONS --compress-algo best --threshold 5)
 
 add_library(mdt_common_cfg INTERFACE)
 
+target_compile_definitions(mdt_common_cfg INTERFACE QXLSX_VERSION_STRING="1.5.1")
+
 target_compile_features(mdt_common_cfg INTERFACE
     cxx_std_17
 )
