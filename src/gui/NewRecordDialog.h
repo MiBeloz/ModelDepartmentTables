@@ -2,6 +2,8 @@
 #define NEWRECORDDIALOG_H
 
 #include <QDialog>
+#include <QPointer>
+#include <QStandardItemModel>
 
 #include "StorageManager.h"
 
@@ -27,6 +29,7 @@ private slots:
 private:
     Ui::NewRecordDialog *m_ui;
     mdt::work::StorageManager m_storageWork;
+    QPointer<QStandardItemModel> m_sourceModelDrawings;
 
     void init();
 };

@@ -44,6 +44,19 @@ void NewRecordDialog::rec_onPB_cancelClicked() {
 void NewRecordDialog::init() {
     //connect(ui->PB_ok, &QPushButton::clicked, this, &NewItemWindow::rec_onPB_okClicked);
     connect(m_ui->PB_cancel, &QPushButton::clicked, this, &NewRecordDialog::rec_onPB_cancelClicked);
+    connect(m_ui->comboBoxDrawingNumberValue,
+            &QComboBox::currentTextChanged,
+            this,
+            [&](const QString &text) {
+                auto drawings = m_storageWork.get().drawings();
+                for (const auto &drawing : std::as_const(drawings)) {
+                    if (drawing.getNumber() == text) {
+                        m_ui->labelDrawingTitleValue->setText(drawing.getTitle());
+                        return;
+                    }
+                }
+                m_ui->labelDrawingTitleValue->setText(QString());
+            });
 
     m_ui->dateEditDateValue->setDate(QDate::currentDate());
     m_ui->dateEditDateValue->setDisplayFormat(mdt::work::DatesList::getDateFormat());
@@ -57,32 +70,19 @@ void NewRecordDialog::init() {
 
     auto drawings = m_storageWork.get().drawings();
     QStringList numbers;
-    for (auto &drawing : drawings) {
+    for (const auto &drawing : std::as_const(drawings)) {
         numbers.append(drawing.getNumber());
     }
     std::sort(numbers.begin(), numbers.end(), naturalLess);
-    m_ui->comboBoxDrawingNumberValue->addItems(numbers);
 
-    QString currentNumber = m_ui->comboBoxDrawingNumberValue->currentText();
-    for (auto &drawing : drawings) {
-        if (drawing.getNumber() == currentNumber) {
-            m_ui->labelDrawingTitleValue->setText(drawing.getTitle());
-        }
-        break;
+    m_sourceModelDrawings = new QStandardItemModel(this);
+    for (const auto &number : numbers) {
+        m_sourceModelDrawings->appendRow(new QStandardItem(number));
     }
+    m_ui->comboBoxDrawingNumberValue->setSourceModel(m_sourceModelDrawings);
 
-    // connect(m_ui->comboBoxDrawingNumberValue,
-    //         &QComboBox::currentTextChanged,
-    //         this,
-    //         [&](const QString &text) {
-    //             auto drawings = m_storageWork.get().drawings();
-    //             for (auto &drawing : drawings) {
-    //                 if (drawing.getNumber() == text) {
-    //                     m_ui->labelDrawingTitleValue->setText(drawing.getTitle());
-    //                 }
-    //                 break;
-    //             }
-    //         });
+    m_ui->comboBoxDrawingNumberValue->addItems(numbers);
+    m_ui->comboBoxDrawingNumberValue->setCurrentIndex(-1);
 
     auto executors = m_storageWork.get().executors();
     std::sort(executors.begin(), executors.end(), naturalLess);
