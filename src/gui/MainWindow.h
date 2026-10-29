@@ -18,6 +18,7 @@ QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
+    Q_DISABLE_COPY_MOVE(MainWindow)
 
 public:
     MainWindow(QWidget *parent = nullptr);

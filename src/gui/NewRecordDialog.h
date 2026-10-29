@@ -3,6 +3,8 @@
 
 #include <QDialog>
 
+#include "StorageManager.h"
+
 namespace Ui {
     class NewRecordDialog;
 }
@@ -24,6 +26,7 @@ private slots:
 
 private:
     Ui::NewRecordDialog *m_ui;
+    mdt::work::StorageManager m_storageWork;
 
     void init();
 };

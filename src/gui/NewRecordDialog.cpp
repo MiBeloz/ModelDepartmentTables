@@ -1,7 +1,9 @@
 ﻿#include "NewRecordDialog.h"
 
+#include "Constants.h"
 #include "DatesList.h"
-#include "Record.h"
+#include "SaverFile.h"
+#include "Utils.h"
 #include "ui_NewRecordDialog.h"
 
 NewRecordDialog::NewRecordDialog(QWidget *parent) : QDialog(parent), m_ui(new Ui::NewRecordDialog) {
@@ -43,7 +45,66 @@ void NewRecordDialog::init() {
     //connect(ui->PB_ok, &QPushButton::clicked, this, &NewItemWindow::rec_onPB_okClicked);
     connect(m_ui->PB_cancel, &QPushButton::clicked, this, &NewRecordDialog::rec_onPB_cancelClicked);
 
-    m_ui->DE_date->setDate(QDate::currentDate());
-    m_ui->DE_date->setDisplayFormat(mdt::work::DatesList::getDateFormat());
-    m_ui->DE_date->setCalendarPopup(true);
+    m_ui->dateEditDateValue->setDate(QDate::currentDate());
+    m_ui->dateEditDateValue->setDisplayFormat(mdt::work::DatesList::getDateFormat());
+    m_ui->dateEditDateValue->setCalendarPopup(true);
+
+    mdt::SaverFile saver(mdt::SaverSettings::SAVER_STORAGE_FILENAME,
+                         mdt::SaverSettings::SAVER_STORAGE_FILENAME_TMP);
+    if (!saver.read(m_storageWork)) {
+        throw mdt::RuntimeError(u"Error read storage"_s);
+    }
+
+    auto drawings = m_storageWork.get().drawings();
+    QStringList numbers;
+    for (auto &drawing : drawings) {
+        numbers.append(drawing.getNumber());
+    }
+    std::sort(numbers.begin(), numbers.end(), naturalLess);
+    m_ui->comboBoxDrawingNumberValue->addItems(numbers);
+
+    QString currentNumber = m_ui->comboBoxDrawingNumberValue->currentText();
+    for (auto &drawing : drawings) {
+        if (drawing.getNumber() == currentNumber) {
+            m_ui->labelDrawingTitleValue->setText(drawing.getTitle());
+        }
+        break;
+    }
+
+    // connect(m_ui->comboBoxDrawingNumberValue,
+    //         &QComboBox::currentTextChanged,
+    //         this,
+    //         [&](const QString &text) {
+    //             auto drawings = m_storageWork.get().drawings();
+    //             for (auto &drawing : drawings) {
+    //                 if (drawing.getNumber() == text) {
+    //                     m_ui->labelDrawingTitleValue->setText(drawing.getTitle());
+    //                 }
+    //                 break;
+    //             }
+    //         });
+
+    auto executors = m_storageWork.get().executors();
+    std::sort(executors.begin(), executors.end(), naturalLess);
+    m_ui->comboBoxAddExecutor->addItems(executors);
+
+    auto authors = m_storageWork.get().authors();
+    std::sort(authors.begin(), authors.end(), naturalLess);
+    m_ui->comboBoxAddAuthor->addItems(authors);
+
+    auto castingMaterials = m_storageWork.get().castingMaterials();
+    std::sort(castingMaterials.begin(), castingMaterials.end(), naturalLess);
+    m_ui->comboBoxAddCastingMaterial->addItems(castingMaterials);
+
+    auto modelMaterials = m_storageWork.get().modelMaterials();
+    std::sort(modelMaterials.begin(), modelMaterials.end(), naturalLess);
+    m_ui->comboBoxAddModelMaterial->addItems(modelMaterials);
+
+    auto machines = m_storageWork.get().machines();
+    std::sort(machines.begin(), machines.end(), naturalLess);
+    m_ui->comboBoxAddMachine->addItems(machines);
+
+    auto notes = m_storageWork.get().notes();
+    std::sort(notes.begin(), notes.end(), naturalLess);
+    m_ui->comboBoxAddNote->addItems(notes);
 }
