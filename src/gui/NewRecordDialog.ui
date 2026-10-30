@@ -28,51 +28,38 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QGridLayout" name="gridLayout_3" columnstretch="0,0,0">
-     <item row="6" column="2">
-      <widget class="QComboBox" name="comboBoxAddAuthor">
-       <property name="minimumSize">
-        <size>
-         <width>180</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="editable">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="labelDate">
-       <property name="text">
-        <string>Date:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="FilteringComboBox" name="comboBoxDrawingNumberValue">
-       <property name="editable">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="0" rowspan="2">
-      <widget class="QLabel" name="labelAuthors">
-       <property name="text">
-        <string>Authors Of The 3D-Model:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="14" column="2">
-      <widget class="QComboBox" name="comboBoxAddNote">
-       <property name="editable">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
      <item row="11" column="2">
       <widget class="QPushButton" name="pushButtonAddModelMaterial">
        <property name="text">
         <string>Add</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QSpinBox" name="spinBoxAmountValue">
+       <property name="value">
+        <number>1</number>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="labelDrawingNumber">
+       <property name="text">
+        <string>Drawing Number:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="12" column="0" rowspan="2">
+      <widget class="QLabel" name="labelMachines">
+       <property name="text">
+        <string>Machines:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0" rowspan="2">
+      <widget class="QLabel" name="labelExecutors">
+       <property name="text">
+        <string>Executors:</string>
        </property>
       </widget>
      </item>
@@ -83,16 +70,6 @@
        </property>
       </widget>
      </item>
-     <item row="10" column="1" rowspan="2">
-      <widget class="QListView" name="listViewModelMaterialsValue"/>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="labelDrawingNumber">
-       <property name="text">
-        <string>Drawing Number:</string>
-       </property>
-      </widget>
-     </item>
      <item row="8" column="0" rowspan="2">
       <widget class="QLabel" name="labelCastingMaterials">
        <property name="text">
@@ -100,8 +77,17 @@
        </property>
       </widget>
      </item>
-     <item row="10" column="2">
-      <widget class="QComboBox" name="comboBoxAddModelMaterial">
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="lineEditDrawingTitleValue"/>
+     </item>
+     <item row="6" column="2">
+      <widget class="FilteringComboBox" name="comboBoxAddAuthor">
+       <property name="minimumSize">
+        <size>
+         <width>180</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="editable">
         <bool>true</bool>
        </property>
@@ -117,10 +103,10 @@
      <item row="14" column="1" rowspan="2">
       <widget class="QListView" name="listViewNotesValue"/>
      </item>
-     <item row="12" column="0" rowspan="2">
-      <widget class="QLabel" name="labelMachines">
+     <item row="5" column="2">
+      <widget class="QPushButton" name="pushButtonAddExecutor">
        <property name="text">
-        <string>Machines:</string>
+        <string>Add</string>
        </property>
       </widget>
      </item>
@@ -128,33 +114,98 @@
       <widget class="QListView" name="listViewMachines"/>
      </item>
      <item row="12" column="2">
-      <widget class="QComboBox" name="comboBoxAddMachine">
+      <widget class="FilteringComboBox" name="comboBoxAddMachine">
        <property name="editable">
         <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="2">
+      <widget class="FilteringComboBox" name="comboBoxAddCastingMaterial">
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="13" column="2">
+      <widget class="QPushButton" name="pushButtonAddMachine">
+       <property name="text">
+        <string>Add</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1" rowspan="2">
+      <widget class="QListView" name="listViewAuthorsValue"/>
+     </item>
+     <item row="4" column="2">
+      <widget class="QComboBox" name="comboBoxAddExecutor">
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0" rowspan="2">
+      <widget class="QLabel" name="labelAuthors">
+       <property name="text">
+        <string>Authors Of The 3D-Model:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="2">
+      <widget class="QPushButton" name="pushButtonAddAuthor">
+       <property name="text">
+        <string>Add</string>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
       <widget class="QDateEdit" name="dateEditDateValue"/>
      </item>
-     <item row="2" column="1">
-      <widget class="QLabel" name="labelDrawingTitleValue">
+     <item row="10" column="2">
+      <widget class="FilteringComboBox" name="comboBoxAddModelMaterial">
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1" rowspan="2">
+      <widget class="QListView" name="listViewCastingMaterialsValue"/>
+     </item>
+     <item row="14" column="2">
+      <widget class="FilteringComboBox" name="comboBoxAddNote">
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="FilteringComboBox" name="comboBoxDrawingNumberValue">
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="0" rowspan="2">
+      <widget class="QLabel" name="labelModelMaterials">
        <property name="text">
-        <string/>
+        <string>Model Materials:</string>
        </property>
       </widget>
      </item>
-     <item row="8" column="2">
-      <widget class="QComboBox" name="comboBoxAddCastingMaterial">
-       <property name="editable">
-        <bool>true</bool>
+     <item row="10" column="1" rowspan="2">
+      <widget class="QListView" name="listViewModelMaterialsValue"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="labelDrawingTitle">
+       <property name="text">
+        <string>Drawing Title:</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="2">
-      <widget class="QComboBox" name="comboBoxAddExecutor">
-       <property name="editable">
-        <bool>true</bool>
+     <item row="0" column="0">
+      <widget class="QLabel" name="labelDate">
+       <property name="text">
+        <string>Date:</string>
        </property>
       </widget>
      </item>
@@ -172,63 +223,8 @@
        </property>
       </widget>
      </item>
-     <item row="6" column="1" rowspan="2">
-      <widget class="QListView" name="listViewAuthorsValue"/>
-     </item>
-     <item row="10" column="0" rowspan="2">
-      <widget class="QLabel" name="labelModelMaterials">
-       <property name="text">
-        <string>Model Materials:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="13" column="2">
-      <widget class="QPushButton" name="pushButtonAddMachine">
-       <property name="text">
-        <string>Add</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="labelDrawingTitle">
-       <property name="text">
-        <string>Drawing Title:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QSpinBox" name="spinBoxAmountValue">
-       <property name="value">
-        <number>1</number>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="1" rowspan="2">
-      <widget class="QListView" name="listViewCastingMaterialsValue"/>
-     </item>
-     <item row="7" column="2">
-      <widget class="QPushButton" name="pushButtonAddAuthor">
-       <property name="text">
-        <string>Add</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="2">
-      <widget class="QPushButton" name="pushButtonAddExecutor">
-       <property name="text">
-        <string>Add</string>
-       </property>
-      </widget>
-     </item>
      <item row="4" column="1" rowspan="2">
-      <widget class="QListView" name="listViewExecutorsValue"/>
-     </item>
-     <item row="4" column="0" rowspan="2">
-      <widget class="QLabel" name="labelExecutors">
-       <property name="text">
-        <string>Executors:</string>
-       </property>
-      </widget>
+      <widget class="QListWidget" name="listWidgetExecutorsValue"/>
      </item>
     </layout>
    </item>
@@ -253,14 +249,14 @@
     </spacer>
    </item>
    <item>
-    <widget class="QPushButton" name="PB_ok">
+    <widget class="QPushButton" name="pushButtonOk">
      <property name="text">
       <string>Ok</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="PB_cancel">
+    <widget class="QPushButton" name="pushButtonCancel">
      <property name="text">
       <string>Cancel</string>
      </property>

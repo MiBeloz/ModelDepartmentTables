@@ -2,6 +2,7 @@
 #define NEWRECORDDIALOG_H
 
 #include <QDialog>
+#include <QEvent>
 #include <QPointer>
 #include <QStandardItemModel>
 
@@ -23,8 +24,8 @@ signals:
     //void sig_handleNewItem(const ItemData &newItem);
 
 private slots:
-    //void rec_onPB_okClicked();
-    void rec_onPB_cancelClicked();
+    void on_pushButtonOk_clicked();
+    void on_pushButtonCancel_clicked();
 
 private:
     Ui::NewRecordDialog *m_ui;
