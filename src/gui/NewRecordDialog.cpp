@@ -75,12 +75,6 @@ void NewRecordDialog::init() {
     }
     std::sort(numbers.begin(), numbers.end(), naturalLess);
 
-    m_sourceModelDrawings = new QStandardItemModel(this);
-    for (const auto &number : numbers) {
-        m_sourceModelDrawings->appendRow(new QStandardItem(number));
-    }
-    m_ui->comboBoxDrawingNumberValue->setSourceModel(m_sourceModelDrawings);
-
     m_ui->comboBoxDrawingNumberValue->addItems(numbers);
     m_ui->comboBoxDrawingNumberValue->setCurrentIndex(-1);
 

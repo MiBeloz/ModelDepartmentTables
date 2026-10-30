@@ -27,7 +27,7 @@ public:
 private slots:
     //void rec_handleNewItem(const ItemData &newItem);
 
-    void on_PB_addItem_clicked();
+    void on_pushButtonAddRecord_clicked();
     void on_actionSettings_triggered();
     void on_actionAbout_triggered();
 

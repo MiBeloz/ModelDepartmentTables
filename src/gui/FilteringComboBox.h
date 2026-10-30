@@ -1,4 +1,4 @@
-#ifndef FILTERINGCOMBOBOX_H
+﻿#ifndef FILTERINGCOMBOBOX_H
 #define FILTERINGCOMBOBOX_H
 
 #include <QAbstractItemModel>
@@ -12,8 +12,6 @@ class FilteringComboBox final : public QComboBox {
 
 public:
     explicit FilteringComboBox(QWidget *parent = nullptr);
-
-    void setSourceModel(QAbstractItemModel *model);
 
 private slots:
     void onCompleterActivated(const QString &text);

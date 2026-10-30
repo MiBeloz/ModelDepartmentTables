@@ -19,9 +19,9 @@
      <widget class="QTableView" name="TV_items"/>
     </item>
     <item row="1" column="0">
-     <widget class="QPushButton" name="PB_addItem">
+     <widget class="QPushButton" name="pushButtonAddRecord">
       <property name="text">
-       <string>Add Item</string>
+       <string>Add Record</string>
       </property>
      </widget>
     </item>

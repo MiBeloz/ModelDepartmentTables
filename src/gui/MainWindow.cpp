@@ -303,8 +303,8 @@ void MainWindow::init() {
     // ui->TV_items->resizeColumnsToContents();
 }
 
-// New Item dialog
-void MainWindow::on_PB_addItem_clicked() {
+// New Record dialog
+void MainWindow::on_pushButtonAddRecord_clicked() {
     if (m_newRecordDialog) {
         m_newRecordDialog->activateWindow();
     } else {
