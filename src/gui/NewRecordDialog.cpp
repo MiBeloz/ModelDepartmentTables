@@ -79,8 +79,14 @@ void NewRecordDialog::init() {
     m_ui->comboBoxDrawingNumberValue->setCurrentIndex(-1);
 
     auto executors = m_storageWork.get().executors();
-    std::sort(executors.begin(), executors.end(), naturalLess);
-    m_ui->comboBoxAddExecutor->addItems(executors);
+
+    m_stringListModelExecutors = new QStringListModel(executors, this);
+    m_sortFilterProxyModelExecutors = new StringSortFilterProxyModel(this);
+    m_sortFilterProxyModelExecutors->setSourceModel(m_stringListModelExecutors);
+    m_ui->comboBoxAddExecutor->setModel(m_sortFilterProxyModelExecutors);
+    // m_sortFilterProxyModelExecutors->setSortRole(Qt::DisplayRole);
+    m_sortFilterProxyModelExecutors->sort(0, Qt::AscendingOrder);
+
     m_ui->comboBoxAddExecutor->setCurrentIndex(-1);
     m_ui->comboBoxAddExecutor->setEditable(false);
     m_ui->comboBoxAddExecutor->setStyleSheet(u"QComboBox { combobox-popup: 0; }"_s);
@@ -94,32 +100,23 @@ void NewRecordDialog::init() {
     m_ui->listWidgetExecutorsValue->installEventFilter(this);
     m_ui->listWidgetExecutorsValue->setSelectionMode(QAbstractItemView::SingleSelection);
 
-    connect(
-        m_ui->listWidgetExecutorsValue,
-        &QListWidget::itemDoubleClicked,
-        this,
-        [&](QListWidgetItem *item) {
-            if (!item) {
-                return;
-            }
-            delete m_ui->listWidgetExecutorsValue->takeItem(
-                m_ui->listWidgetExecutorsValue->row(item));
-
-            auto *model = qobject_cast<QStandardItemModel *>(m_ui->comboBoxAddExecutor->model());
-            if (!model) {
-                return;
-            }
-
-            for (int i = 0; i < model->rowCount(); ++i) {
-                QStandardItem *item = model->item(i);
+    connect(m_ui->listWidgetExecutorsValue,
+            &QListWidget::itemDoubleClicked,
+            this,
+            [&](QListWidgetItem *item) {
                 if (!item) {
-                    continue;
+                    return;
                 }
-                const bool used =
-                    !m_ui->listWidgetExecutorsValue->findItems(item->text(), Qt::MatchExactly).isEmpty();
-                item->setEnabled(!used);
-            }
-        });
+                const QString text = item->text();
+                delete m_ui->listWidgetExecutorsValue->takeItem(
+                    m_ui->listWidgetExecutorsValue->row(item));
+
+                QStringList list = m_stringListModelExecutors->stringList();
+                list.append(text);
+                m_stringListModelExecutors->setStringList(list);
+
+                m_ui->comboBoxAddExecutor->setCurrentIndex(-1);
+            });
 
     connect(m_ui->comboBoxAddExecutor,
             QOverload<int>::of(&QComboBox::activated),
@@ -128,23 +125,13 @@ void NewRecordDialog::init() {
                 if (index < 0) {
                     return;
                 }
-
                 const QString text = m_ui->comboBoxAddExecutor->itemText(index);
+
                 m_ui->listWidgetExecutorsValue->addItem(text);
 
-                m_ui->comboBoxAddExecutor->setCurrentIndex(-1);
+                m_ui->comboBoxAddExecutor->removeItem(index);
 
-                for (int i = 0; i < m_ui->comboBoxAddExecutor->count(); ++i) {
-                    const QString t = m_ui->comboBoxAddExecutor->itemText(i);
-                    const bool used =
-                        !m_ui->listWidgetExecutorsValue->findItems(t, Qt::MatchExactly).isEmpty();
-                    if (auto *model = qobject_cast<QStandardItemModel *>(
-                            m_ui->comboBoxAddExecutor->model())) {
-                        if (auto *item = model->item(i)) {
-                            item->setEnabled(!used);
-                        }
-                    }
-                }
+                m_ui->comboBoxAddExecutor->setCurrentIndex(-1);
             });
 
     auto authors = m_storageWork.get().authors();
