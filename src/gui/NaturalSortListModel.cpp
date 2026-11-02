@@ -7,6 +7,14 @@ NaturalSortListModel::NaturalSortListModel(const QStringList &strings, QObject *
     sort(0, Qt::AscendingOrder);
 }
 
+QStringList NaturalSortListModel::stringList() const {
+    return m_stringListModel->stringList();
+}
+
+void NaturalSortListModel::setStringList(const QStringList &strings) {
+    m_stringListModel->setStringList(strings);
+}
+
 bool NaturalSortListModel::lessThan(const QModelIndex &source_left,
                                     const QModelIndex &source_right) const {
     QVariant leftData = sourceModel()->data(source_left, sortRole());

@@ -79,11 +79,12 @@ void NewRecordDialog::init() {
 
     auto executors = m_storageWork.get().executors();
 
-    m_stringListModelExecutors = new QStringListModel(executors, this);
-    m_NaturalSortListModelExecutors = new NaturalSortListModel(this);
-    m_NaturalSortListModelExecutors->setSourceModel(m_stringListModelExecutors);
+    m_NaturalSortListModelExecutors = new NaturalSortListModel(executors, this);
+    // m_stringListModelExecutors = new QStringListModel(executors, this);
+    // m_NaturalSortListModelExecutors = new NaturalSortListModel(this);
+    // m_NaturalSortListModelExecutors->setSourceModel(m_stringListModelExecutors);
     m_ui->comboBoxAddExecutor->setModel(m_NaturalSortListModelExecutors);
-    m_NaturalSortListModelExecutors->sort(0, Qt::AscendingOrder);
+    // m_NaturalSortListModelExecutors->sort(0, Qt::AscendingOrder);
 
     m_ui->comboBoxAddExecutor->setCurrentIndex(-1);
     m_ui->comboBoxAddExecutor->setEditable(false);
@@ -109,9 +110,9 @@ void NewRecordDialog::init() {
                 delete m_ui->listWidgetExecutorsValue->takeItem(
                     m_ui->listWidgetExecutorsValue->row(item));
 
-                QStringList list = m_stringListModelExecutors->stringList();
+                QStringList list = m_NaturalSortListModelExecutors->stringList();
                 list.append(text);
-                m_stringListModelExecutors->setStringList(list);
+                m_NaturalSortListModelExecutors->setStringList(list);
 
                 m_ui->comboBoxAddExecutor->setCurrentIndex(-1);
             });

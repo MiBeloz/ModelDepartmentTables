@@ -8,6 +8,9 @@ class NaturalSortListModel : public QSortFilterProxyModel {
 public:
     NaturalSortListModel(const QStringList &strings, QObject *parent = nullptr);
 
+    QStringList stringList() const;
+    void setStringList(const QStringList &strings);
+
 protected:
     bool lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const override;
 

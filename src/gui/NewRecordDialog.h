@@ -32,7 +32,6 @@ private:
     Ui::NewRecordDialog *m_ui;
     mdt::work::StorageManager m_storageWork;
     QPointer<QStandardItemModel> m_sourceModelDrawings;
-    QPointer<QStringListModel> m_stringListModelExecutors;
     QPointer<NaturalSortListModel> m_NaturalSortListModelExecutors;
 
     void init();
