@@ -1,35 +1,13 @@
 ﻿#ifndef NEWRECORDDIALOG_H
 #define NEWRECORDDIALOG_H
 
+#include "NaturalSortListModel.h"
+#include "StorageManager.h"
+
 #include <QDialog>
-#include <QEvent>
 #include <QPointer>
-#include <QSortFilterProxyModel>
 #include <QStandardItemModel>
 #include <QStringListModel>
-
-#include "StorageManager.h"
-#include "Utils.h"
-
-class StringSortFilterProxyModel : public QSortFilterProxyModel {
-public:
-    StringSortFilterProxyModel(QObject *parent = nullptr) : QSortFilterProxyModel(parent) { }
-
-    using QSortFilterProxyModel::QSortFilterProxyModel;
-
-    void refreshFilter() {
-        beginFilterChange();
-        endFilterChange(QSortFilterProxyModel::Direction::Rows);
-    }
-
-protected:
-    bool lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const override {
-        QString leftData = sourceModel()->data(source_left).toString();
-        QString rightData = sourceModel()->data(source_right).toString();
-
-        return naturalLess(leftData, rightData);
-    }
-};
 
 namespace Ui {
     class NewRecordDialog;
@@ -55,7 +33,7 @@ private:
     mdt::work::StorageManager m_storageWork;
     QPointer<QStandardItemModel> m_sourceModelDrawings;
     QPointer<QStringListModel> m_stringListModelExecutors;
-    QPointer<StringSortFilterProxyModel> m_sortFilterProxyModelExecutors;
+    QPointer<NaturalSortListModel> m_NaturalSortListModelExecutors;
 
     void init();
 };

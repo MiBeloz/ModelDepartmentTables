@@ -4,7 +4,7 @@ project(ModelDepartmentTables
 
 set(BUILD_TESTING ON)
 
-set(minQt6Version 6.11.1)
+set(minQt6Version 6.12.0)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 

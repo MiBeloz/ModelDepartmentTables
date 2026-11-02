@@ -3,7 +3,6 @@
 #include "Constants.h"
 #include "DatesList.h"
 #include "SaverFile.h"
-#include "Utils.h"
 #include "ui_NewRecordDialog.h"
 
 NewRecordDialog::NewRecordDialog(QWidget *parent) : QDialog(parent), m_ui(new Ui::NewRecordDialog) {
@@ -73,7 +72,7 @@ void NewRecordDialog::init() {
     for (const auto &drawing : std::as_const(drawings)) {
         numbers.append(drawing.getNumber());
     }
-    std::sort(numbers.begin(), numbers.end(), naturalLess);
+    //std::sort(numbers.begin(), numbers.end(), naturalLess);
 
     m_ui->comboBoxDrawingNumberValue->addItems(numbers);
     m_ui->comboBoxDrawingNumberValue->setCurrentIndex(-1);
@@ -81,11 +80,10 @@ void NewRecordDialog::init() {
     auto executors = m_storageWork.get().executors();
 
     m_stringListModelExecutors = new QStringListModel(executors, this);
-    m_sortFilterProxyModelExecutors = new StringSortFilterProxyModel(this);
-    m_sortFilterProxyModelExecutors->setSourceModel(m_stringListModelExecutors);
-    m_ui->comboBoxAddExecutor->setModel(m_sortFilterProxyModelExecutors);
-    // m_sortFilterProxyModelExecutors->setSortRole(Qt::DisplayRole);
-    m_sortFilterProxyModelExecutors->sort(0, Qt::AscendingOrder);
+    m_NaturalSortListModelExecutors = new NaturalSortListModel(this);
+    m_NaturalSortListModelExecutors->setSourceModel(m_stringListModelExecutors);
+    m_ui->comboBoxAddExecutor->setModel(m_NaturalSortListModelExecutors);
+    m_NaturalSortListModelExecutors->sort(0, Qt::AscendingOrder);
 
     m_ui->comboBoxAddExecutor->setCurrentIndex(-1);
     m_ui->comboBoxAddExecutor->setEditable(false);
@@ -135,31 +133,31 @@ void NewRecordDialog::init() {
             });
 
     auto authors = m_storageWork.get().authors();
-    std::sort(authors.begin(), authors.end(), naturalLess);
+    //std::sort(authors.begin(), authors.end(), naturalLess);
     m_ui->comboBoxAddAuthor->addItems(authors);
     m_ui->comboBoxAddAuthor->setCurrentIndex(-1);
     m_ui->comboBoxAddAuthor->setEditable(false);
 
     auto castingMaterials = m_storageWork.get().castingMaterials();
-    std::sort(castingMaterials.begin(), castingMaterials.end(), naturalLess);
+    //std::sort(castingMaterials.begin(), castingMaterials.end(), naturalLess);
     m_ui->comboBoxAddCastingMaterial->addItems(castingMaterials);
     m_ui->comboBoxAddCastingMaterial->setCurrentIndex(-1);
     m_ui->comboBoxAddCastingMaterial->setEditable(false);
 
     auto modelMaterials = m_storageWork.get().modelMaterials();
-    std::sort(modelMaterials.begin(), modelMaterials.end(), naturalLess);
+    //std::sort(modelMaterials.begin(), modelMaterials.end(), naturalLess);
     m_ui->comboBoxAddModelMaterial->addItems(modelMaterials);
     m_ui->comboBoxAddModelMaterial->setCurrentIndex(-1);
     m_ui->comboBoxAddModelMaterial->setEditable(false);
 
     auto machines = m_storageWork.get().machines();
-    std::sort(machines.begin(), machines.end(), naturalLess);
+    //std::sort(machines.begin(), machines.end(), naturalLess);
     m_ui->comboBoxAddMachine->addItems(machines);
     m_ui->comboBoxAddMachine->setCurrentIndex(-1);
     m_ui->comboBoxAddMachine->setEditable(false);
 
     auto notes = m_storageWork.get().notes();
-    std::sort(notes.begin(), notes.end(), naturalLess);
+    //std::sort(notes.begin(), notes.end(), naturalLess);
     m_ui->comboBoxAddNote->addItems(notes);
     m_ui->comboBoxAddNote->setCurrentIndex(-1);
     m_ui->comboBoxAddNote->setEditable(false);
