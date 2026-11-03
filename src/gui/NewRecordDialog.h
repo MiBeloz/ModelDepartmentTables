@@ -1,13 +1,13 @@
 ﻿#ifndef NEWRECORDDIALOG_H
 #define NEWRECORDDIALOG_H
 
-#include "NaturalSortListModel.h"
+#include "NaturalSortComboBox.h"
 #include "StorageManager.h"
 
 #include <QDialog>
+#include <QListWidget>
 #include <QPointer>
 #include <QStandardItemModel>
-#include <QStringListModel>
 
 namespace Ui {
     class NewRecordDialog;
@@ -25,16 +25,36 @@ signals:
     //void sig_handleNewItem(const ItemData &newItem);
 
 private slots:
-    void on_pushButtonOk_clicked();
-    void on_pushButtonCancel_clicked();
+    void onPushButtonOkClicked();
+    void onPushButtonCancelClicked();
 
 private:
     Ui::NewRecordDialog *m_ui;
     mdt::work::StorageManager m_storageWork;
     QPointer<QStandardItemModel> m_sourceModelDrawings;
-    QPointer<NaturalSortListModel> m_NaturalSortListModelExecutors;
 
     void init();
+
+    void createListComboPair(QListWidget *list, NaturalSortComboBox *combo) {
+        connect(list, &QListWidget::itemDoubleClicked, this, [list, combo](QListWidgetItem *item) {
+            if (!item) {
+                return;
+            }
+            const QString text = item->text();
+            delete list->takeItem(list->row(item));
+            combo->addString(text);
+        });
+
+        connect(combo, qOverload<int>(&QComboBox::activated), this, [list, combo](int index) {
+            if (index < 0) {
+                return;
+            }
+            const QString text = combo->itemText(index);
+            list->addItem(text);
+            combo->removeItem(index);
+            combo->setCurrentIndex(-1);
+        });
+    }
 };
 
 #endif // NEWRECORDDIALOG_H

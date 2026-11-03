@@ -14,7 +14,7 @@ NewRecordDialog::~NewRecordDialog() {
     delete m_ui;
 }
 
-void NewRecordDialog::on_pushButtonOk_clicked() {
+void NewRecordDialog::onPushButtonOkClicked() {
     //     Drawing *drawing = new Drawing(ui->LE_drawingNumber->text(), ui->LE_title->text());
 
     //     Item item;
@@ -36,15 +36,24 @@ void NewRecordDialog::on_pushButtonOk_clicked() {
     //     accept();
 }
 
-void NewRecordDialog::on_pushButtonCancel_clicked() {
+void NewRecordDialog::onPushButtonCancelClicked() {
     reject();
 }
 
 void NewRecordDialog::init() {
+    connect(m_ui->pushButtonOk,
+            &QPushButton::clicked,
+            this,
+            &NewRecordDialog::onPushButtonOkClicked);
+    connect(m_ui->pushButtonCancel,
+            &QPushButton::clicked,
+            this,
+            &NewRecordDialog::onPushButtonCancelClicked);
+
     connect(m_ui->comboBoxDrawingNumberValue,
             &QComboBox::currentTextChanged,
             this,
-            [&](const QString &text) {
+            [this](const QString &text) {
                 auto drawings = m_storageWork.get().drawings();
                 for (const auto &drawing : std::as_const(drawings)) {
                     if (drawing.getNumber() == text) {
@@ -54,8 +63,14 @@ void NewRecordDialog::init() {
                     }
                 }
                 m_ui->lineEditDrawingTitleValue->setText(QString());
-                m_ui->lineEditDrawingTitleValue->setEnabled(true);                
+                m_ui->lineEditDrawingTitleValue->setEnabled(true);
             });
+    createListComboPair(m_ui->listWidgetExecutors, m_ui->comboBoxAddExecutor);
+    createListComboPair(m_ui->listWidgetAuthors, m_ui->comboBoxAddAuthor);
+    createListComboPair(m_ui->listWidgetCastingMaterials, m_ui->comboBoxAddCastingMaterial);
+    createListComboPair(m_ui->listWidgetModelMaterials, m_ui->comboBoxAddModelMaterial);
+    createListComboPair(m_ui->listWidgetMachines, m_ui->comboBoxAddMachine);
+    createListComboPair(m_ui->listWidgetNotes, m_ui->comboBoxAddNote);
 
     m_ui->dateEditDateValue->setDate(QDate::currentDate());
     m_ui->dateEditDateValue->setDisplayFormat(mdt::work::DatesList::getDateFormat());
@@ -77,61 +92,31 @@ void NewRecordDialog::init() {
     m_ui->comboBoxDrawingNumberValue->addItems(numbers);
     m_ui->comboBoxDrawingNumberValue->setCurrentIndex(-1);
 
-    auto executors = m_storageWork.get().executors();
-
-    m_NaturalSortListModelExecutors = new NaturalSortListModel(executors, this);
-    // m_stringListModelExecutors = new QStringListModel(executors, this);
-    // m_NaturalSortListModelExecutors = new NaturalSortListModel(this);
-    // m_NaturalSortListModelExecutors->setSourceModel(m_stringListModelExecutors);
-    m_ui->comboBoxAddExecutor->setModel(m_NaturalSortListModelExecutors);
-    // m_NaturalSortListModelExecutors->sort(0, Qt::AscendingOrder);
-
-    m_ui->comboBoxAddExecutor->setCurrentIndex(-1);
-    m_ui->comboBoxAddExecutor->setEditable(false);
-    m_ui->comboBoxAddExecutor->setStyleSheet(u"QComboBox { combobox-popup: 0; }"_s);
-    m_ui->comboBoxAddExecutor->setMaxVisibleItems(10);
+    m_ui->comboBoxAddExecutor->setStringList(m_storageWork.get().executors());
     m_ui->comboBoxAddExecutor->setPlaceholderText(u"Select executor..."_s);
-    m_ui->listWidgetExecutorsValue->setFlow(QListView::LeftToRight);
-    m_ui->listWidgetExecutorsValue->setWrapping(true);
-    m_ui->listWidgetExecutorsValue->setResizeMode(QListView::Adjust);
-    m_ui->listWidgetExecutorsValue->setSpacing(4);
 
-    m_ui->listWidgetExecutorsValue->installEventFilter(this);
-    m_ui->listWidgetExecutorsValue->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_ui->comboBoxAddAuthor->setStringList(m_storageWork.get().authors());
+    m_ui->comboBoxAddAuthor->setPlaceholderText(u"Select author..."_s);
 
-    connect(m_ui->listWidgetExecutorsValue,
-            &QListWidget::itemDoubleClicked,
-            this,
-            [&](QListWidgetItem *item) {
-                if (!item) {
-                    return;
-                }
-                const QString text = item->text();
-                delete m_ui->listWidgetExecutorsValue->takeItem(
-                    m_ui->listWidgetExecutorsValue->row(item));
+    m_ui->comboBoxAddCastingMaterial->setStringList(m_storageWork.get().castingMaterials());
+    m_ui->comboBoxAddCastingMaterial->setPlaceholderText(u"Select casting material..."_s);
 
-                QStringList list = m_NaturalSortListModelExecutors->stringList();
-                list.append(text);
-                m_NaturalSortListModelExecutors->setStringList(list);
+    m_ui->comboBoxAddModelMaterial->setStringList(m_storageWork.get().modelMaterials());
+    m_ui->comboBoxAddModelMaterial->setPlaceholderText(u"Select model material..."_s);
 
-                m_ui->comboBoxAddExecutor->setCurrentIndex(-1);
-            });
+    m_ui->comboBoxAddMachine->setStringList(m_storageWork.get().machines());
+    m_ui->comboBoxAddMachine->setPlaceholderText(u"Select machine..."_s);
 
-    connect(m_ui->comboBoxAddExecutor,
-            QOverload<int>::of(&QComboBox::activated),
-            this,
-            [&](int index) {
-                if (index < 0) {
-                    return;
-                }
-                const QString text = m_ui->comboBoxAddExecutor->itemText(index);
+    m_ui->comboBoxAddNote->setStringList(m_storageWork.get().notes());
+    m_ui->comboBoxAddNote->setPlaceholderText(u"Select note..."_s);
 
-                m_ui->listWidgetExecutorsValue->addItem(text);
+    m_ui->listWidgetExecutors->setFlow(QListView::LeftToRight);
+    m_ui->listWidgetExecutors->setWrapping(true);
+    m_ui->listWidgetExecutors->setResizeMode(QListView::Adjust);
+    m_ui->listWidgetExecutors->setSpacing(10);
 
-                m_ui->comboBoxAddExecutor->removeItem(index);
-
-                m_ui->comboBoxAddExecutor->setCurrentIndex(-1);
-            });
+    //m_ui->listWidgetExecutors->installEventFilter(this);
+    m_ui->listWidgetExecutors->setSelectionMode(QAbstractItemView::SingleSelection);
 
     auto authors = m_storageWork.get().authors();
     //std::sort(authors.begin(), authors.end(), naturalLess);

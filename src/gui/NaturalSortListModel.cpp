@@ -1,5 +1,12 @@
 ﻿#include "NaturalSortListModel.h"
 
+NaturalSortListModel::NaturalSortListModel(QObject *parent)
+    : QSortFilterProxyModel(parent)
+    , m_stringListModel(new QStringListModel(this)) {
+    setSourceModel(m_stringListModel);
+    sort(0, Qt::AscendingOrder);
+}
+
 NaturalSortListModel::NaturalSortListModel(const QStringList &strings, QObject *parent)
     : QSortFilterProxyModel(parent)
     , m_stringListModel(new QStringListModel(strings, this)) {
@@ -20,7 +27,7 @@ bool NaturalSortListModel::lessThan(const QModelIndex &source_left,
     QVariant leftData = sourceModel()->data(source_left, sortRole());
     QVariant rightData = sourceModel()->data(source_right, sortRole());
 
-    if (leftData.userType() == QMetaType::QString) {
+    if (leftData.typeId() == QMetaType::QString) {
         return naturalLess(leftData.toString(), rightData.toString());
     }
 

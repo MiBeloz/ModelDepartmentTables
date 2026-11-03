@@ -29,9 +29,9 @@
    <item>
     <layout class="QGridLayout" name="gridLayout_3" columnstretch="0,0,0">
      <item row="11" column="2">
-      <widget class="QPushButton" name="pushButtonAddModelMaterial">
+      <widget class="QPushButton" name="pushButtonAddNewModelMaterial">
        <property name="text">
-        <string>Add</string>
+        <string> Add new</string>
        </property>
       </widget>
      </item>
@@ -81,7 +81,7 @@
       <widget class="QLineEdit" name="lineEditDrawingTitleValue"/>
      </item>
      <item row="6" column="2">
-      <widget class="FilteringComboBox" name="comboBoxAddAuthor">
+      <widget class="NaturalSortComboBox" name="comboBoxAddAuthor">
        <property name="minimumSize">
         <size>
          <width>180</width>
@@ -100,45 +100,36 @@
        </property>
       </widget>
      </item>
-     <item row="14" column="1" rowspan="2">
-      <widget class="QListView" name="listViewNotesValue"/>
-     </item>
      <item row="5" column="2">
-      <widget class="QPushButton" name="pushButtonAddExecutor">
+      <widget class="QPushButton" name="pushButtonAddNewExecutor">
        <property name="text">
-        <string>Add</string>
+        <string> Add new</string>
        </property>
       </widget>
      </item>
-     <item row="12" column="1" rowspan="2">
-      <widget class="QListView" name="listViewMachines"/>
-     </item>
      <item row="12" column="2">
-      <widget class="FilteringComboBox" name="comboBoxAddMachine">
+      <widget class="NaturalSortComboBox" name="comboBoxAddMachine">
        <property name="editable">
         <bool>true</bool>
        </property>
       </widget>
      </item>
      <item row="8" column="2">
-      <widget class="FilteringComboBox" name="comboBoxAddCastingMaterial">
+      <widget class="NaturalSortComboBox" name="comboBoxAddCastingMaterial">
        <property name="editable">
         <bool>true</bool>
        </property>
       </widget>
      </item>
      <item row="13" column="2">
-      <widget class="QPushButton" name="pushButtonAddMachine">
+      <widget class="QPushButton" name="pushButtonAddNewMachine">
        <property name="text">
-        <string>Add</string>
+        <string> Add new</string>
        </property>
       </widget>
      </item>
-     <item row="6" column="1" rowspan="2">
-      <widget class="QListView" name="listViewAuthorsValue"/>
-     </item>
      <item row="4" column="2">
-      <widget class="QComboBox" name="comboBoxAddExecutor">
+      <widget class="NaturalSortComboBox" name="comboBoxAddExecutor">
        <property name="editable">
         <bool>true</bool>
        </property>
@@ -152,9 +143,9 @@
       </widget>
      </item>
      <item row="7" column="2">
-      <widget class="QPushButton" name="pushButtonAddAuthor">
+      <widget class="QPushButton" name="pushButtonAddNewAuthor">
        <property name="text">
-        <string>Add</string>
+        <string> Add new</string>
        </property>
       </widget>
      </item>
@@ -162,17 +153,14 @@
       <widget class="QDateEdit" name="dateEditDateValue"/>
      </item>
      <item row="10" column="2">
-      <widget class="FilteringComboBox" name="comboBoxAddModelMaterial">
+      <widget class="NaturalSortComboBox" name="comboBoxAddModelMaterial">
        <property name="editable">
         <bool>true</bool>
        </property>
       </widget>
      </item>
-     <item row="8" column="1" rowspan="2">
-      <widget class="QListView" name="listViewCastingMaterialsValue"/>
-     </item>
      <item row="14" column="2">
-      <widget class="FilteringComboBox" name="comboBoxAddNote">
+      <widget class="NaturalSortComboBox" name="comboBoxAddNote">
        <property name="editable">
         <bool>true</bool>
        </property>
@@ -192,9 +180,6 @@
        </property>
       </widget>
      </item>
-     <item row="10" column="1" rowspan="2">
-      <widget class="QListView" name="listViewModelMaterialsValue"/>
-     </item>
      <item row="2" column="0">
       <widget class="QLabel" name="labelDrawingTitle">
        <property name="text">
@@ -210,21 +195,36 @@
       </widget>
      </item>
      <item row="9" column="2">
-      <widget class="QPushButton" name="pushButtonAddCastingMaterial">
+      <widget class="QPushButton" name="pushButtonAddNewCastingMaterial">
        <property name="text">
-        <string>Add</string>
+        <string> Add new</string>
        </property>
       </widget>
      </item>
      <item row="15" column="2">
-      <widget class="QPushButton" name="pushButtonAddNote">
+      <widget class="QPushButton" name="pushButtonAddNewNote">
        <property name="text">
-        <string>Add</string>
+        <string> Add new</string>
        </property>
       </widget>
      </item>
      <item row="4" column="1" rowspan="2">
-      <widget class="QListWidget" name="listWidgetExecutorsValue"/>
+      <widget class="QListWidget" name="listWidgetExecutors"/>
+     </item>
+     <item row="6" column="1" rowspan="2">
+      <widget class="QListWidget" name="listWidgetAuthors"/>
+     </item>
+     <item row="8" column="1" rowspan="2">
+      <widget class="QListWidget" name="listWidgetCastingMaterials"/>
+     </item>
+     <item row="10" column="1" rowspan="2">
+      <widget class="QListWidget" name="listWidgetModelMaterials"/>
+     </item>
+     <item row="12" column="1" rowspan="2">
+      <widget class="QListWidget" name="listWidgetMachines"/>
+     </item>
+     <item row="14" column="1" rowspan="2">
+      <widget class="QListWidget" name="listWidgetNotes"/>
      </item>
     </layout>
    </item>
@@ -268,7 +268,12 @@
   <customwidget>
    <class>FilteringComboBox</class>
    <extends>QComboBox</extends>
-   <header location="global">FilteringComboBox.h</header>
+   <header>FilteringComboBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>NaturalSortComboBox</class>
+   <extends>QComboBox</extends>
+   <header>NaturalSortComboBox.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
