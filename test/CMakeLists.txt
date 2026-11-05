@@ -20,6 +20,11 @@ set(testFiles
     test_StorageRecordsLinks.cpp
 )
 
+set(testFilesGui
+    test_NaturalSortComboBox.cpp
+    test_NaturalSortListModel.cpp
+)
+
 set(testFilesWithConcurrent
     test_SaverFile.cpp
     test_StorageManager.cpp
@@ -38,6 +43,20 @@ foreach(testFile ${testFiles})
     )
     add_test(NAME "${testFilename}" COMMAND "${testFilename}")
     
+    add_dependencies(check "${testFilename}")
+endforeach()
+
+foreach(testFile ${testFilesGui})
+    get_filename_component(testFilename "${testFile}" NAME_WLE)
+
+    add_executable("${testFilename}" "${testFile}")
+    target_link_libraries("${testFilename}"
+        PRIVATE
+            Qt6::Test
+            mdt_gui
+    )
+    add_test(NAME "${testFilename}" COMMAND "${testFilename}")
+
     add_dependencies(check "${testFilename}")
 endforeach()
 

@@ -13,10 +13,10 @@ public:
     NaturalSortComboBox(QWidget *parent = nullptr);
 
     void setStringList(const QStringList &strings);
-    QStringList stringList() const;
+    QStringList sortedStringList() const;
 
-    void addString(const QString &s);
-    void removeString(const QString &s);
+    bool addString(const QString &text);
+    bool removeString(const QString &text);
 
 private:
     NaturalSortListModel *m_model;

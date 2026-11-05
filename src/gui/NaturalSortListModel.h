@@ -11,10 +11,12 @@ class NaturalSortListModel final : public QSortFilterProxyModel {
 
 public:
     NaturalSortListModel(QObject *parent = nullptr);
-    NaturalSortListModel(const QStringList &strings, QObject *parent = nullptr);
 
-    QStringList stringList() const;
     void setStringList(const QStringList &strings);
+    QStringList sortedStringList() const;
+
+    bool appendString(const QString &text);
+    bool removeString(const QString &text);
 
 protected:
     bool lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const override;
@@ -22,6 +24,9 @@ protected:
 private:
     QStringListModel *m_stringListModel;
     QCollator m_collator;
+
+    QStringList deduplicate(const QStringList &strings) const;
+    bool containsCaseInsensitive(const QString &text) const;
 };
 
 #endif // NATURALSORTLISTMODEL_H

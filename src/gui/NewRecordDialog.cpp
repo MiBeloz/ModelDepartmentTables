@@ -50,6 +50,10 @@ void NewRecordDialog::init() {
             this,
             &NewRecordDialog::onPushButtonCancelClicked);
 
+    connect(m_ui->checkBoxAddToFinishedModels, &QCheckBox::clicked, this, [this](bool checked) {
+        m_ui->dateEditDateValue->setEnabled(checked);
+    });
+
     connect(m_ui->comboBoxDrawingNumberValue,
             &QComboBox::currentTextChanged,
             this,
@@ -65,12 +69,26 @@ void NewRecordDialog::init() {
                 m_ui->lineEditDrawingTitleValue->setText(QString());
                 m_ui->lineEditDrawingTitleValue->setEnabled(true);
             });
+
+    if (m_ui->checkBoxAddToFinishedModels->isChecked()) {
+        m_ui->dateEditDateValue->setEnabled(true);
+    } else {
+        m_ui->dateEditDateValue->setEnabled(false);
+    }
+
     createListComboPair(m_ui->listWidgetExecutors, m_ui->comboBoxAddExecutor);
     createListComboPair(m_ui->listWidgetAuthors, m_ui->comboBoxAddAuthor);
     createListComboPair(m_ui->listWidgetCastingMaterials, m_ui->comboBoxAddCastingMaterial);
     createListComboPair(m_ui->listWidgetModelMaterials, m_ui->comboBoxAddModelMaterial);
     createListComboPair(m_ui->listWidgetMachines, m_ui->comboBoxAddMachine);
     createListComboPair(m_ui->listWidgetNotes, m_ui->comboBoxAddNote);
+
+    setListDefaultSettings(m_ui->listWidgetExecutors);
+    setListDefaultSettings(m_ui->listWidgetAuthors);
+    setListDefaultSettings(m_ui->listWidgetCastingMaterials);
+    setListDefaultSettings(m_ui->listWidgetModelMaterials);
+    setListDefaultSettings(m_ui->listWidgetMachines);
+    setListDefaultSettings(m_ui->listWidgetNotes);
 
     m_ui->dateEditDateValue->setDate(QDate::currentDate());
     m_ui->dateEditDateValue->setDisplayFormat(mdt::work::DatesList::getDateFormat());
@@ -109,12 +127,33 @@ void NewRecordDialog::init() {
 
     m_ui->comboBoxAddNote->setStringList(m_storageWork.get().notes());
     m_ui->comboBoxAddNote->setPlaceholderText(u"Select note..."_s);
+}
 
-    m_ui->listWidgetExecutors->setFlow(QListView::LeftToRight);
-    m_ui->listWidgetExecutors->setWrapping(true);
-    m_ui->listWidgetExecutors->setResizeMode(QListView::Adjust);
-    m_ui->listWidgetExecutors->setSpacing(10);
+void NewRecordDialog::createListComboPair(QListWidget *list, NaturalSortComboBox *combo) {
+    connect(list, &QListWidget::itemDoubleClicked, this, [list, combo](QListWidgetItem *item) {
+        if (!item) {
+            return;
+        }
+        const QString text = item->text();
+        delete list->takeItem(list->row(item));
+        combo->addString(text);
+    });
 
-    //m_ui->listWidgetExecutors->installEventFilter(this);
-    m_ui->listWidgetExecutors->setSelectionMode(QAbstractItemView::SingleSelection);
+    connect(combo, qOverload<int>(&QComboBox::activated), this, [list, combo](int index) {
+        if (index < 0) {
+            return;
+        }
+        const QString text = combo->itemText(index);
+        list->addItem(text);
+        combo->removeItem(index);
+        combo->setCurrentIndex(-1);
+    });
+}
+
+void NewRecordDialog::setListDefaultSettings(QListWidget *list) {
+    list->setFlow(QListView::LeftToRight);
+    list->setWrapping(true);
+    list->setResizeMode(QListView::Adjust);
+    list->setSpacing(10);
+    list->setSelectionMode(QAbstractItemView::SingleSelection);
 }

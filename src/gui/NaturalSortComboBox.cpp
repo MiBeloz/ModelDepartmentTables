@@ -4,28 +4,22 @@ NaturalSortComboBox::NaturalSortComboBox(QWidget *parent)
     : QComboBox(parent)
     , m_model(new NaturalSortListModel(this)) {
     setModel(m_model);
+    setEditable(false);
 }
 
 void NaturalSortComboBox::setStringList(const QStringList &strings) {
     m_model->setStringList(strings);
     setCurrentIndex(-1);
-    setEditable(false);
 }
 
-QStringList NaturalSortComboBox::stringList() const {
-    return m_model->stringList();
+QStringList NaturalSortComboBox::sortedStringList() const {
+    return m_model->sortedStringList();
 }
 
-void NaturalSortComboBox::addString(const QString &s) {
-    QStringList list = m_model->stringList();
-    list.append(s);
-    m_model->setStringList(list);
-    setCurrentIndex(-1);
+bool NaturalSortComboBox::addString(const QString &text) {
+    return m_model->appendString(text);
 }
 
-void NaturalSortComboBox::removeString(const QString &s) {
-    QStringList list = m_model->stringList();
-    if (list.removeOne(s)) {
-        m_model->setStringList(list);
-    }
+bool NaturalSortComboBox::removeString(const QString &text) {
+    return m_model->removeString(text);
 }
