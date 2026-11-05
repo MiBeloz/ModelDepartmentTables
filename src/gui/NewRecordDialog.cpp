@@ -117,34 +117,4 @@ void NewRecordDialog::init() {
 
     //m_ui->listWidgetExecutors->installEventFilter(this);
     m_ui->listWidgetExecutors->setSelectionMode(QAbstractItemView::SingleSelection);
-
-    auto authors = m_storageWork.get().authors();
-    //std::sort(authors.begin(), authors.end(), naturalLess);
-    m_ui->comboBoxAddAuthor->addItems(authors);
-    m_ui->comboBoxAddAuthor->setCurrentIndex(-1);
-    m_ui->comboBoxAddAuthor->setEditable(false);
-
-    auto castingMaterials = m_storageWork.get().castingMaterials();
-    //std::sort(castingMaterials.begin(), castingMaterials.end(), naturalLess);
-    m_ui->comboBoxAddCastingMaterial->addItems(castingMaterials);
-    m_ui->comboBoxAddCastingMaterial->setCurrentIndex(-1);
-    m_ui->comboBoxAddCastingMaterial->setEditable(false);
-
-    auto modelMaterials = m_storageWork.get().modelMaterials();
-    //std::sort(modelMaterials.begin(), modelMaterials.end(), naturalLess);
-    m_ui->comboBoxAddModelMaterial->addItems(modelMaterials);
-    m_ui->comboBoxAddModelMaterial->setCurrentIndex(-1);
-    m_ui->comboBoxAddModelMaterial->setEditable(false);
-
-    auto machines = m_storageWork.get().machines();
-    //std::sort(machines.begin(), machines.end(), naturalLess);
-    m_ui->comboBoxAddMachine->addItems(machines);
-    m_ui->comboBoxAddMachine->setCurrentIndex(-1);
-    m_ui->comboBoxAddMachine->setEditable(false);
-
-    auto notes = m_storageWork.get().notes();
-    //std::sort(notes.begin(), notes.end(), naturalLess);
-    m_ui->comboBoxAddNote->addItems(notes);
-    m_ui->comboBoxAddNote->setCurrentIndex(-1);
-    m_ui->comboBoxAddNote->setEditable(false);
 }

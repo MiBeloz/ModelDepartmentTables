@@ -5,40 +5,18 @@
 
 #include <QComboBox>
 
-using namespace Qt::Literals::StringLiterals;
+class NaturalSortComboBox final : public QComboBox {
+    Q_OBJECT
+    Q_DISABLE_COPY_MOVE(NaturalSortComboBox)
 
-class NaturalSortComboBox : public QComboBox {
 public:
-    NaturalSortComboBox(QWidget *parent = nullptr)
-        : QComboBox(parent)
-        , m_model(new NaturalSortListModel(this)) {
-        setModel(m_model);
-    }
+    NaturalSortComboBox(QWidget *parent = nullptr);
 
-    void setStringList(const QStringList &strings) {
-        m_model->setStringList(strings);
-        setCurrentIndex(-1);
-        setEditable(false);
-        setStyleSheet(u"QComboBox { combobox-popup: 0; }"_s);
-        setMaxVisibleItems(10);
-    }
+    void setStringList(const QStringList &strings);
+    QStringList stringList() const;
 
-    QStringList stringList() const {
-        return m_model->stringList();
-    }
-
-    void addString(const QString &s) {
-        QStringList list = m_model->stringList();
-        list.append(s);
-        m_model->setStringList(list);
-    }
-
-    void removeString(const QString &s) {
-        QStringList list = m_model->stringList();
-        if (list.removeOne(s)) {
-            m_model->setStringList(list);
-        }
-    }
+    void addString(const QString &s);
+    void removeString(const QString &s);
 
 private:
     NaturalSortListModel *m_model;
