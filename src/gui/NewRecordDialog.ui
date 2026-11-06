@@ -144,7 +144,7 @@
       <widget class="NaturalSortComboBox" name="comboBoxAddNote"/>
      </item>
      <item row="1" column="1">
-      <widget class="FilteringComboBox" name="comboBoxDrawingNumberValue">
+      <widget class="NaturalSortFilteringComboBox" name="comboBoxDrawingNumberValue">
        <property name="editable">
         <bool>true</bool>
        </property>
@@ -243,14 +243,14 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>FilteringComboBox</class>
-   <extends>QComboBox</extends>
-   <header>FilteringComboBox.h</header>
-  </customwidget>
-  <customwidget>
    <class>NaturalSortComboBox</class>
    <extends>QComboBox</extends>
    <header>NaturalSortComboBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>NaturalSortFilteringComboBox</class>
+   <extends>QComboBox</extends>
+   <header>NaturalSortFilteringComboBox.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

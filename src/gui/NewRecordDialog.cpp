@@ -105,10 +105,9 @@ void NewRecordDialog::init() {
     for (const auto &drawing : std::as_const(drawings)) {
         numbers.append(drawing.getNumber());
     }
-    //std::sort(numbers.begin(), numbers.end(), naturalLess);
 
-    m_ui->comboBoxDrawingNumberValue->addItems(numbers);
-    m_ui->comboBoxDrawingNumberValue->setCurrentIndex(-1);
+    m_ui->comboBoxDrawingNumberValue->setStringList(numbers);
+    m_ui->comboBoxDrawingNumberValue->setPlaceholderText(u"Select or start typing the drawing..."_s);
 
     m_ui->comboBoxAddExecutor->setStringList(m_storageWork.get().executors());
     m_ui->comboBoxAddExecutor->setPlaceholderText(u"Select executor..."_s);

@@ -5,7 +5,7 @@
 
 #include <QComboBox>
 
-class NaturalSortComboBox final : public QComboBox {
+class NaturalSortComboBox : public QComboBox {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(NaturalSortComboBox)
 
