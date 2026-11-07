@@ -5,6 +5,7 @@
 NaturalSortFilteringComboBox::NaturalSortFilteringComboBox(QWidget *parent)
     : NaturalSortComboBox(parent) {
     this->setEditable(true);
+    this->setInsertPolicy(QComboBox::NoInsert);
 
     this->completer()->setCompletionMode(QCompleter::PopupCompletion);
     this->completer()->setFilterMode(Qt::MatchContains);

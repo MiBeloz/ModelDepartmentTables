@@ -1,42 +1,30 @@
-﻿#include <QApplication>
+﻿#include "MainWindow.h"
+
+#include <QApplication>
 #include <QDir>
 #include <QLocale>
+#include <QStyleFactory>
+#include <QStyleHints>
 #include <QTranslator>
-
-#include "MainWindow.h"
-#include "xlsxdocument.h"
-#include "xlsxworkbook.h"
 
 using namespace Qt::Literals::StringLiterals;
 
 int main(int argc, char *argv[]) {
-    QApplication a(argc, argv);
+    QApplication app(argc, argv);
 
-    QXlsx::Document xlsxW;
+    qDebug() << QStyleFactory::keys();
 
-    int row = 1;
-    int col = 1;
-
-    xlsxW.write("A1", u"Hello Qt!"_s); // write "Hello Qt!" to cell(A,1). it's shared string.
-    QVariant writeValue = QString(u"Hello Qt!");
-    xlsxW.write(row, col, writeValue);
-
-    if (xlsxW.saveAs(u"Test.xlsx"_s)) // save the document as 'Test.xlsx'
-    {
-        qDebug() << "[debug] success to write xlsx file";
-    } else {
-        qDebug() << "[debug][error] failed to write xlsx file";
-        exit(-1);
-    }
-
-    qDebug() << "[debug] current directory is " << QDir::currentPath();
+    // QApplication::setStyle(u"Fusion"_s);
+    QApplication::setStyle(u"Windows"_s);
+    //app.styleHints()->setColorScheme(Qt::ColorScheme::Light);
+    app.styleHints()->setColorScheme(Qt::ColorScheme::Dark);
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
     for (const QString &locale : uiLanguages) {
         const QString baseName = u"ModelDepartmentTables_" + QLocale(locale).name();
         if (translator.load(u":/i18n/" + baseName)) {
-            a.installTranslator(&translator);
+            app.installTranslator(&translator);
             break;
         }
     }
@@ -44,5 +32,5 @@ int main(int argc, char *argv[]) {
     MainWindow w;
     w.show();
 
-    return a.exec();
+    return app.exec();
 }

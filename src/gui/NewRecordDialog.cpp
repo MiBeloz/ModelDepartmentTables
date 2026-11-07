@@ -111,6 +111,7 @@ void NewRecordDialog::init() {
 
     m_ui->comboBoxAddExecutor->setStringList(m_storageWork.get().executors());
     m_ui->comboBoxAddExecutor->setPlaceholderText(u"Select executor..."_s);
+    m_ui->comboBoxAddExecutor->setMaxVisibleItems(10);
 
     m_ui->comboBoxAddAuthor->setStringList(m_storageWork.get().authors());
     m_ui->comboBoxAddAuthor->setPlaceholderText(u"Select author..."_s);
