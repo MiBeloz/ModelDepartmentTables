@@ -15,9 +15,12 @@ int main(int argc, char *argv[]) {
     qDebug() << QStyleFactory::keys();
 
     // QApplication::setStyle(u"Fusion"_s);
-    QApplication::setStyle(u"Windows"_s);
-    //app.styleHints()->setColorScheme(Qt::ColorScheme::Light);
-    app.styleHints()->setColorScheme(Qt::ColorScheme::Dark);
+    // QApplication::setStyle(u"Windows"_s);
+    app.styleHints()->setColorScheme(Qt::ColorScheme::Light);
+    // app.styleHints()->setColorScheme(Qt::ColorScheme::Dark);
+    qDebug() << app.style();
+
+    // app.setStyleSheet((u" QComboBox { background: yellow } QCheckBox { color: red }"_s));
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
