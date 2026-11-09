@@ -1,15 +1,15 @@
-﻿#include <QAtomicInt>
+﻿#include "Drawing.h"
+#include "Record.h"
+#include "StorageManager.h"
+#include "TestStats.h"
+
+#include <QAtomicInt>
 #include <QByteArray>
 #include <QDataStream>
 #include <QFuture>
 #include <QTest>
 #include <QThread>
 #include <QtConcurrentRun>
-
-#include "Drawing.h"
-#include "Record.h"
-#include "StorageManager.h"
-#include "TestStats.h"
 
 using mdt::Drawing;
 using mdt::work::DatesList;
@@ -53,7 +53,8 @@ private slots:
         const int recordsPerThread = 500;
         const int totalRecords = threadCount * recordsPerThread;
 
-        StorageManager storageManager;
+        StorageManager::initInstance();
+        StorageManager* storageManager = StorageManager::instance();
         QAtomicInt successCount;
         QAtomicInt failCount;
 
@@ -79,7 +80,7 @@ private slots:
             futures.append(QtConcurrent::run([&, t]() {
                 for (int i = 0; i < recordsPerThread; ++i) {
                     Record record = createRecord(t, i);
-                    if (storageManager.addRecord(record)) {
+                    if (storageManager->addRecord(record)) {
                         successCount.fetchAndAddOrdered(1);
                     } else {
                         failCount.fetchAndAddOrdered(1);
@@ -103,7 +104,7 @@ private slots:
             .metric(u"addOk"_s, successCount.loadAcquire())
             .metric(u"addFail"_s, failCount.loadAcquire())
             .metric(u"elapsedMs"_s, elapsed)
-            .metric(u"finalRecords"_s, storageManager.countRecords());
+            .metric(u"finalRecords"_s, storageManager->countRecords());
 
         // === Проверки ===
 
@@ -112,10 +113,10 @@ private slots:
         QCOMPARE(successCount.loadAcquire(), totalRecords);
 
         // 2) Количество записей в хранилище совпадает
-        QCOMPARE(storageManager.countRecords(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(storageManager->countRecords(), static_cast<qsizetype>(totalRecords));
 
         // 3) Получаем все записи и сверяем с эталоном
-        QList<Record> records = storageManager.getRecords();
+        QList<Record> records = storageManager->getRecords();
         QCOMPARE(records.size(), totalRecords);
 
         QSet<QString> actualKeys;
@@ -140,7 +141,8 @@ private slots:
         const int recordsPerThread = 400;
         const int totalRecords = threadCount * recordsPerThread;
 
-        StorageManager sm;
+        StorageManager::initInstance();
+        StorageManager* sm = StorageManager::instance();
         QAtomicInt addSuccess;
         QAtomicInt removeSuccess;
 
@@ -154,7 +156,7 @@ private slots:
         for (int t = 0; t < threadCount; ++t) {
             futures.append(QtConcurrent::run([&, t]() {
                 for (int i = 0; i < recordsPerThread; ++i) {
-                    if (sm.addRecord(createRecord(t, i))) {
+                    if (sm->addRecord(createRecord(t, i))) {
                         addSuccess.fetchAndAddOrdered(1);
                     }
                 }
@@ -166,13 +168,13 @@ private slots:
         futures.clear();
 
         QCOMPARE(addSuccess.loadAcquire(), totalRecords);
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(totalRecords));
 
         // ---------- Фаза 2: удаляем ----------
         for (int t = 0; t < threadCount; ++t) {
             futures.append(QtConcurrent::run([&, t]() {
                 for (int i = 0; i < recordsPerThread; ++i) {
-                    if (sm.removeRecord(createRecord(t, i))) {
+                    if (sm->removeRecord(createRecord(t, i))) {
                         removeSuccess.fetchAndAddOrdered(1);
                     }
                 }
@@ -191,11 +193,11 @@ private slots:
             .metric(u"addOk"_s, addSuccess.loadAcquire())
             .metric(u"removeOk"_s, removeSuccess.loadAcquire())
             .metric(u"elapsedMs"_s, elapsed)
-            .metric(u"finalRecords"_s, sm.countRecords());
+            .metric(u"finalRecords"_s, sm->countRecords());
 
         QCOMPARE(removeSuccess.loadAcquire(), totalRecords);
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(0));
-        QCOMPARE(sm.getRecords().size(), 0);
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(0));
+        QCOMPARE(sm->getRecords().size(), 0);
     }
 
     // ---------- TEST 3: read during write ----------
@@ -206,7 +208,8 @@ private slots:
         const int recordsPerThread = 500;
         const int totalRecords = threadCount * recordsPerThread;
 
-        StorageManager sm;
+        StorageManager::initInstance();
+        StorageManager* sm = StorageManager::instance();
         QAtomicInt stopFlag;
         QAtomicInt addSuccess;
         QAtomicInt getterIterations;
@@ -219,7 +222,7 @@ private slots:
         // Thread-reader
         QFuture<void> getter = QtConcurrent::run([&]() {
             while (!stopFlag.loadAcquire()) {
-                const auto records = sm.getRecords();
+                const auto records = sm->getRecords();
                 Q_UNUSED(records);
                 getterIterations.fetchAndAddOrdered(1);
             }
@@ -230,7 +233,7 @@ private slots:
         for (int t = 0; t < threadCount; ++t) {
             futures.append(QtConcurrent::run([&, t]() {
                 for (int i = 0; i < recordsPerThread; ++i) {
-                    if (sm.addRecord(createRecord(t, i))) {
+                    if (sm->addRecord(createRecord(t, i))) {
                         addSuccess.fetchAndAddOrdered(1);
                     }
                 }
@@ -252,9 +255,9 @@ private slots:
             .metric(u"addOk"_s, addSuccess.loadAcquire())
             .metric(u"getterIter"_s, getterIterations.loadAcquire())
             .metric(u"elapsedMs"_s, elapsed)
-            .metric(u"finalRecords"_s, sm.countRecords());
+            .metric(u"finalRecords"_s, sm->countRecords());
 
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(totalRecords));
         QVERIFY(getterIterations.loadAcquire() > 0);
     }
 
@@ -266,7 +269,8 @@ private slots:
         const int addsPerThread = 500;
         const int total = threadCount * addsPerThread;
 
-        StorageManager sm;
+        StorageManager::initInstance();
+        StorageManager* sm = StorageManager::instance();
         QAtomicInt success;
 
         QThreadPool::globalInstance()->setMaxThreadCount(16);
@@ -278,7 +282,7 @@ private slots:
         for (int t = 0; t < threadCount; ++t) {
             futures.append(QtConcurrent::run([&, t]() {
                 for (int i = 0; i < addsPerThread; ++i) {
-                    sm.add()
+                    sm->add()
                         .date(makeDate(t, i))
                         .drawing(makeDrawing(t, i))
                         .amount(t * addsPerThread + i + 1)
@@ -303,19 +307,19 @@ private slots:
             .metric(u"total"_s, total)
             .metric(u"adderOk"_s, success.loadAcquire())
             .metric(u"elapsedMs"_s, elapsed)
-            .metric(u"finalRecords"_s, sm.countRecords());
+            .metric(u"finalRecords"_s, sm->countRecords());
 
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(0));
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(0));
 
-        QCOMPARE(sm.count().dates(), total);
-        QCOMPARE(sm.count().drawings(), total);
-        QCOMPARE(sm.count().amounts(), total);
-        QCOMPARE(sm.count().executors(), total);
-        QCOMPARE(sm.count().authors(), total);
-        QCOMPARE(sm.count().castingMaterials(), total);
-        QCOMPARE(sm.count().modelMaterials(), total);
-        QCOMPARE(sm.count().machines(), total);
-        QCOMPARE(sm.count().notes(), total);
+        QCOMPARE(sm->count().dates(), total);
+        QCOMPARE(sm->count().drawings(), total);
+        QCOMPARE(sm->count().amounts(), total);
+        QCOMPARE(sm->count().executors(), total);
+        QCOMPARE(sm->count().authors(), total);
+        QCOMPARE(sm->count().castingMaterials(), total);
+        QCOMPARE(sm->count().modelMaterials(), total);
+        QCOMPARE(sm->count().machines(), total);
+        QCOMPARE(sm->count().notes(), total);
 
         QCOMPARE(success.loadAcquire(), total);
     }
@@ -328,7 +332,8 @@ private slots:
         const int recordsPerThread = 400;
         const int totalRecords = threadCount * recordsPerThread;
 
-        StorageManager sm;
+        StorageManager::initInstance();
+        StorageManager* sm = StorageManager::instance();
         QAtomicInt addSuccess(0);
 
         QThreadPool::globalInstance()->setMaxThreadCount(16);
@@ -339,13 +344,13 @@ private slots:
         // Фаза 1 — добавляем через addRecord (создаются RecordLink)
         for (int t = 0; t < threadCount; ++t) {
             for (int i = 0; i < recordsPerThread; ++i) {
-                if (sm.addRecord(createRecord(t, i))) {
+                if (sm->addRecord(createRecord(t, i))) {
                     addSuccess.fetchAndAddOrdered(1);
                 }
             }
         }
 
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(totalRecords));
 
         // Фаза 2 — удаляем через Remover в 8 потоков
         QAtomicInt removed(0);
@@ -354,7 +359,7 @@ private slots:
             futures.append(QtConcurrent::run([&, t]() {
                 for (int i = 0; i < recordsPerThread; ++i) {
                     const Record r = createRecord(t, i);
-                    sm.remove().date(r.date()).drawing(r.drawing()).amount(r.amount());
+                    sm->remove().date(r.date()).drawing(r.drawing()).amount(r.amount());
                     removed.fetchAndAddOrdered(1);
                 }
             }));
@@ -372,11 +377,11 @@ private slots:
             .metric(u"addOk"_s, addSuccess.loadAcquire())
             .metric(u"removerOk"_s, removed.loadAcquire())
             .metric(u"elapsedMs"_s, elapsed)
-            .metric(u"finalRecords"_s, sm.countRecords());
+            .metric(u"finalRecords"_s, sm->countRecords());
 
         QCOMPARE(removed.loadAcquire(), totalRecords);
 
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(0));
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(0));
     }
 
     // ---------- TEST 6: mixed load Adder/Remover/Getter/Counter ----------
@@ -384,7 +389,8 @@ private slots:
         TEST_SCOPE("testMixedWorkload");
 
         const int threadCount = 8;
-        StorageManager sm;
+        StorageManager::initInstance();
+        StorageManager* sm = StorageManager::instance();
         QAtomicInt stopFlag;
         QAtomicInt adderRemoverIters;
         QAtomicInt getterIters;
@@ -398,9 +404,9 @@ private slots:
         // Thread-Getter
         QFuture<void> getter = QtConcurrent::run([&]() {
             while (!stopFlag.loadAcquire()) {
-                auto d = sm.get().dates();
-                auto dr = sm.get().drawings();
-                auto a = sm.get().amounts();
+                auto d = sm->get().dates();
+                auto dr = sm->get().drawings();
+                auto a = sm->get().amounts();
                 Q_UNUSED(d);
                 Q_UNUSED(dr);
                 Q_UNUSED(a);
@@ -411,8 +417,8 @@ private slots:
         // Thread-Counter
         QFuture<void> counter = QtConcurrent::run([&]() {
             while (!stopFlag.loadAcquire()) {
-                auto n1 = sm.count().dates();
-                auto n2 = sm.count().drawings();
+                auto n1 = sm->count().dates();
+                auto n2 = sm->count().drawings();
                 Q_UNUSED(n1);
                 Q_UNUSED(n2);
                 counterIters.fetchAndAddOrdered(1);
@@ -426,9 +432,9 @@ private slots:
                 for (int i = 0; i < 10000; ++i) {
                     const QString key = QString(u"E_%1_%2").arg(t).arg(i);
                     if (i % 2 == 0) {
-                        sm.add().executor(key);
+                        sm->add().executor(key);
                     } else {
-                        sm.remove().executor(QString(u"E_%1_%2").arg(t).arg(i - 1));
+                        sm->remove().executor(QString(u"E_%1_%2").arg(t).arg(i - 1));
                     }
                     adderRemoverIters.fetchAndAddOrdered(1);
                 }
@@ -450,7 +456,7 @@ private slots:
             .metric(u"getterIters"_s, getterIters.loadAcquire())
             .metric(u"counterIters"_s, counterIters.loadAcquire())
             .metric(u"elapsedMs"_s, elapsed)
-            .metric(u"finalRecords"_s, sm.countRecords());
+            .metric(u"finalRecords"_s, sm->countRecords());
 
         QVERIFY(getterIters.loadAcquire() > 0);
         QVERIFY(counterIters.loadAcquire() > 0);
@@ -466,14 +472,15 @@ private slots:
 
         QThreadPool::globalInstance()->setMaxThreadCount(16);
 
-        StorageManager sm;
+        StorageManager::initInstance();
+        StorageManager* sm = StorageManager::instance();
 
         // Наполняем
         QList<QFuture<void>> futures;
         for (int t = 0; t < threadCount; ++t) {
             futures.append(QtConcurrent::run([&, t]() {
                 for (int i = 0; i < recordsPerThread; ++i) {
-                    sm.addRecord(createRecord(t, i));
+                    sm->addRecord(createRecord(t, i));
                 }
             }));
         }
@@ -481,21 +488,21 @@ private slots:
             f.waitForFinished();
         }
 
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
-        QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(sm->getRecords().size(), static_cast<qsizetype>(totalRecords));
 
         QElapsedTimer timer;
         timer.start();
 
-        sm.commit();
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
-        QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(totalRecords));
+        sm->commit();
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(sm->getRecords().size(), static_cast<qsizetype>(totalRecords));
 
         futures.clear();
         for (int t = threadCount; t < threadCount * 2; ++t) {
             futures.append(QtConcurrent::run([&, t]() {
                 for (int i = 0; i < recordsPerThread; ++i) {
-                    sm.addRecord(createRecord(t, i));
+                    sm->addRecord(createRecord(t, i));
                 }
             }));
         }
@@ -510,31 +517,31 @@ private slots:
             .metric(u"recordsPerThread"_s, recordsPerThread)
             .metric(u"totalRecords"_s, totalRecords)
             .metric(u"elapsedMs"_s, elapsed)
-            .metric(u"finalRecords"_s, sm.countRecords());
+            .metric(u"finalRecords"_s, sm->countRecords());
 
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords * 2));
-        QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(totalRecords * 2));
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(totalRecords * 2));
+        QCOMPARE(sm->getRecords().size(), static_cast<qsizetype>(totalRecords * 2));
 
-        sm.reset();
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
-        QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(totalRecords));
+        sm->reset();
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(sm->getRecords().size(), static_cast<qsizetype>(totalRecords));
 
-        sm.clear();
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(0));
-        QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(0));
+        sm->clear();
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(0));
+        QCOMPARE(sm->getRecords().size(), static_cast<qsizetype>(0));
 
-        sm.reset();
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
-        QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(totalRecords));
+        sm->reset();
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(sm->getRecords().size(), static_cast<qsizetype>(totalRecords));
 
-        sm.clear();
-        sm.commit();
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(0));
-        QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(0));
+        sm->clear();
+        sm->commit();
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(0));
+        QCOMPARE(sm->getRecords().size(), static_cast<qsizetype>(0));
 
-        sm.reset();
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(0));
-        QCOMPARE(sm.getRecords().size(), static_cast<qsizetype>(0));
+        sm->reset();
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(0));
+        QCOMPARE(sm->getRecords().size(), static_cast<qsizetype>(0));
     }
 
     // ---------- TEST 8: serialize / deserialize in a single thread (round-trip) ----------
@@ -547,14 +554,15 @@ private slots:
 
         QThreadPool::globalInstance()->setMaxThreadCount(16);
 
-        StorageManager sm;
+        StorageManager::initInstance();
+        StorageManager* sm = StorageManager::instance();
         for (int t = 0; t < threadCount; ++t) {
             for (int i = 0; i < recordsPerThread; ++i) {
-                sm.addRecord(createRecord(t, i));
+                sm->addRecord(createRecord(t, i));
             }
         }
 
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(totalRecords));
 
         QElapsedTimer timerSerialize;
         timerSerialize.start();
@@ -564,7 +572,7 @@ private slots:
         {
             QDataStream out(&data, QIODevice::WriteOnly);
             out.setVersion(QDataStream::Version::Qt_6_11);
-            sm.serialize(out);
+            sm->serialize(out);
         }
 
         const qint64 elapsedSerialize = timerSerialize.elapsed();
@@ -573,11 +581,13 @@ private slots:
         timerDeserialize.start();
 
         // deserialize
-        StorageManager sm2;
+        StorageManager::freeInstance();
+        StorageManager::initInstance();
+        StorageManager* sm2 = StorageManager::instance();
         {
             QDataStream in(&data, QIODevice::ReadOnly);
             in.setVersion(QDataStream::Version::Qt_6_11);
-            sm2.deserialize(in);
+            sm2->deserialize(in);
         }
 
         const qint64 elapsedDeserialize = timerDeserialize.elapsed();
@@ -587,16 +597,16 @@ private slots:
         _scope.metric(u"elapsedSerialize"_s, elapsedSerialize)
             .metric(u"elapsedDeserialize"_s, elapsedDeserialize)
             .metric(u"totalRecords"_s, totalRecords)
-            .metric(u"finalRecords"_s, sm.countRecords());
+            .metric(u"finalRecords"_s, sm->countRecords());
 
-        QCOMPARE(sm2.countRecords(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(sm2->countRecords(), static_cast<qsizetype>(totalRecords));
 
         // Сверяем ключи
         QSet<QString> keys1, keys2;
-        for (const Record& r : sm.getRecords()) {
+        for (const Record& r : sm->getRecords()) {
             keys1.insert(makeKey(r));
         }
-        for (const Record& r : sm2.getRecords()) {
+        for (const Record& r : sm2->getRecords()) {
             keys2.insert(makeKey(r));
         }
         QCOMPARE(keys1, keys2);
@@ -612,7 +622,8 @@ private slots:
 
         QThreadPool::globalInstance()->setMaxThreadCount(16);
 
-        StorageManager sm;
+        StorageManager::initInstance();
+        StorageManager* sm = StorageManager::instance();
         QAtomicInt stopFlag;
         QAtomicInt serializations;
 
@@ -624,7 +635,7 @@ private slots:
                 QByteArray data;
                 QDataStream out(&data, QIODevice::WriteOnly);
                 out.setVersion(QDataStream::Version::Qt_6_11);
-                sm.serialize(out);
+                sm->serialize(out);
                 serializations.fetchAndAddOrdered(1);
             }
         });
@@ -633,7 +644,7 @@ private slots:
         for (int t = 0; t < threadCount; ++t) {
             futures.append(QtConcurrent::run([&, t]() {
                 for (int i = 0; i < recordsPerThread; ++i) {
-                    sm.addRecord(createRecord(t, i));
+                    sm->addRecord(createRecord(t, i));
                 }
             }));
         }
@@ -651,9 +662,9 @@ private slots:
             .metric(u"recordsPerThread"_s, recordsPerThread)
             .metric(u"totalRecords"_s, totalRecords)
             .metric(u"elapsedMs"_s, elapsed)
-            .metric(u"finalRecords"_s, sm.countRecords());
+            .metric(u"finalRecords"_s, sm->countRecords());
 
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(totalRecords));
         QVERIFY(serializations.loadAcquire() > 0);
     }
 
@@ -669,7 +680,8 @@ private slots:
             const int recordsPerWriter = 500;
             const int totalRecords = writerCount * recordsPerWriter;
 
-            StorageManager sm;
+            StorageManager::initInstance();
+            StorageManager* sm = StorageManager::instance();
 
             QThreadPool::globalInstance()->setMaxThreadCount(16);
 
@@ -691,7 +703,7 @@ private slots:
             for (int t = 0; t < writerCount; ++t) {
                 writers.append(QtConcurrent::run([&, t]() {
                     for (int i = 0; i < recordsPerWriter; ++i) {
-                        if (sm.addRecord(createRecord(t, i))) {
+                        if (sm->addRecord(createRecord(t, i))) {
                             success.fetchAndAddOrdered(1);
                         }
                     }
@@ -708,13 +720,13 @@ private slots:
                 .metric(u"recordsPerWriter"_s, recordsPerWriter)
                 .metric(u"totalRecords"_s, totalRecords)
                 .metric(u"elapsedMs"_s, elapsedA)
-                .metric(u"finalRecords"_s, sm.countRecords());
+                .metric(u"finalRecords"_s, sm->countRecords());
 
             QCOMPARE(success.loadAcquire(), totalRecords);
-            QCOMPARE(sm.countRecords(), static_cast<qsizetype>(totalRecords));
+            QCOMPARE(sm->countRecords(), static_cast<qsizetype>(totalRecords));
 
             // ---------- Проверка каждой Record на целостность ----------
-            const QList<Record> records = sm.getRecords();
+            const QList<Record> records = sm->getRecords();
             QCOMPARE(records.size(), totalRecords);
 
             QSet<QString> actualKeys;
@@ -726,7 +738,7 @@ private slots:
             QCOMPARE(actualKeys, expectedKeys);
 
             // ---- Повторный вызов getRecords должен дать тот же результат ----
-            const QList<Record> recordsAgain = sm.getRecords();
+            const QList<Record> recordsAgain = sm->getRecords();
             QCOMPARE(recordsAgain.size(), records.size());
             for (int k = 0; k < records.size(); ++k) {
                 QCOMPARE(makeKey(recordsAgain[k]), makeKey(records[k]));
@@ -737,7 +749,7 @@ private slots:
             {
                 QDataStream out(&data, QIODevice::WriteOnly);
                 out.setVersion(QDataStream::Version::Qt_6_11);
-                sm.serialize(out);
+                sm->serialize(out);
             }
             StorageManager sm2;
             {
@@ -771,9 +783,9 @@ private slots:
             // Стартовое наполнение — чтобы у удалятелей было что удалять
             const int initialRecords = 500;
             for (int i = 0; i < initialRecords; ++i) {
-                sm.addRecord(createRecord(i % 8, i));
+                sm->addRecord(createRecord(i % 8, i));
             }
-            QCOMPARE(sm.countRecords(), static_cast<qsizetype>(initialRecords));
+            QCOMPARE(sm->countRecords(), static_cast<qsizetype>(initialRecords));
 
             QAtomicInt stopFlag;
             QAtomicInt addOk, addFail;
@@ -788,7 +800,7 @@ private slots:
                 int i = 0;
                 while (!stopFlag.loadAcquire()) {
                     const Record r = createRecord(0, 100000 + i);
-                    if (sm.addRecord(r)) {
+                    if (sm->addRecord(r)) {
                         addOk.fetchAndAddOrdered(1);
                     } else {
                         addFail.fetchAndAddOrdered(1);
@@ -806,7 +818,7 @@ private slots:
                 int i = 0;
                 while (!stopFlag.loadAcquire()) {
                     const Record r = createRecord(0, 100000 + i);
-                    if (sm.removeRecord(r)) {
+                    if (sm->removeRecord(r)) {
                         removeOk.fetchAndAddOrdered(1);
                     } else {
                         removeFail.fetchAndAddOrdered(1);
@@ -823,7 +835,7 @@ private slots:
             QFuture<void> fAdder = QtConcurrent::run([&]() {
                 int i = 0;
                 while (!stopFlag.loadAcquire()) {
-                    sm.add()
+                    sm->add()
                         .date(makeDate(2, i))
                         .drawing(makeDrawing(2, 200000 + i))
                         .amount(1000000 + i)
@@ -846,7 +858,7 @@ private slots:
             QFuture<void> fRemover = QtConcurrent::run([&]() {
                 int i = 0;
                 while (!stopFlag.loadAcquire()) {
-                    sm.remove()
+                    sm->remove()
                         .executor(QString(u"E_adder_%1").arg(i))
                         .author(QString(u"A_adder_%1").arg(i))
                         .castingMaterial(QString(u"C_adder_%1").arg(i))
@@ -866,7 +878,7 @@ private slots:
             QFuture<void> fGet = QtConcurrent::run([&]() {
                 int i = 0;
                 while (!stopFlag.loadAcquire()) {
-                    const auto records = sm.getRecords();
+                    const auto records = sm->getRecords();
                     for (const Record& r : records) {
                         QVERIFY(r.isValid());
                     }
@@ -882,15 +894,15 @@ private slots:
             // ---------- Thread 6: Getter ---
             QFuture<void> fGetLists = QtConcurrent::run([&]() {
                 while (!stopFlag.loadAcquire()) {
-                    Q_UNUSED(sm.get().dates());
-                    Q_UNUSED(sm.get().drawings());
-                    Q_UNUSED(sm.get().amounts());
-                    Q_UNUSED(sm.get().executors());
-                    Q_UNUSED(sm.get().authors());
-                    Q_UNUSED(sm.get().castingMaterials());
-                    Q_UNUSED(sm.get().modelMaterials());
-                    Q_UNUSED(sm.get().machines());
-                    Q_UNUSED(sm.get().notes());
+                    Q_UNUSED(sm->get().dates());
+                    Q_UNUSED(sm->get().drawings());
+                    Q_UNUSED(sm->get().amounts());
+                    Q_UNUSED(sm->get().executors());
+                    Q_UNUSED(sm->get().authors());
+                    Q_UNUSED(sm->get().castingMaterials());
+                    Q_UNUSED(sm->get().modelMaterials());
+                    Q_UNUSED(sm->get().machines());
+                    Q_UNUSED(sm->get().notes());
                     counterIters.fetchAndAddOrdered(1);
                 }
             });
@@ -898,15 +910,15 @@ private slots:
             // ---------- Thread 7: Counter ---
             QFuture<void> fCount = QtConcurrent::run([&]() {
                 while (!stopFlag.loadAcquire()) {
-                    Q_UNUSED(sm.count().dates());
-                    Q_UNUSED(sm.count().drawings());
-                    Q_UNUSED(sm.count().amounts());
-                    Q_UNUSED(sm.count().executors());
-                    Q_UNUSED(sm.count().authors());
-                    Q_UNUSED(sm.count().castingMaterials());
-                    Q_UNUSED(sm.count().modelMaterials());
-                    Q_UNUSED(sm.count().machines());
-                    Q_UNUSED(sm.count().notes());
+                    Q_UNUSED(sm->count().dates());
+                    Q_UNUSED(sm->count().drawings());
+                    Q_UNUSED(sm->count().amounts());
+                    Q_UNUSED(sm->count().executors());
+                    Q_UNUSED(sm->count().authors());
+                    Q_UNUSED(sm->count().castingMaterials());
+                    Q_UNUSED(sm->count().modelMaterials());
+                    Q_UNUSED(sm->count().machines());
+                    Q_UNUSED(sm->count().notes());
                     counterIters.fetchAndAddOrdered(1);
                 }
             });
@@ -917,7 +929,7 @@ private slots:
                     QByteArray data;
                     QDataStream out(&data, QIODevice::WriteOnly);
                     out.setVersion(QDataStream::Version::Qt_6_11);
-                    sm.serialize(out);
+                    sm->serialize(out);
                     serializeIters.fetchAndAddOrdered(1);
                 }
             });
@@ -961,12 +973,12 @@ private slots:
 
             {
                 // Все потоки стоят. Состояние sm фиксировано.
-                const QList<Record> finalRecords1 = sm.getRecords();
+                const QList<Record> finalRecords1 = sm->getRecords();
                 QByteArray data1;
                 {
                     QDataStream out(&data1, QIODevice::WriteOnly);
                     out.setVersion(QDataStream::Version::Qt_6_11);
-                    sm.serialize(out);
+                    sm->serialize(out);
                 }
                 StorageManager sm2;
                 {
@@ -975,7 +987,7 @@ private slots:
                     sm2.deserialize(in);
                 }
                 const QList<Record> deserRecords = sm2.getRecords();
-                const QList<Record> finalRecords2 = sm.getRecords();
+                const QList<Record> finalRecords2 = sm->getRecords();
 
                 // 1) getRecords стабилен
                 QCOMPARE(finalRecords1.size(), finalRecords2.size());
@@ -996,7 +1008,7 @@ private slots:
             }
 
             // ---- Финальная проверка целостности ----
-            const QList<Record> finalRecords = sm.getRecords();
+            const QList<Record> finalRecords = sm->getRecords();
             qDebug() << "final records:" << finalRecords.size();
 
             QSet<QString> finalKeys;
@@ -1012,7 +1024,7 @@ private slots:
             {
                 QDataStream out(&data, QIODevice::WriteOnly);
                 out.setVersion(QDataStream::Version::Qt_6_11);
-                sm.serialize(out);
+                sm->serialize(out);
             }
             StorageManager sm2;
             {
@@ -1020,7 +1032,7 @@ private slots:
                 in.setVersion(QDataStream::Version::Qt_6_11);
                 sm2.deserialize(in);
             }
-            QCOMPARE(sm2.countRecords(), sm.countRecords());
+            QCOMPARE(sm2.countRecords(), sm->countRecords());
 
             QSet<QString> deserKeys;
             for (const Record& r : sm2.getRecords()) {
@@ -1047,7 +1059,7 @@ private slots:
         for (int g = 0; g < getterCount; ++g) {
             getters.append(QtConcurrent::run([&]() {
                 while (!stopFlag.loadAcquire()) {
-                    auto records = sm.getRecords(); // ← mutable-кэш, гонка
+                    auto records = sm->getRecords(); // ← mutable-кэш, гонка
                     Q_UNUSED(records);
                 }
             }));
@@ -1057,7 +1069,7 @@ private slots:
         for (int w = 0; w < writerCount; ++w) {
             writers.append(QtConcurrent::run([&, w]() {
                 for (int i = 0; i < perThread; ++i) {
-                    sm.addRecord(createRecord(w, i));
+                    sm->addRecord(createRecord(w, i));
                 }
             }));
         }
@@ -1070,7 +1082,7 @@ private slots:
             f.waitForFinished();
         }
 
-        QCOMPARE(sm.countRecords(), static_cast<qsizetype>(writerCount * perThread));
+        QCOMPARE(sm->countRecords(), static_cast<qsizetype>(writerCount * perThread));
     }
 
     // getRecords() во время clear()/reset()
@@ -1079,22 +1091,22 @@ private slots:
 
         StorageManager sm;
         for (int i = 0; i < 1000; ++i) {
-            sm.addRecord(createRecord(0, i));
+            sm->addRecord(createRecord(0, i));
         }
 
         QAtomicInt stop(0);
         QFuture<void> getter = QtConcurrent::run([&]() {
             while (!stop.loadAcquire()) {
-                auto r = sm.getRecords();
+                auto r = sm->getRecords();
                 // размер может быть любым: 0, 1000, промежуточным
                 Q_UNUSED(r);
             }
         });
 
         for (int k = 0; k < 100; ++k) {
-            sm.clear();
+            sm->clear();
             for (int i = 0; i < 10; ++i) {
-                sm.addRecord(createRecord(0, i));
+                sm->addRecord(createRecord(0, i));
             }
         }
         stop.storeRelease(1);
@@ -1163,11 +1175,11 @@ private:
         //  Каждое значение из Record должно присутствовать в соответствующем
         //  списке StorageLists. Если оно оттуда пропало — значит, ссылка
         //  «полубитая»: RecordLink ещё ссылается на удалённый id.
-        const auto allDates = sm.get().datesStr();
+        const auto allDates = sm->get().datesStr();
         QVERIFY2(allDates.contains(r.date()),
                  qPrintable(QString(u"date '%1' отсутствует в StorageLists::dates").arg(r.date())));
 
-        const auto allDrawings = sm.get().drawings();
+        const auto allDrawings = sm->get().drawings();
         bool drawingFound = false;
         for (const auto& d : allDrawings) {
             if (d == r.drawing()) {
@@ -1179,7 +1191,7 @@ private:
                  qPrintable(QString(u"drawing '%1 / %2' отсутствует в StorageLists::drawings")
                                 .arg(r.drawing().getNumber(), r.drawing().getTitle())));
 
-        const auto allAmounts = sm.get().amounts();
+        const auto allAmounts = sm->get().amounts();
         QVERIFY2(allAmounts.contains(r.amount()),
                  qPrintable(
                      QString(u"amount '%1' отсутствует в StorageLists::amounts").arg(r.amount())));
@@ -1194,12 +1206,12 @@ private:
                 }
             };
 
-        checkList(r.executors(), sm.get().executors(), "executor");
-        checkList(r.authors(), sm.get().authors(), "author");
-        checkList(r.castingMaterials(), sm.get().castingMaterials(), "castingMaterial");
-        checkList(r.modelMaterials(), sm.get().modelMaterials(), "modelMaterial");
-        checkList(r.machines(), sm.get().machines(), "machine");
-        checkList(r.notes(), sm.get().notes(), "note");
+        checkList(r.executors(), sm->get().executors(), "executor");
+        checkList(r.authors(), sm->get().authors(), "author");
+        checkList(r.castingMaterials(), sm->get().castingMaterials(), "castingMaterial");
+        checkList(r.modelMaterials(), sm->get().modelMaterials(), "modelMaterial");
+        checkList(r.machines(), sm->get().machines(), "machine");
+        checkList(r.notes(), sm->get().notes(), "note");
     }
 };
 
@@ -1232,18 +1244,18 @@ Record TestStorageManager::makeValidRecord(const QString& date,
 
 void TestStorageManager::testEmptyOnCreate() {
     StorageManager sm;
-    QCOMPARE(sm.countRecords(), qsizetype(0));
-    QVERIFY(sm.getRecords().isEmpty());
+    QCOMPARE(sm->countRecords(), qsizetype(0));
+    QVERIFY(sm->getRecords().isEmpty());
 }
 
 void TestStorageManager::testAddRecord() {
     StorageManager sm;
     const Record r = makeValidRecord(u"15.01.2024"_s, 5, { u"Ivanov"_s }, { u"Petrov"_s });
 
-    QVERIFY(sm.addRecord(r));
-    QCOMPARE(sm.countRecords(), qsizetype(1));
+    QVERIFY(sm->addRecord(r));
+    QCOMPARE(sm->countRecords(), qsizetype(1));
 
-    const QList<Record> records = sm.getRecords();
+    const QList<Record> records = sm->getRecords();
     QCOMPARE(records.size(), 1);
     QCOMPARE(records.first(), r);
 }
@@ -1253,49 +1265,49 @@ void TestStorageManager::testAddInvalidRecord() {
 
     // Пустая / невалидная дата
     const Record badDate = makeValidRecord(QString(), 1);
-    QVERIFY(!sm.addRecord(badDate));
+    QVERIFY(!sm->addRecord(badDate));
 
     // Невалидный drawing (Drawing::Null)
     const Record badDrawing(u"15.01.2024"_s, Drawing::Null, 1);
-    QVERIFY(!sm.addRecord(badDrawing));
+    QVERIFY(!sm->addRecord(badDrawing));
 
     // amount < 1
     const Record badAmount = makeValidRecord(u"15.01.2024"_s, 0);
-    QVERIFY(!sm.addRecord(badAmount));
+    QVERIFY(!sm->addRecord(badAmount));
 
-    QCOMPARE(sm.countRecords(), qsizetype(0));
+    QCOMPARE(sm->countRecords(), qsizetype(0));
 }
 
 void TestStorageManager::testAddDuplicateValuesInList() {
     StorageManager sm;
 
-    sm.add().executor(u"Ivanov"_s);
-    sm.add().executor(u"Ivanov"_s);
-    sm.add().executor(u"Ivanov"_s);
+    sm->add().executor(u"Ivanov"_s);
+    sm->add().executor(u"Ivanov"_s);
+    sm->add().executor(u"Ivanov"_s);
 
-    QCOMPARE(sm.count().executors(), 1);
-    QCOMPARE(sm.get().executors().size(), 1);
-    QCOMPARE(sm.get().executors().first(), u"Ivanov");
+    QCOMPARE(sm->count().executors(), 1);
+    QCOMPARE(sm->get().executors().size(), 1);
+    QCOMPARE(sm->get().executors().first(), u"Ivanov");
 }
 
 void TestStorageManager::testRemoveRecord() {
     StorageManager sm;
     const Record r = makeValidRecord(u"20.02.2024"_s, 3, { u"Sidorov"_s });
 
-    QVERIFY(sm.addRecord(r));
-    QCOMPARE(sm.countRecords(), qsizetype(1));
+    QVERIFY(sm->addRecord(r));
+    QCOMPARE(sm->countRecords(), qsizetype(1));
 
-    QVERIFY(sm.removeRecord(r));
-    QCOMPARE(sm.countRecords(), qsizetype(0));
-    QVERIFY(sm.getRecords().isEmpty());
+    QVERIFY(sm->removeRecord(r));
+    QCOMPARE(sm->countRecords(), qsizetype(0));
+    QVERIFY(sm->getRecords().isEmpty());
 }
 
 void TestStorageManager::testRemoveNonexistentRecord() {
     StorageManager sm;
     const Record r = makeValidRecord(u"20.02.2024"_s, 3);
 
-    QVERIFY(!sm.removeRecord(r));
-    QCOMPARE(sm.countRecords(), qsizetype(0));
+    QVERIFY(!sm->removeRecord(r));
+    QCOMPARE(sm->countRecords(), qsizetype(0));
 }
 
 // ---------------------------------------------------------------------------
@@ -1305,7 +1317,7 @@ void TestStorageManager::testRemoveNonexistentRecord() {
 void TestStorageManager::testAdderFluent() {
     StorageManager sm;
 
-    sm.add()
+    sm->add()
         .date(u"01.03.2024"_s)
         .drawing(makeValidDrawing(2))
         .amount(10)
@@ -1316,50 +1328,50 @@ void TestStorageManager::testAdderFluent() {
         .machine(u"MachineA"_s)
         .note(u"NoteA"_s);
 
-    QCOMPARE(sm.count().dates(), 1);
-    QCOMPARE(sm.count().amounts(), 1);
-    QCOMPARE(sm.count().executors(), 1);
-    QCOMPARE(sm.count().authors(), 1);
-    QCOMPARE(sm.count().castingMaterials(), 1);
-    QCOMPARE(sm.count().modelMaterials(), 1);
-    QCOMPARE(sm.count().machines(), 1);
-    QCOMPARE(sm.count().notes(), 1);
+    QCOMPARE(sm->count().dates(), 1);
+    QCOMPARE(sm->count().amounts(), 1);
+    QCOMPARE(sm->count().executors(), 1);
+    QCOMPARE(sm->count().authors(), 1);
+    QCOMPARE(sm->count().castingMaterials(), 1);
+    QCOMPARE(sm->count().modelMaterials(), 1);
+    QCOMPARE(sm->count().machines(), 1);
+    QCOMPARE(sm->count().notes(), 1);
 
-    QCOMPARE(sm.get().datesStr().first(), u"01.03.2024"_s);
-    QCOMPARE(sm.get().amounts().first(), 10);
-    QCOMPARE(sm.get().executors().first(), u"ExecA"_s);
+    QCOMPARE(sm->get().datesStr().first(), u"01.03.2024"_s);
+    QCOMPARE(sm->get().amounts().first(), 10);
+    QCOMPARE(sm->get().executors().first(), u"ExecA"_s);
 }
 
 void TestStorageManager::testRemoverFluent() {
     StorageManager sm;
-    sm.add().date(u"02.03.2024"_s).amount(1).executor(u"ExecB"_s).note(u"NoteB"_s);
+    sm->add().date(u"02.03.2024"_s).amount(1).executor(u"ExecB"_s).note(u"NoteB"_s);
 
-    QCOMPARE(sm.count().executors(), 1);
-    QCOMPARE(sm.count().notes(), 1);
+    QCOMPARE(sm->count().executors(), 1);
+    QCOMPARE(sm->count().notes(), 1);
 
-    sm.remove().executor(u"ExecB"_s).note(u"NoteB"_s);
+    sm->remove().executor(u"ExecB"_s).note(u"NoteB"_s);
 
-    QCOMPARE(sm.count().executors(), 0);
-    QCOMPARE(sm.count().notes(), 0);
+    QCOMPARE(sm->count().executors(), 0);
+    QCOMPARE(sm->count().notes(), 0);
 }
 
 void TestStorageManager::testGetter() {
     StorageManager sm;
-    sm.add().date(u"01.04.2024"_s).amount(7).executor(u"ExecC"_s).author(u"AuthorC"_s);
+    sm->add().date(u"01.04.2024"_s).amount(7).executor(u"ExecC"_s).author(u"AuthorC"_s);
 
-    const auto dates = sm.get().datesStr();
+    const auto dates = sm->get().datesStr();
     QCOMPARE(dates.size(), 1);
     QCOMPARE(dates.first(), u"01.04.2024"_s);
 
-    const auto amounts = sm.get().amounts();
+    const auto amounts = sm->get().amounts();
     QCOMPARE(amounts.size(), 1);
     QCOMPARE(amounts.first(), 7);
 
-    const auto execs = sm.get().executors();
+    const auto execs = sm->get().executors();
     QCOMPARE(execs.size(), 1);
     QCOMPARE(execs.first(), u"ExecC"_s);
 
-    const auto authors = sm.get().authors();
+    const auto authors = sm->get().authors();
     QCOMPARE(authors.size(), 1);
     QCOMPARE(authors.first(), u"AuthorC"_s);
 }
@@ -1367,12 +1379,12 @@ void TestStorageManager::testGetter() {
 void TestStorageManager::testCounter() {
     StorageManager sm;
 
-    sm.add().date(u"01.05.2024"_s);
-    sm.add().date(u"02.05.2024"_s);
-    sm.add().date(u"01.05.2024"_s);
-    sm.add().date(u"01.05.2024"_s);
+    sm->add().date(u"01.05.2024"_s);
+    sm->add().date(u"02.05.2024"_s);
+    sm->add().date(u"01.05.2024"_s);
+    sm->add().date(u"01.05.2024"_s);
 
-    QCOMPARE(sm.count().dates(), 2);
+    QCOMPARE(sm->count().dates(), 2);
 }
 
 // ---------------------------------------------------------------------------
@@ -1382,23 +1394,23 @@ void TestStorageManager::testCounter() {
 void TestStorageManager::testDeleteBadLinksOnRemoverDate() {
     StorageManager sm;
     const Record r = makeValidRecord(u"01.06.2024"_s, 4, { u"ExecD"_s });
-    QVERIFY(sm.addRecord(r));
-    QCOMPARE(sm.countRecords(), qsizetype(1));
+    QVERIFY(sm->addRecord(r));
+    QCOMPARE(sm->countRecords(), qsizetype(1));
 
-    sm.remove().date(u"01.06.2024"_s);
-    QCOMPARE(sm.countRecords(), qsizetype(0));
-    QVERIFY(sm.getRecords().isEmpty());
+    sm->remove().date(u"01.06.2024"_s);
+    QCOMPARE(sm->countRecords(), qsizetype(0));
+    QVERIFY(sm->getRecords().isEmpty());
 }
 
 void TestStorageManager::testDeleteBadLinksOnRemoverExecutor() {
     StorageManager sm;
     const Record r = makeValidRecord(u"01.07.2024"_s, 2, { u"ExecE1"_s, u"ExecE2"_s });
-    QVERIFY(sm.addRecord(r));
+    QVERIFY(sm->addRecord(r));
 
-    sm.remove().executor(u"ExecE1"_s);
+    sm->remove().executor(u"ExecE1"_s);
 
-    QCOMPARE(sm.countRecords(), qsizetype(1));
-    const QList<Record> records = sm.getRecords();
+    QCOMPARE(sm->countRecords(), qsizetype(1));
+    const QList<Record> records = sm->getRecords();
     QCOMPARE(records.size(), 1);
     QCOMPARE(records.first().executors(), QStringList { u"ExecE2"_s });
 }
@@ -1413,12 +1425,12 @@ void TestStorageManager::testDeleteBadLinksKeepsRecordIfOnlySomeValuesRemoved() 
                                      { u"ModelX"_s },
                                      { u"MachineX"_s },
                                      { u"NoteX"_s });
-    QVERIFY(sm.addRecord(r));
+    QVERIFY(sm->addRecord(r));
 
-    sm.remove().executor(u"ExecX"_s).castingMaterial(u"CastX"_s).machine(u"MachineX"_s);
+    sm->remove().executor(u"ExecX"_s).castingMaterial(u"CastX"_s).machine(u"MachineX"_s);
 
-    QCOMPARE(sm.countRecords(), qsizetype(1));
-    const Record got = sm.getRecords().constFirst();
+    QCOMPARE(sm->countRecords(), qsizetype(1));
+    const Record got = sm->getRecords().constFirst();
     QVERIFY(got.executors().isEmpty());
     QVERIFY(got.castingMaterials().isEmpty());
     QVERIFY(got.machines().isEmpty());
@@ -1434,16 +1446,16 @@ void TestStorageManager::testDeleteBadLinksKeepsRecordIfOnlySomeValuesRemoved() 
 
 void TestStorageManager::testRecordsCacheInvalidation() {
     StorageManager sm;
-    QVERIFY(sm.getRecords().isEmpty());
+    QVERIFY(sm->getRecords().isEmpty());
 
     const Record r = makeValidRecord(u"01.08.2024"_s, 1);
-    QVERIFY(sm.addRecord(r));
+    QVERIFY(sm->addRecord(r));
 
-    QCOMPARE(sm.getRecords().size(), 1);
-    QCOMPARE(sm.getRecords().constFirst(), r);
+    QCOMPARE(sm->getRecords().size(), 1);
+    QCOMPARE(sm->getRecords().constFirst(), r);
 
-    QVERIFY(sm.removeRecord(r));
-    QCOMPARE(sm.getRecords().size(), 0);
+    QVERIFY(sm->removeRecord(r));
+    QCOMPARE(sm->getRecords().size(), 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -1478,28 +1490,28 @@ void TestStorageManager::testSerializeDeserialize() {
 
 void TestStorageManager::testReset() {
     StorageManager sm;
-    QVERIFY(sm.addRecord(makeValidRecord(u"01.10.2024"_s, 1)));
-    QCOMPARE(sm.countRecords(), qsizetype(1));
+    QVERIFY(sm->addRecord(makeValidRecord(u"01.10.2024"_s, 1)));
+    QCOMPARE(sm->countRecords(), qsizetype(1));
 
-    sm.reset();
+    sm->reset();
 
-    QCOMPARE(sm.countRecords(), qsizetype(0));
-    QVERIFY(sm.getRecords().isEmpty());
-    QCOMPARE(sm.count().dates(), 0);
-    QCOMPARE(sm.count().amounts(), 0);
+    QCOMPARE(sm->countRecords(), qsizetype(0));
+    QVERIFY(sm->getRecords().isEmpty());
+    QCOMPARE(sm->count().dates(), 0);
+    QCOMPARE(sm->count().amounts(), 0);
 }
 
 void TestStorageManager::testClear() {
     StorageManager sm;
-    QVERIFY(sm.addRecord(makeValidRecord(u"01.11.2024"_s, 1)));
-    QCOMPARE(sm.countRecords(), qsizetype(1));
+    QVERIFY(sm->addRecord(makeValidRecord(u"01.11.2024"_s, 1)));
+    QCOMPARE(sm->countRecords(), qsizetype(1));
 
-    sm.clear();
+    sm->clear();
 
-    QCOMPARE(sm.countRecords(), qsizetype(0));
-    QVERIFY(sm.getRecords().isEmpty());
-    QCOMPARE(sm.count().dates(), 0);
+    QCOMPARE(sm->countRecords(), qsizetype(0));
+    QVERIFY(sm->getRecords().isEmpty());
+    QCOMPARE(sm->count().dates(), 0);
 }
 
 QTEST_MAIN(TestStorageManager)
-#include "test_StorageManager.moc"
+#include "test_storageManager->moc"
