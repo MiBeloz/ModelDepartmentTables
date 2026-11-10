@@ -176,7 +176,7 @@ void TestSaverFile::readRoundTripReturnsSameData() {
 
     TestData out;
     SaverFile saver2(&out, m_filePath);
-    QVERIFY(saver.read());
+    QVERIFY(saver2.read());
     QCOMPARE(out, original);
 }
 
@@ -200,7 +200,7 @@ void TestSaverFile::readThrowsPropagates() {
         f.write("anything");
     }
 
-    TestData data;
+    ThrowingData data;
     SaverFile saver(&data, m_filePath);
 
     QVERIFY_THROWS_EXCEPTION(RuntimeError, Q_UNUSED(saver.read()));
@@ -279,7 +279,7 @@ void TestSaverFile::fullCyclePrepareWriteRead() {
 
     TestData out;
     SaverFile saver2(&out, m_filePath);
-    QVERIFY(saver.read());
+    QVERIFY(saver2.read());
     QCOMPARE(out, data);
 }
 
