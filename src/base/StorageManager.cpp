@@ -17,277 +17,260 @@ mdt::work::StorageManager *mdt::work::StorageManager::instance() {
     return m_instance;
 }
 
-mdt::work::StorageManager::Adder::Adder(StorageManager &storageManager)
-    : m_storageManager(storageManager) {}
-
 mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::date(const QString &date) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.dates().add(date);
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.dates().add(date);
     return *this;
 }
 
 mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::date(const qint32 exelFormat) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.dates().add(exelFormat);
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.dates().add(exelFormat);
     return *this;
 }
 
 mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::drawing(const Drawing &drawing) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.drawings().add(drawing);
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.drawings().add(drawing);
     return *this;
 }
 
 mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::amount(const qint32 amount) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.amounts().add(amount);
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.amounts().add(amount);
     return *this;
 }
 
 mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::executor(
     const QString &executor) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.customStorage(CustomStorage::Executors).add(executor);
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.customStorage(CustomStorage::Executors).add(executor);
     return *this;
 }
 
 mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::author(const QString &author) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.customStorage(CustomStorage::Authors).add(author);
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.customStorage(CustomStorage::Authors).add(author);
     return *this;
 }
 
 mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::castingMaterial(
     const QString &castingMaterial) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.customStorage(CustomStorage::CastingMaterials)
-        .add(castingMaterial);
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.customStorage(CustomStorage::CastingMaterials).add(castingMaterial);
     return *this;
 }
 
 mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::modelMaterial(
     const QString &modelMaterial) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.customStorage(CustomStorage::ModelMaterials).add(modelMaterial);
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.customStorage(CustomStorage::ModelMaterials).add(modelMaterial);
     return *this;
 }
 
 mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::machine(const QString &machine) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.customStorage(CustomStorage::Machines).add(machine);
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.customStorage(CustomStorage::Machines).add(machine);
     return *this;
 }
 
 mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::note(const QString &note) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.customStorage(CustomStorage::Notes).add(note);
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.customStorage(CustomStorage::Notes).add(note);
     return *this;
 }
 
-mdt::work::StorageManager::Remover::Remover(StorageManager &storageManager)
-    : m_storageManager(storageManager) {}
-
 mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::date(const QString &date) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.dates().remove(date);
-    m_storageManager.deleteBadLinks();
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.dates().remove(date);
+    m_instance->deleteBadLinks();
     return *this;
 }
 
 mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::date(
     const qint32 exelFormat) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.dates().remove(exelFormat);
-    m_storageManager.deleteBadLinks();
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.dates().remove(exelFormat);
+    m_instance->deleteBadLinks();
     return *this;
 }
 
 mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::drawing(
     const Drawing &drawing) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.drawings().remove(drawing);
-    m_storageManager.deleteBadLinks();
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.drawings().remove(drawing);
+    m_instance->deleteBadLinks();
     return *this;
 }
 
 mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::amount(const qint32 amount) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.amounts().remove(amount);
-    m_storageManager.deleteBadLinks();
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.amounts().remove(amount);
+    m_instance->deleteBadLinks();
     return *this;
 }
 
 mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::executor(
     const QString &executor) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.customStorage(CustomStorage::Executors).remove(executor);
-    m_storageManager.deleteBadLinksList(IdsList::Executors, CustomStorage::Executors);
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.customStorage(CustomStorage::Executors).remove(executor);
+    m_instance->deleteBadLinksList(IdsList::Executors, CustomStorage::Executors);
     return *this;
 }
 
 mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::author(
     const QString &author) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.customStorage(CustomStorage::Authors).remove(author);
-    m_storageManager.deleteBadLinksList(IdsList::Authors, CustomStorage::Authors);
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.customStorage(CustomStorage::Authors).remove(author);
+    m_instance->deleteBadLinksList(IdsList::Authors, CustomStorage::Authors);
     return *this;
 }
 
 mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::castingMaterial(
     const QString &castingMaterial) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.customStorage(CustomStorage::CastingMaterials)
-        .remove(castingMaterial);
-    m_storageManager.deleteBadLinksList(IdsList::CastingMaterials, CustomStorage::CastingMaterials);
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.customStorage(CustomStorage::CastingMaterials).remove(castingMaterial);
+    m_instance->deleteBadLinksList(IdsList::CastingMaterials, CustomStorage::CastingMaterials);
     return *this;
 }
 
 mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::modelMaterial(
     const QString &modelMaterial) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.customStorage(CustomStorage::ModelMaterials)
-        .remove(modelMaterial);
-    m_storageManager.deleteBadLinksList(IdsList::ModelMaterials, CustomStorage::ModelMaterials);
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.customStorage(CustomStorage::ModelMaterials).remove(modelMaterial);
+    m_instance->deleteBadLinksList(IdsList::ModelMaterials, CustomStorage::ModelMaterials);
     return *this;
 }
 
 mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::machine(
     const QString &machine) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.customStorage(CustomStorage::Machines).remove(machine);
-    m_storageManager.deleteBadLinksList(IdsList::Machines, CustomStorage::Machines);
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.customStorage(CustomStorage::Machines).remove(machine);
+    m_instance->deleteBadLinksList(IdsList::Machines, CustomStorage::Machines);
     return *this;
 }
 
 mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::note(const QString &note) {
-    const QWriteLocker locker(&m_storageManager.m_lock);
-    m_storageManager.m_storageLists.customStorage(CustomStorage::Notes).remove(note);
-    m_storageManager.deleteBadLinksList(IdsList::Notes, CustomStorage::Notes);
+    const QWriteLocker locker(&m_instance->m_lock);
+    m_instance->m_storageLists.customStorage(CustomStorage::Notes).remove(note);
+    m_instance->deleteBadLinksList(IdsList::Notes, CustomStorage::Notes);
     return *this;
 }
 
-mdt::work::StorageManager::Getter::Getter(const StorageManager &storageManager)
-    : m_storageManager(storageManager) {}
-
-auto mdt::work::StorageManager::Getter::dates() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.dates().findAllValues();
+QList<int> mdt::work::StorageManager::Getter::dates() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.dates().findAllValues();
 }
 
-auto mdt::work::StorageManager::Getter::datesStr() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.dates().findAllStrValues();
+QList<QString> mdt::work::StorageManager::Getter::datesStr() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.dates().findAllStrValues();
 }
 
-auto mdt::work::StorageManager::Getter::datesError() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.dates().lastError();
+mdt::work::DatesList::ErrorType mdt::work::StorageManager::Getter::datesError() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.dates().lastError();
 }
 
-auto mdt::work::StorageManager::Getter::drawings() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.drawings().findAllValues();
+QList<mdt::Drawing> mdt::work::StorageManager::Getter::drawings() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.drawings().findAllValues();
 }
 
-auto mdt::work::StorageManager::Getter::amounts() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.amounts().findAllValues();
+QList<int> mdt::work::StorageManager::Getter::amounts() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.amounts().findAllValues();
 }
 
-auto mdt::work::StorageManager::Getter::executors() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.customStorage(CustomStorage::Executors).findAllValues();
+QList<QString> mdt::work::StorageManager::Getter::executors() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.customStorage(CustomStorage::Executors).findAllValues();
 }
 
-auto mdt::work::StorageManager::Getter::authors() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.customStorage(CustomStorage::Authors).findAllValues();
+QList<QString> mdt::work::StorageManager::Getter::authors() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.customStorage(CustomStorage::Authors).findAllValues();
 }
 
-auto mdt::work::StorageManager::Getter::castingMaterials() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.customStorage(CustomStorage::CastingMaterials)
-        .findAllValues();
+QList<QString> mdt::work::StorageManager::Getter::castingMaterials() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.customStorage(CustomStorage::CastingMaterials).findAllValues();
 }
 
-auto mdt::work::StorageManager::Getter::modelMaterials() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.customStorage(CustomStorage::ModelMaterials)
-        .findAllValues();
+QList<QString> mdt::work::StorageManager::Getter::modelMaterials() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.customStorage(CustomStorage::ModelMaterials).findAllValues();
 }
 
-auto mdt::work::StorageManager::Getter::machines() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.customStorage(CustomStorage::Machines).findAllValues();
+QList<QString> mdt::work::StorageManager::Getter::machines() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.customStorage(CustomStorage::Machines).findAllValues();
 }
 
-auto mdt::work::StorageManager::Getter::notes() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.customStorage(CustomStorage::Notes).findAllValues();
+QList<QString> mdt::work::StorageManager::Getter::notes() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.customStorage(CustomStorage::Notes).findAllValues();
 }
 
-mdt::work::StorageManager::Counter::Counter(const StorageManager &storageManager)
-    : m_storageManager(storageManager) {}
-
-auto mdt::work::StorageManager::Counter::dates() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.dates().count();
+qsizetype mdt::work::StorageManager::Counter::dates() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.dates().count();
 }
 
-auto mdt::work::StorageManager::Counter::drawings() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.drawings().count();
+qsizetype mdt::work::StorageManager::Counter::drawings() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.drawings().count();
 }
 
-auto mdt::work::StorageManager::Counter::amounts() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.amounts().count();
+qsizetype mdt::work::StorageManager::Counter::amounts() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.amounts().count();
 }
 
-auto mdt::work::StorageManager::Counter::executors() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.customStorage(CustomStorage::Executors).count();
+qsizetype mdt::work::StorageManager::Counter::executors() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.customStorage(CustomStorage::Executors).count();
 }
 
-auto mdt::work::StorageManager::Counter::authors() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.customStorage(CustomStorage::Authors).count();
+qsizetype mdt::work::StorageManager::Counter::authors() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.customStorage(CustomStorage::Authors).count();
 }
 
-auto mdt::work::StorageManager::Counter::castingMaterials() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.customStorage(CustomStorage::CastingMaterials).count();
+qsizetype mdt::work::StorageManager::Counter::castingMaterials() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.customStorage(CustomStorage::CastingMaterials).count();
 }
 
-auto mdt::work::StorageManager::Counter::modelMaterials() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.customStorage(CustomStorage::ModelMaterials).count();
+qsizetype mdt::work::StorageManager::Counter::modelMaterials() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.customStorage(CustomStorage::ModelMaterials).count();
 }
 
-auto mdt::work::StorageManager::Counter::machines() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.customStorage(CustomStorage::Machines).count();
+qsizetype mdt::work::StorageManager::Counter::machines() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.customStorage(CustomStorage::Machines).count();
 }
 
-auto mdt::work::StorageManager::Counter::notes() const {
-    const QReadLocker locker(&m_storageManager.m_lock);
-    return m_storageManager.m_storageLists.customStorage(CustomStorage::Notes).count();
+qsizetype mdt::work::StorageManager::Counter::notes() const {
+    const QReadLocker locker(&m_instance->m_lock);
+    return m_instance->m_storageLists.customStorage(CustomStorage::Notes).count();
 }
 
 mdt::work::StorageManager::Adder mdt::work::StorageManager::add() {
-    return Adder(*this);
+    return Adder();
 }
 
 mdt::work::StorageManager::Remover mdt::work::StorageManager::remove() {
-    return Remover(*this);
+    return Remover();
 }
 
 mdt::work::StorageManager::Getter mdt::work::StorageManager::get() const {
-    return Getter(*this);
+    return Getter();
 }
 
 mdt::work::StorageManager::Counter mdt::work::StorageManager::count() const {
-    return Counter(*this);
+    return Counter();
 }
 
 bool mdt::work::StorageManager::addRecord(const Record &record) {

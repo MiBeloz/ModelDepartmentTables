@@ -8,15 +8,16 @@
 #endif
 
 namespace mdt {
-    SaverFile::SaverFile(QString fileName, QString tempFileName)
-        : m_fileName(std::move(fileName))
-        , m_tempFileName(std::move(tempFileName)) { }
+    SaverFile::SaverFile(Storage *storage, const QString &fileName)
+        : Saver(storage)
+        , m_fileName(fileName)
+        , m_tempFileName(fileName + u".tmp") {}
 
     SaverFile::~SaverFile() {
         QFile::remove(m_tempFileName);
     }
 
-    bool SaverFile::prepare(const Storage &storage) {
+    bool SaverFile::prepare() {
         const QWriteLocker locker(&m_lock);
 
         QFile temp(m_tempFileName);
@@ -28,7 +29,7 @@ namespace mdt {
         stream.setVersion(QDataStream::Version::Qt_6_11);
 
         try {
-            storage.serialize(stream);
+            m_storage->serialize(stream);
         } catch (...) {
             temp.close();
             temp.remove();
@@ -49,7 +50,7 @@ namespace mdt {
         return true;
     }
 
-    bool SaverFile::read(Storage &storage) {
+    bool SaverFile::read() {
         const QReadLocker locker(&m_lock);
 
         QFile file(m_fileName);
@@ -61,7 +62,7 @@ namespace mdt {
         stream.setVersion(QDataStream::Version::Qt_6_11);
 
         try {
-            storage.deserialize(stream);
+            m_storage->deserialize(stream);
         } catch (...) {
             file.close();
             throw;

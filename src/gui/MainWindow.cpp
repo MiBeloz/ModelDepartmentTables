@@ -193,13 +193,14 @@ void MainWindow::init() {
     //         this,
     //         &MainWindow::rec_handleNewItem);
 
-    mdt::SaverFile saver(mdt::SaverSettings::SAVER_STORAGE_FILENAME,
-                         mdt::SaverSettings::SAVER_STORAGE_FILENAME_TMP);
-    if (!saver.read(m_storageWork)) {
+    mdt::work::StorageManager::initInstance();
+    m_storageWork = mdt::work::StorageManager::instance();
+    mdt::SaverFile saver(m_storageWork, mdt::SaverSettings::SAVER_STORAGE_FILENAME);
+    if (!saver.read()) {
         throw mdt::RuntimeError(u"Error read storage"_s);
     }
 
-    auto records = m_storageWork.getRecords();
+    auto records = m_storageWork->getRecords();
     for (auto &record : records) {
         auto model = m_itemsModel->sourceModel();
 

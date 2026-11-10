@@ -37,7 +37,7 @@ private:
     QPointer<NewRecordDialog> m_newRecordDialog;
     QPointer<SettingsDialog> m_settingsDialog;
     QPointer<QAbstractProxyModel> m_itemsModel;
-    mdt::work::StorageManager m_storageWork;
+    mdt::work::StorageManager *m_storageWork;
 
     void init();
 };

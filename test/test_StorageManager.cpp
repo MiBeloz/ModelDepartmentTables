@@ -21,6 +21,9 @@ class TestStorageManager : public QObject {
     Q_OBJECT
 
 private slots:
+    void init();
+    void cleanup();
+
     void testEmptyOnCreate();
     void testAddRecord();
     void testAddInvalidRecord();
@@ -53,7 +56,6 @@ private slots:
         const int recordsPerThread = 500;
         const int totalRecords = threadCount * recordsPerThread;
 
-        StorageManager::initInstance();
         StorageManager* storageManager = StorageManager::instance();
         QAtomicInt successCount;
         QAtomicInt failCount;
@@ -141,7 +143,6 @@ private slots:
         const int recordsPerThread = 400;
         const int totalRecords = threadCount * recordsPerThread;
 
-        StorageManager::initInstance();
         StorageManager* sm = StorageManager::instance();
         QAtomicInt addSuccess;
         QAtomicInt removeSuccess;
@@ -208,7 +209,6 @@ private slots:
         const int recordsPerThread = 500;
         const int totalRecords = threadCount * recordsPerThread;
 
-        StorageManager::initInstance();
         StorageManager* sm = StorageManager::instance();
         QAtomicInt stopFlag;
         QAtomicInt addSuccess;
@@ -269,7 +269,6 @@ private slots:
         const int addsPerThread = 500;
         const int total = threadCount * addsPerThread;
 
-        StorageManager::initInstance();
         StorageManager* sm = StorageManager::instance();
         QAtomicInt success;
 
@@ -332,7 +331,6 @@ private slots:
         const int recordsPerThread = 400;
         const int totalRecords = threadCount * recordsPerThread;
 
-        StorageManager::initInstance();
         StorageManager* sm = StorageManager::instance();
         QAtomicInt addSuccess(0);
 
@@ -389,7 +387,6 @@ private slots:
         TEST_SCOPE("testMixedWorkload");
 
         const int threadCount = 8;
-        StorageManager::initInstance();
         StorageManager* sm = StorageManager::instance();
         QAtomicInt stopFlag;
         QAtomicInt adderRemoverIters;
@@ -472,7 +469,6 @@ private slots:
 
         QThreadPool::globalInstance()->setMaxThreadCount(16);
 
-        StorageManager::initInstance();
         StorageManager* sm = StorageManager::instance();
 
         // Наполняем
@@ -554,7 +550,6 @@ private slots:
 
         QThreadPool::globalInstance()->setMaxThreadCount(16);
 
-        StorageManager::initInstance();
         StorageManager* sm = StorageManager::instance();
         for (int t = 0; t < threadCount; ++t) {
             for (int i = 0; i < recordsPerThread; ++i) {
@@ -577,13 +572,17 @@ private slots:
 
         const qint64 elapsedSerialize = timerSerialize.elapsed();
 
+        QList<Record> records = sm->getRecords();
+        qsizetype countRecords = sm->countRecords();
+        StorageManager::freeInstance();
+        StorageManager::initInstance();
+        StorageManager* sm2 = StorageManager::instance();
+        QCOMPARE(sm2->countRecords(), 0);
+
         QElapsedTimer timerDeserialize;
         timerDeserialize.start();
 
         // deserialize
-        StorageManager::freeInstance();
-        StorageManager::initInstance();
-        StorageManager* sm2 = StorageManager::instance();
         {
             QDataStream in(&data, QIODevice::ReadOnly);
             in.setVersion(QDataStream::Version::Qt_6_11);
@@ -592,21 +591,27 @@ private slots:
 
         const qint64 elapsedDeserialize = timerDeserialize.elapsed();
 
+        QCOMPARE(sm2->countRecords(), static_cast<qsizetype>(totalRecords));
+
+        QList<Record> records2 = sm2->getRecords();
+        qsizetype countRecords2 = sm2->countRecords();
+
         qDebug() << "ElapsedSerialize:" << elapsedSerialize << "ms";
         qDebug() << "ElapsedDeserialize:" << elapsedDeserialize << "ms";
         _scope.metric(u"elapsedSerialize"_s, elapsedSerialize)
             .metric(u"elapsedDeserialize"_s, elapsedDeserialize)
             .metric(u"totalRecords"_s, totalRecords)
-            .metric(u"finalRecords"_s, sm->countRecords());
+            .metric(u"startCountRecords"_s, countRecords)
+            .metric(u"finalCountRecords"_s, countRecords2);
 
-        QCOMPARE(sm2->countRecords(), static_cast<qsizetype>(totalRecords));
+        QCOMPARE(countRecords2, static_cast<qsizetype>(totalRecords));
 
         // Сверяем ключи
         QSet<QString> keys1, keys2;
-        for (const Record& r : sm->getRecords()) {
+        for (const Record& r : records) {
             keys1.insert(makeKey(r));
         }
-        for (const Record& r : sm2->getRecords()) {
+        for (const Record& r : records2) {
             keys2.insert(makeKey(r));
         }
         QCOMPARE(keys1, keys2);
@@ -622,7 +627,6 @@ private slots:
 
         QThreadPool::globalInstance()->setMaxThreadCount(16);
 
-        StorageManager::initInstance();
         StorageManager* sm = StorageManager::instance();
         QAtomicInt stopFlag;
         QAtomicInt serializations;
@@ -680,7 +684,6 @@ private slots:
             const int recordsPerWriter = 500;
             const int totalRecords = writerCount * recordsPerWriter;
 
-            StorageManager::initInstance();
             StorageManager* sm = StorageManager::instance();
 
             QThreadPool::globalInstance()->setMaxThreadCount(16);
@@ -731,7 +734,7 @@ private slots:
 
             QSet<QString> actualKeys;
             for (const Record& r : records) {
-                verifyRecordIntegrity(r, /*sm=*/sm);
+                verifyRecordIntegrity(r);
                 actualKeys.insert(makeKey(r));
             }
             QCOMPARE(actualKeys.size(), totalRecords);
@@ -751,26 +754,31 @@ private slots:
                 out.setVersion(QDataStream::Version::Qt_6_11);
                 sm->serialize(out);
             }
-            StorageManager sm2;
+
+            StorageManager::freeInstance();
+            StorageManager::initInstance();
+            StorageManager* sm2 = StorageManager::instance();
+
+            QCOMPARE(sm2->countRecords(), 0);
             {
                 QDataStream in(&data, QIODevice::ReadOnly);
                 in.setVersion(QDataStream::Version::Qt_6_11);
-                sm2.deserialize(in);
+                sm2->deserialize(in);
             }
-            QCOMPARE(sm2.countRecords(), static_cast<qsizetype>(totalRecords));
+            QCOMPARE(sm2->countRecords(), static_cast<qsizetype>(totalRecords));
 
             QSet<QString> deserializedKeys;
-            for (const Record& r : sm2.getRecords()) {
+            for (const Record& r : sm2->getRecords()) {
                 deserializedKeys.insert(makeKey(r));
             }
             QCOMPARE(deserializedKeys, expectedKeys);
         }
 
-        // ------------------------------------------------------------
-        //  Part 2. Scenario B: all methods in parallel.
-        //           The result is non-deterministic, but each Record
-        //           must be consistent.
-        // ------------------------------------------------------------
+        //     // ------------------------------------------------------------
+        //     //  Part 2. Scenario B: all methods in parallel.
+        //     //           The result is non-deterministic, but each Record
+        //     //           must be consistent.
+        //     // ------------------------------------------------------------
         {
             TEST_SCOPE("testFullStressIntegrity - Scenario B");
 
@@ -778,7 +786,9 @@ private slots:
 
             QThreadPool::globalInstance()->setMaxThreadCount(16);
 
-            StorageManager sm;
+            StorageManager::freeInstance();
+            StorageManager::initInstance();
+            StorageManager* sm = StorageManager::instance();
 
             // Стартовое наполнение — чтобы у удалятелей было что удалять
             const int initialRecords = 500;
@@ -971,34 +981,36 @@ private slots:
                 .metric(u"serializeIters"_s, serializeIters.loadAcquire())
                 .metric(u"runTimeMs"_s, runTimeMs);
 
+            const QList<Record> finalRecords = sm->getRecords();
             {
                 // Все потоки стоят. Состояние sm фиксировано.
-                const QList<Record> finalRecords1 = sm->getRecords();
                 QByteArray data1;
                 {
                     QDataStream out(&data1, QIODevice::WriteOnly);
                     out.setVersion(QDataStream::Version::Qt_6_11);
                     sm->serialize(out);
                 }
-                StorageManager sm2;
+
+                StorageManager::freeInstance();
+                StorageManager::initInstance();
+                StorageManager* sm2 = StorageManager::instance();
                 {
                     QDataStream in(&data1, QIODevice::ReadOnly);
                     in.setVersion(QDataStream::Version::Qt_6_11);
-                    sm2.deserialize(in);
+                    sm2->deserialize(in);
                 }
-                const QList<Record> deserRecords = sm2.getRecords();
-                const QList<Record> finalRecords2 = sm->getRecords();
+                const QList<Record> deserRecords = sm2->getRecords();
 
                 // 1) getRecords стабилен
-                QCOMPARE(finalRecords1.size(), finalRecords2.size());
-                for (int i = 0; i < finalRecords1.size(); ++i) {
-                    QCOMPARE(makeKey(finalRecords1[i]), makeKey(finalRecords2[i]));
+                QCOMPARE(finalRecords.size(), deserRecords.size());
+                for (int i = 0; i < finalRecords.size(); ++i) {
+                    QCOMPARE(makeKey(finalRecords[i]), makeKey(deserRecords[i]));
                 }
 
                 // 2) serialize/deserialize даёт то же
-                QCOMPARE(deserRecords.size(), finalRecords1.size());
+                QCOMPARE(deserRecords.size(), finalRecords.size());
                 QSet<QString> k1, k2;
-                for (const auto& r : finalRecords1) {
+                for (const auto& r : finalRecords) {
                     k1.insert(makeKey(r));
                 }
                 for (const auto& r : deserRecords) {
@@ -1007,40 +1019,15 @@ private slots:
                 QCOMPARE(k1, k2);
             }
 
-            // ---- Финальная проверка целостности ----
-            const QList<Record> finalRecords = sm->getRecords();
             qDebug() << "final records:" << finalRecords.size();
 
             QSet<QString> finalKeys;
             for (const Record& r : finalRecords) {
-                verifyRecordIntegrity(r, sm);
+                verifyRecordIntegrity(r);
                 finalKeys.insert(makeKey(r));
             }
             // Все записи уникальны (нет дубликатов из-за гонок)
             QCOMPARE(finalKeys.size(), finalRecords.size());
-
-            // ---- serialize финального состояния корректен ----
-            QByteArray data;
-            {
-                QDataStream out(&data, QIODevice::WriteOnly);
-                out.setVersion(QDataStream::Version::Qt_6_11);
-                sm->serialize(out);
-            }
-            StorageManager sm2;
-            {
-                QDataStream in(&data, QIODevice::ReadOnly);
-                in.setVersion(QDataStream::Version::Qt_6_11);
-                sm2.deserialize(in);
-            }
-            QCOMPARE(sm2.countRecords(), sm->countRecords());
-
-            QSet<QString> deserKeys;
-            for (const Record& r : sm2.getRecords()) {
-                verifyRecordIntegrity(r, sm2);
-                deserKeys.insert(makeKey(r));
-            }
-
-            QCOMPARE(deserKeys, finalKeys);
         }
     }
 
@@ -1050,7 +1037,8 @@ private slots:
         const int getterCount = 4;
         const int perThread = 1000;
 
-        StorageManager sm;
+        StorageManager::initInstance();
+        StorageManager* sm = StorageManager::instance();
         QAtomicInt stopFlag;
 
         QThreadPool::globalInstance()->setMaxThreadCount(16);
@@ -1089,7 +1077,8 @@ private slots:
     void testGetDuringClear() {
         QThreadPool::globalInstance()->setMaxThreadCount(16);
 
-        StorageManager sm;
+        StorageManager::initInstance();
+        StorageManager* sm = StorageManager::instance();
         for (int i = 0; i < 1000; ++i) {
             sm->addRecord(createRecord(0, i));
         }
@@ -1162,7 +1151,7 @@ private:
             .join(u"|");
     }
 
-    void verifyRecordIntegrity(const Record& r, const StorageManager& sm) const {
+    void verifyRecordIntegrity(const Record& r) const {
         // ---------- 1. Базовые проверки ---
         QVERIFY2(!r.date().isEmpty(), "date пустой");
         QVERIFY2(DatesList::checkDate(r.date()), "date не проходит checkDate");
@@ -1175,6 +1164,7 @@ private:
         //  Каждое значение из Record должно присутствовать в соответствующем
         //  списке StorageLists. Если оно оттуда пропало — значит, ссылка
         //  «полубитая»: RecordLink ещё ссылается на удалённый id.
+        StorageManager* sm = StorageManager::instance();
         const auto allDates = sm->get().datesStr();
         QVERIFY2(allDates.contains(r.date()),
                  qPrintable(QString(u"date '%1' отсутствует в StorageLists::dates").arg(r.date())));
@@ -1242,14 +1232,22 @@ Record TestStorageManager::makeValidRecord(const QString& date,
 // Базовые операции
 // ---------------------------------------------------------------------------
 
+void TestStorageManager::init() {
+    StorageManager::initInstance();
+}
+
+void TestStorageManager::cleanup() {
+    StorageManager::freeInstance();
+}
+
 void TestStorageManager::testEmptyOnCreate() {
-    StorageManager sm;
+    StorageManager* sm = StorageManager::instance();
     QCOMPARE(sm->countRecords(), qsizetype(0));
     QVERIFY(sm->getRecords().isEmpty());
 }
 
 void TestStorageManager::testAddRecord() {
-    StorageManager sm;
+    StorageManager* sm = StorageManager::instance();
     const Record r = makeValidRecord(u"15.01.2024"_s, 5, { u"Ivanov"_s }, { u"Petrov"_s });
 
     QVERIFY(sm->addRecord(r));
@@ -1261,7 +1259,7 @@ void TestStorageManager::testAddRecord() {
 }
 
 void TestStorageManager::testAddInvalidRecord() {
-    StorageManager sm;
+    StorageManager* sm = StorageManager::instance();
 
     // Пустая / невалидная дата
     const Record badDate = makeValidRecord(QString(), 1);
@@ -1279,7 +1277,7 @@ void TestStorageManager::testAddInvalidRecord() {
 }
 
 void TestStorageManager::testAddDuplicateValuesInList() {
-    StorageManager sm;
+    StorageManager* sm = StorageManager::instance();
 
     sm->add().executor(u"Ivanov"_s);
     sm->add().executor(u"Ivanov"_s);
@@ -1291,7 +1289,7 @@ void TestStorageManager::testAddDuplicateValuesInList() {
 }
 
 void TestStorageManager::testRemoveRecord() {
-    StorageManager sm;
+    StorageManager* sm = StorageManager::instance();
     const Record r = makeValidRecord(u"20.02.2024"_s, 3, { u"Sidorov"_s });
 
     QVERIFY(sm->addRecord(r));
@@ -1303,7 +1301,7 @@ void TestStorageManager::testRemoveRecord() {
 }
 
 void TestStorageManager::testRemoveNonexistentRecord() {
-    StorageManager sm;
+    StorageManager* sm = StorageManager::instance();
     const Record r = makeValidRecord(u"20.02.2024"_s, 3);
 
     QVERIFY(!sm->removeRecord(r));
@@ -1315,7 +1313,7 @@ void TestStorageManager::testRemoveNonexistentRecord() {
 // ---------------------------------------------------------------------------
 
 void TestStorageManager::testAdderFluent() {
-    StorageManager sm;
+    StorageManager* sm = StorageManager::instance();
 
     sm->add()
         .date(u"01.03.2024"_s)
@@ -1343,7 +1341,7 @@ void TestStorageManager::testAdderFluent() {
 }
 
 void TestStorageManager::testRemoverFluent() {
-    StorageManager sm;
+    StorageManager* sm = StorageManager::instance();
     sm->add().date(u"02.03.2024"_s).amount(1).executor(u"ExecB"_s).note(u"NoteB"_s);
 
     QCOMPARE(sm->count().executors(), 1);
@@ -1356,7 +1354,7 @@ void TestStorageManager::testRemoverFluent() {
 }
 
 void TestStorageManager::testGetter() {
-    StorageManager sm;
+    StorageManager* sm = StorageManager::instance();
     sm->add().date(u"01.04.2024"_s).amount(7).executor(u"ExecC"_s).author(u"AuthorC"_s);
 
     const auto dates = sm->get().datesStr();
@@ -1377,7 +1375,7 @@ void TestStorageManager::testGetter() {
 }
 
 void TestStorageManager::testCounter() {
-    StorageManager sm;
+    StorageManager* sm = StorageManager::instance();
 
     sm->add().date(u"01.05.2024"_s);
     sm->add().date(u"02.05.2024"_s);
@@ -1392,7 +1390,7 @@ void TestStorageManager::testCounter() {
 // ---------------------------------------------------------------------------
 
 void TestStorageManager::testDeleteBadLinksOnRemoverDate() {
-    StorageManager sm;
+    StorageManager* sm = StorageManager::instance();
     const Record r = makeValidRecord(u"01.06.2024"_s, 4, { u"ExecD"_s });
     QVERIFY(sm->addRecord(r));
     QCOMPARE(sm->countRecords(), qsizetype(1));
@@ -1403,7 +1401,7 @@ void TestStorageManager::testDeleteBadLinksOnRemoverDate() {
 }
 
 void TestStorageManager::testDeleteBadLinksOnRemoverExecutor() {
-    StorageManager sm;
+    StorageManager* sm = StorageManager::instance();
     const Record r = makeValidRecord(u"01.07.2024"_s, 2, { u"ExecE1"_s, u"ExecE2"_s });
     QVERIFY(sm->addRecord(r));
 
@@ -1416,7 +1414,7 @@ void TestStorageManager::testDeleteBadLinksOnRemoverExecutor() {
 }
 
 void TestStorageManager::testDeleteBadLinksKeepsRecordIfOnlySomeValuesRemoved() {
-    StorageManager sm;
+    StorageManager* sm = StorageManager::instance();
     const Record r = makeValidRecord(u"15.07.2024"_s,
                                      1,
                                      { u"ExecX"_s },
@@ -1445,7 +1443,7 @@ void TestStorageManager::testDeleteBadLinksKeepsRecordIfOnlySomeValuesRemoved() 
 // ---------------------------------------------------------------------------
 
 void TestStorageManager::testRecordsCacheInvalidation() {
-    StorageManager sm;
+    StorageManager* sm = StorageManager::instance();
     QVERIFY(sm->getRecords().isEmpty());
 
     const Record r = makeValidRecord(u"01.08.2024"_s, 1);
@@ -1463,25 +1461,27 @@ void TestStorageManager::testRecordsCacheInvalidation() {
 // ---------------------------------------------------------------------------
 
 void TestStorageManager::testSerializeDeserialize() {
-    StorageManager src;
-    QVERIFY(src.addRecord(makeValidRecord(u"01.09.2024"_s, 11, { u"ExecF"_s }, { u"AuthorF"_s })));
-    QVERIFY(src.addRecord(makeValidRecord(u"02.09.2024"_s, 22, { u"ExecG"_s })));
+    StorageManager* src = StorageManager::instance();
+    QVERIFY(src->addRecord(makeValidRecord(u"01.09.2024"_s, 11, { u"ExecF"_s }, { u"AuthorF"_s })));
+    QVERIFY(src->addRecord(makeValidRecord(u"02.09.2024"_s, 22, { u"ExecG"_s })));
 
     QByteArray data;
     {
         QDataStream out(&data, QIODevice::WriteOnly);
-        src.serialize(out);
+        src->serialize(out);
     }
 
-    StorageManager dst;
+    StorageManager::freeInstance();
+    StorageManager::initInstance();
+    StorageManager* dst = StorageManager::instance();
     {
         QDataStream in(&data, QIODevice::ReadOnly);
-        dst.deserialize(in);
+        dst->deserialize(in);
     }
 
-    QCOMPARE(dst.countRecords(), src.countRecords());
-    QCOMPARE(dst.getRecords().size(), src.getRecords().size());
-    QCOMPARE(dst.getRecords(), src.getRecords());
+    QCOMPARE(dst->countRecords(), src->countRecords());
+    QCOMPARE(dst->getRecords().size(), src->getRecords().size());
+    QCOMPARE(dst->getRecords(), src->getRecords());
 }
 
 // ---------------------------------------------------------------------------
@@ -1489,7 +1489,7 @@ void TestStorageManager::testSerializeDeserialize() {
 // ---------------------------------------------------------------------------
 
 void TestStorageManager::testReset() {
-    StorageManager sm;
+    StorageManager* sm = StorageManager::instance();
     QVERIFY(sm->addRecord(makeValidRecord(u"01.10.2024"_s, 1)));
     QCOMPARE(sm->countRecords(), qsizetype(1));
 
@@ -1502,7 +1502,7 @@ void TestStorageManager::testReset() {
 }
 
 void TestStorageManager::testClear() {
-    StorageManager sm;
+    StorageManager* sm = StorageManager::instance();
     QVERIFY(sm->addRecord(makeValidRecord(u"01.11.2024"_s, 1)));
     QCOMPARE(sm->countRecords(), qsizetype(1));
 
@@ -1514,4 +1514,4 @@ void TestStorageManager::testClear() {
 }
 
 QTEST_MAIN(TestStorageManager)
-#include "test_storageManager->moc"
+#include "test_StorageManager.moc"

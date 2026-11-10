@@ -18,8 +18,6 @@ namespace mdt {
         public:
             class Adder {
             public:
-                explicit Adder(StorageManager& storageManager);
-
                 Adder& date(const QString& date);
                 Adder& date(const qint32 exelFormat);
                 Adder& drawing(const Drawing& drawing);
@@ -30,15 +28,10 @@ namespace mdt {
                 Adder& modelMaterial(const QString& modelMaterial);
                 Adder& machine(const QString& machine);
                 Adder& note(const QString& note);
-
-            private:
-                StorageManager& m_storageManager;
             };
 
             class Remover {
             public:
-                explicit Remover(StorageManager& storageManager);
-
                 Remover& date(const QString& date);
                 Remover& date(const qint32 exelFormat);
                 Remover& drawing(const Drawing& drawing);
@@ -49,47 +42,34 @@ namespace mdt {
                 Remover& modelMaterial(const QString& modelMaterial);
                 Remover& machine(const QString& machine);
                 Remover& note(const QString& note);
-
-            private:
-                StorageManager& m_storageManager;
             };
 
             class Getter {
             public:
-                explicit Getter(const StorageManager& storageManager);
-
-                auto dates() const;
-                auto datesStr() const;
-                auto datesError() const;
-                auto drawings() const;
-                auto amounts() const;
-                auto executors() const;
-                auto authors() const;
-                auto castingMaterials() const;
-                auto modelMaterials() const;
-                auto machines() const;
-                auto notes() const;
-
-            private:
-                const StorageManager& m_storageManager;
+                QList<int> dates() const;
+                QList<QString> datesStr() const;
+                DatesList::ErrorType datesError() const;
+                QList<Drawing> drawings() const;
+                QList<int> amounts() const;
+                QList<QString> executors() const;
+                QList<QString> authors() const;
+                QList<QString> castingMaterials() const;
+                QList<QString> modelMaterials() const;
+                QList<QString> machines() const;
+                QList<QString> notes() const;
             };
 
             class Counter {
             public:
-                explicit Counter(const StorageManager& storageManager);
-
-                auto dates() const;
-                auto drawings() const;
-                auto amounts() const;
-                auto executors() const;
-                auto authors() const;
-                auto castingMaterials() const;
-                auto modelMaterials() const;
-                auto machines() const;
-                auto notes() const;
-
-            private:
-                const StorageManager& m_storageManager;
+                qsizetype dates() const;
+                qsizetype drawings() const;
+                qsizetype amounts() const;
+                qsizetype executors() const;
+                qsizetype authors() const;
+                qsizetype castingMaterials() const;
+                qsizetype modelMaterials() const;
+                qsizetype machines() const;
+                qsizetype notes() const;
             };
 
             static void initInstance();

@@ -58,7 +58,6 @@ private slots:
     void prepareSetsDirtyAndAllowsWrite();
     void prepareInvalidPathReturnsFalse();
     void prepareThrowsPropagatesAndCleansTemp();
-    void prepareCalledTwiceOverwritesTemp();
 
     // ---------- read ----------
     void readMissingFileReturnsFalse();
@@ -86,7 +85,6 @@ private slots:
 private:
     QTemporaryDir *m_dir = nullptr;
     QString m_filePath;
-    QString m_tempPath;
 
     // ---------- write / read records helpers ----------
 
@@ -118,7 +116,6 @@ void TestSaverFile::init() {
     m_dir = new QTemporaryDir();
     QVERIFY(m_dir->isValid());
     m_filePath = m_dir->filePath(u"data.bin"_s);
-    m_tempPath = m_dir->filePath(u"data.bin.tmp"_s);
 }
 
 void TestSaverFile::cleanup() {
@@ -129,67 +126,57 @@ void TestSaverFile::cleanup() {
 // ---------- prepare() ----------
 
 void TestSaverFile::prepareCreatesTempFile() {
-    SaverFile saver(m_filePath, m_tempPath);
     TestData data { 42, u"hello"_s };
-    QVERIFY(saver.prepare(data));
-    QVERIFY(QFile::exists(m_tempPath));
+    SaverFile saver(&data, m_filePath);
+
+    QVERIFY(saver.prepare());
+    QVERIFY(QFile::exists(m_filePath + u".tmp"_s));
 }
 
 void TestSaverFile::prepareSetsDirtyAndAllowsWrite() {
-    SaverFile saver(m_filePath, m_tempPath);
     TestData data { 7, u"dirty"_s };
+    SaverFile saver(&data, m_filePath);
 
-    QVERIFY(saver.prepare(data));
+    QVERIFY(saver.prepare());
     QVERIFY(saver.write());
     QVERIFY(QFile::exists(m_filePath));
 }
 
 void TestSaverFile::prepareInvalidPathReturnsFalse() {
+    TestData data { 1, u"x"_s };
     const QString badPath = m_dir->filePath(u"no_such_dir/data.bin.tmp"_s);
-    SaverFile saver(m_filePath, badPath);
+    SaverFile saver(&data, badPath);
 
-    QVERIFY(!saver.prepare(TestData { 1, u"x"_s }));
+    QVERIFY(!saver.prepare());
 }
 
 void TestSaverFile::prepareThrowsPropagatesAndCleansTemp() {
-    SaverFile saver(m_filePath, m_tempPath);
+    ThrowingData data {};
+    SaverFile saver(&data, m_filePath);
 
-    QVERIFY_THROWS_EXCEPTION(RuntimeError, Q_UNUSED(saver.prepare(ThrowingData { })));
-    QVERIFY(!QFile::exists(m_tempPath));
-}
-
-void TestSaverFile::prepareCalledTwiceOverwritesTemp() {
-    SaverFile saver(m_filePath, m_tempPath);
-
-    QVERIFY(saver.prepare(TestData { 1, u"first"_s }));
-    QVERIFY(saver.prepare(TestData { 2, u"second"_s }));
-    QVERIFY(saver.write());
-
-    TestData out;
-    QVERIFY(saver.read(out));
-    QCOMPARE(out.value, 2);
-    QCOMPARE(out.text, u"second"_s);
+    QVERIFY_THROWS_EXCEPTION(RuntimeError, Q_UNUSED(saver.prepare()));
+    QVERIFY(!QFile::exists(m_filePath + u".tmp"_s));
 }
 
 // ---------- read() ----------
 
 void TestSaverFile::readMissingFileReturnsFalse() {
-    SaverFile saver(m_filePath, m_tempPath);
+    TestData data;
+    SaverFile saver(&data, m_filePath);
 
-    TestData out;
-    QVERIFY(!saver.read(out));
+    QVERIFY(!saver.read());
 }
 
 void TestSaverFile::readRoundTripReturnsSameData() {
-    SaverFile saver(m_filePath, m_tempPath);
+    TestData original { 123, u"round trip"_s };
+    SaverFile saver(&original, m_filePath);
 
-    const TestData original { 123, u"round trip"_s };
-
-    QVERIFY(saver.prepare(original));
+    QVERIFY(saver.prepare());
     QVERIFY(saver.write());
 
     TestData out;
-    QVERIFY(saver.read(out));
+    SaverFile saver2(&out, m_filePath);
+    QVERIFY(saver.read());
     QCOMPARE(out, original);
 }
 
@@ -200,10 +187,10 @@ void TestSaverFile::readCorruptedFileReturnsFalse() {
         f.write("garbage-not-a-valid-stream");
     }
 
-    SaverFile saver(m_filePath, m_tempPath);
-    TestData out;
+    TestData data;
+    SaverFile saver(&data, m_filePath);
 
-    Q_UNUSED(saver.read(out));
+    Q_UNUSED(saver.read());
 }
 
 void TestSaverFile::readThrowsPropagates() {
@@ -213,44 +200,47 @@ void TestSaverFile::readThrowsPropagates() {
         f.write("anything");
     }
 
-    SaverFile saver(m_filePath, m_tempPath);
-    ThrowingData out;
+    TestData data;
+    SaverFile saver(&data, m_filePath);
 
-    QVERIFY_THROWS_EXCEPTION(RuntimeError, Q_UNUSED(saver.read(out)));
+    QVERIFY_THROWS_EXCEPTION(RuntimeError, Q_UNUSED(saver.read()));
 }
 
 void TestSaverFile::readDoesNotModifyStorageOnFailure() {
-    SaverFile saver(m_filePath, m_tempPath);
+    TestData data { 999, u"unchanged"_s };
+    SaverFile saver(&data, m_filePath);
 
-    TestData out { 999, u"unchanged"_s };
-    QVERIFY(!saver.read(out));
+    QVERIFY(!saver.read());
 
-    QCOMPARE(out.value, 999);
-    QCOMPARE(out.text, u"unchanged"_s);
+    QCOMPARE(data.value, 999);
+    QCOMPARE(data.text, u"unchanged"_s);
 }
 
 // ---------- write() ----------
 
 void TestSaverFile::writeWithoutPrepareReturnsTrue() {
-    SaverFile saver(m_filePath, m_tempPath);
+    TestData data;
+    SaverFile saver(&data, m_filePath);
 
     QVERIFY(saver.write());
     QVERIFY(!QFile::exists(m_filePath));
 }
 
 void TestSaverFile::writeWithoutTempFileReturnsFalse() {
-    SaverFile saver(m_filePath, m_tempPath);
+    TestData data { 1, u"x"_s };
+    SaverFile saver(&data, m_filePath);
 
-    QVERIFY(saver.prepare(TestData { 1, u"x"_s }));
-    QVERIFY(QFile::remove(m_tempPath));
+    QVERIFY(saver.prepare());
+    QVERIFY(QFile::remove(m_filePath + u".tmp"_s));
 
     QVERIFY(!saver.write());
 }
 
 void TestSaverFile::writeAfterPrepareMovesFile() {
-    SaverFile saver(m_filePath, m_tempPath);
+    TestData data { 5, u"move"_s };
+    SaverFile saver(&data, m_filePath);
 
-    QVERIFY(saver.prepare(TestData { 5, u"move"_s }));
+    QVERIFY(saver.prepare());
     QVERIFY(!QFile::exists(m_filePath));
 
     QVERIFY(saver.write());
@@ -258,18 +248,20 @@ void TestSaverFile::writeAfterPrepareMovesFile() {
 }
 
 void TestSaverFile::writeRemovesTempFile() {
-    SaverFile saver(m_filePath, m_tempPath);
+    TestData data { 5, u"x"_s };
+    SaverFile saver(&data, m_filePath);
 
-    QVERIFY(saver.prepare(TestData { 5, u"x"_s }));
+    QVERIFY(saver.prepare());
     QVERIFY(saver.write());
 
-    QVERIFY(!QFile::exists(m_tempPath));
+    QVERIFY(!QFile::exists(m_filePath + u".tmp"_s));
 }
 
 void TestSaverFile::writeTwiceIsIdempotent() {
-    SaverFile saver(m_filePath, m_tempPath);
+    TestData data { 1, u"a"_s };
+    SaverFile saver(&data, m_filePath);
 
-    QVERIFY(saver.prepare(TestData { 1, u"a"_s }));
+    QVERIFY(saver.prepare());
     QVERIFY(saver.write());
 
     QVERIFY(saver.write());
@@ -279,35 +271,29 @@ void TestSaverFile::writeTwiceIsIdempotent() {
 // ---------- Full Cycle ----------
 
 void TestSaverFile::fullCyclePrepareWriteRead() {
-    SaverFile saver(m_filePath, m_tempPath);
+    TestData data { 10, u"alpha"_s };
+    SaverFile saver(&data, m_filePath);
 
-    const TestData a { 10, u"alpha"_s };
-    const TestData b { 20, u"beta"_s };
-
-    QVERIFY(saver.prepare(a));
+    QVERIFY(saver.prepare());
     QVERIFY(saver.write());
 
     TestData out;
-    QVERIFY(saver.read(out));
-    QCOMPARE(out, a);
-
-    QVERIFY(saver.prepare(b));
-    QVERIFY(saver.write());
-
-    QVERIFY(saver.read(out));
-    QCOMPARE(out, b);
+    SaverFile saver2(&out, m_filePath);
+    QVERIFY(saver.read());
+    QCOMPARE(out, data);
 }
 
 // ---------- Destructor ----------
 
 void TestSaverFile::destructorRemovesTempFile() {
     {
-        SaverFile saver(m_filePath, m_tempPath);
-        QVERIFY(saver.prepare(TestData { 1, u"x"_s }));
-        QVERIFY(QFile::exists(m_tempPath));
+        TestData data { 1, u"x"_s };
+        SaverFile saver(&data, m_filePath);
+        QVERIFY(saver.prepare());
+        QVERIFY(QFile::exists(m_filePath + u".tmp"_s));
     }
 
-    QVERIFY(!QFile::exists(m_tempPath));
+    QVERIFY(!QFile::exists(m_filePath + u".tmp"_s));
 }
 
 // ---------- write / read records ----------
@@ -316,20 +302,21 @@ void TestSaverFile::writeReadRecords() {
     QElapsedTimer timerCommon;
     QElapsedTimer timer;
 
-    StorageManager sm;
+    StorageManager::initInstance();
+    StorageManager *sm = StorageManager::instance();
 
     timerCommon.start();
     timer.start();
 
     for (int t = 0; t < 4; ++t) {
         for (int i = 0; i < 500; ++i) {
-            sm.addRecord(createRecord(t, i));
+            sm->addRecord(createRecord(t, i));
         }
     }
 
     const qint64 elapsedFilling = timer.restart();
 
-    auto records = sm.getRecords();
+    auto records = sm->getRecords();
 
     const qint64 elapsedCopy = timer.restart();
 
@@ -342,18 +329,22 @@ void TestSaverFile::writeReadRecords() {
 
     const qint64 elapsedCheck = timer.restart();
 
-    SaverFile saver(m_filePath, m_tempPath);
-    QVERIFY(saver.prepare(sm));
+    SaverFile saver(sm, m_filePath);
+    QVERIFY(saver.prepare());
     QVERIFY(saver.write());
 
     const qint64 elapsedSave = timer.restart();
 
-    StorageManager sm2;
-    QVERIFY(saver.read(sm2));
+    StorageManager::freeInstance();
+    StorageManager::initInstance();
+    StorageManager *sm2 = StorageManager::instance();
+
+    SaverFile saver2(sm2, m_filePath);
+    QVERIFY(saver2.read());
 
     const qint64 elapsedLoad = timer.restart();
 
-    auto records2 = sm2.getRecords();
+    auto records2 = sm2->getRecords();
 
     const qint64 elapsedCopy2 = timer.restart();
 

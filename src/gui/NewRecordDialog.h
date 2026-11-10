@@ -28,7 +28,7 @@ private slots:
 
 private:
     Ui::NewRecordDialog *m_ui;
-    mdt::work::StorageManager m_storageWork;
+    mdt::work::StorageManager *m_storageWork;
 
     void init();
     void createListComboPair(QListWidget *list, NaturalSortComboBox *combo);

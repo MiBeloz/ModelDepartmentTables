@@ -58,7 +58,7 @@ void NewRecordDialog::init() {
             &QComboBox::currentTextChanged,
             this,
             [this](const QString &text) {
-                auto drawings = m_storageWork.get().drawings();
+                auto drawings = m_storageWork->get().drawings();
                 for (const auto &drawing : std::as_const(drawings)) {
                     if (drawing.getNumber() == text) {
                         m_ui->lineEditDrawingTitleValue->setText(drawing.getTitle());
@@ -94,13 +94,9 @@ void NewRecordDialog::init() {
     m_ui->dateEditDateValue->setDisplayFormat(mdt::work::DatesList::getDateFormat());
     m_ui->dateEditDateValue->setCalendarPopup(true);
 
-    mdt::SaverFile saver(mdt::SaverSettings::SAVER_STORAGE_FILENAME,
-                         mdt::SaverSettings::SAVER_STORAGE_FILENAME_TMP);
-    if (!saver.read(m_storageWork)) {
-        throw mdt::RuntimeError(u"Error read storage"_s);
-    }
+    m_storageWork = mdt::work::StorageManager::instance();
 
-    auto drawings = m_storageWork.get().drawings();
+    auto drawings = m_storageWork->get().drawings();
     QStringList numbers;
     for (const auto &drawing : std::as_const(drawings)) {
         numbers.append(drawing.getNumber());
@@ -109,22 +105,22 @@ void NewRecordDialog::init() {
     m_ui->comboBoxDrawingNumberValue->setStringList(numbers);
     m_ui->comboBoxDrawingNumberValue->setPlaceholderText(u"Select or start typing the drawing..."_s);
 
-    m_ui->comboBoxAddExecutor->setStringList(m_storageWork.get().executors());
+    m_ui->comboBoxAddExecutor->setStringList(m_storageWork->get().executors());
     m_ui->comboBoxAddExecutor->setPlaceholderText(u"Select executor..."_s);
 
-    m_ui->comboBoxAddAuthor->setStringList(m_storageWork.get().authors());
+    m_ui->comboBoxAddAuthor->setStringList(m_storageWork->get().authors());
     m_ui->comboBoxAddAuthor->setPlaceholderText(u"Select author..."_s);
 
-    m_ui->comboBoxAddCastingMaterial->setStringList(m_storageWork.get().castingMaterials());
+    m_ui->comboBoxAddCastingMaterial->setStringList(m_storageWork->get().castingMaterials());
     m_ui->comboBoxAddCastingMaterial->setPlaceholderText(u"Select casting material..."_s);
 
-    m_ui->comboBoxAddModelMaterial->setStringList(m_storageWork.get().modelMaterials());
+    m_ui->comboBoxAddModelMaterial->setStringList(m_storageWork->get().modelMaterials());
     m_ui->comboBoxAddModelMaterial->setPlaceholderText(u"Select model material..."_s);
 
-    m_ui->comboBoxAddMachine->setStringList(m_storageWork.get().machines());
+    m_ui->comboBoxAddMachine->setStringList(m_storageWork->get().machines());
     m_ui->comboBoxAddMachine->setPlaceholderText(u"Select machine..."_s);
 
-    m_ui->comboBoxAddNote->setStringList(m_storageWork.get().notes());
+    m_ui->comboBoxAddNote->setStringList(m_storageWork->get().notes());
     m_ui->comboBoxAddNote->setPlaceholderText(u"Select note..."_s);
 }
 
