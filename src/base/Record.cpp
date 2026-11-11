@@ -4,10 +4,14 @@
 
 namespace mdt {
     namespace work {
-        Record::Record(const QString &date, const Drawing &drawing, qint32 amount)
+        Record::Record(const QString &date,
+                       const Drawing &drawing,
+                       qint32 amount,
+                       qsizetype customCount)
             : m_date(date)
             , m_drawing(drawing)
-            , m_amount(amount) {}
+            , m_amount(amount)
+            , m_custom(customCount) {}
 
         Record::Record(const QString &date,
                        const Drawing &drawing,
@@ -76,6 +80,10 @@ namespace mdt {
 
         const QStringList &Record::custom(qsizetype customIndex) const {
             return m_custom[customIndex];
+        }
+
+        qsizetype Record::customCount() const {
+            return m_custom.count();
         }
     } // namespace work
 } // namespace mdt

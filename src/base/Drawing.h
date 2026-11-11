@@ -2,6 +2,7 @@
 #define DRAWING_H
 
 #include <QHash>
+#include <QMetaType>
 
 namespace mdt {
     class Drawing final {
@@ -50,5 +51,7 @@ namespace mdt {
         return in;
     }
 } // namespace mdt
+
+Q_DECLARE_METATYPE(mdt::Drawing)
 
 #endif // DRAWING_H

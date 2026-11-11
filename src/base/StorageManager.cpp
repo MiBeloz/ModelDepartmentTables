@@ -31,7 +31,7 @@ mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::date(const q
 
 mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::drawing(const Drawing &drawing) {
     const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.drawings().insert(drawing);
+    m_instance->m_storageLists.drawings().insert(QVariant::fromValue(drawing));
     return *this;
 }
 
@@ -66,7 +66,7 @@ mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::date(
 mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::drawing(
     const Drawing &drawing) {
     const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.drawings().remove(drawing);
+    m_instance->m_storageLists.drawings().remove(QVariant::fromValue(drawing));
     m_instance->deleteBadLinks();
     return *this;
 }
@@ -160,34 +160,19 @@ bool mdt::work::StorageManager::addRecord(const Record &record) {
     const QWriteLocker locker(&m_lock);
 
     auto idDate = m_storageLists.dates().insert(record.date());
-    auto idDrawing = m_storageLists.drawings().insert(record.drawing());
+    auto idDrawing = m_storageLists.drawings().insert(QVariant::fromValue(record.drawing()));
     auto idAmount = m_storageLists.amounts().insert(record.amount());
     if (!idDate.has_value() || !idDrawing.has_value() || !idAmount.has_value()) {
         return false;
     }
 
-    auto idExecutors = addHelper(record.executors(),
-                                 m_storageLists.customStorage(CustomStorage::Executors));
-    auto idAuthors = addHelper(record.authors(),
-                               m_storageLists.customStorage(CustomStorage::Authors));
-    auto idCastingMaterials = addHelper(record.castingMaterials(),
-                                        m_storageLists.customStorage(
-                                            CustomStorage::CastingMaterials));
-    auto idModelMaterials = addHelper(record.modelMaterials(),
-                                      m_storageLists.customStorage(CustomStorage::ModelMaterials));
-    auto idMachines = addHelper(record.machines(),
-                                m_storageLists.customStorage(CustomStorage::Machines));
-    auto idNotes = addHelper(record.notes(), m_storageLists.customStorage(CustomStorage::Notes));
+    QList<QSet<qint32>> idCustomLists(record.customCount());
+    for (int i = 0; i < idCustomLists.count(); ++i) {
+        QSet<qint32> list = addHelper(record.custom(i), m_storageLists.customStorage(i));
+        idCustomLists[i] = list;
+    }
 
-    RecordLink recordLink(*idDate,
-                          *idDrawing,
-                          *idAmount,
-                          idExecutors,
-                          idAuthors,
-                          idCastingMaterials,
-                          idModelMaterials,
-                          idMachines,
-                          idNotes);
+    RecordLink recordLink(*idDate, *idDrawing, *idAmount, idCustomLists);
 
     m_storageRecordsLinks.add(recordLink);
     m_recordsIsValid = false;
@@ -201,36 +186,20 @@ bool mdt::work::StorageManager::removeRecord(const Record &record) {
 
     const QWriteLocker locker(&m_lock);
 
-    auto idDate = m_storageLists.dates().findId(record.date());
-    auto idDrawing = m_storageLists.drawings().findId(record.drawing());
-    auto idAmount = m_storageLists.amounts().findId(record.amount());
+    auto idDate = m_storageLists.dates().getId(record.date());
+    auto idDrawing = m_storageLists.drawings().getId(QVariant::fromValue(record.drawing()));
+    auto idAmount = m_storageLists.amounts().getId(record.amount());
     if (!idDate.has_value() || !idDrawing.has_value() || !idAmount.has_value()) {
         return false;
     }
 
-    auto idExecutors = findIdHelper(record.executors(),
-                                    m_storageLists.customStorage(CustomStorage::Executors));
-    auto idAuthors = findIdHelper(record.authors(),
-                                  m_storageLists.customStorage(CustomStorage::Authors));
-    auto idCastingMaterials = findIdHelper(record.castingMaterials(),
-                                           m_storageLists.customStorage(
-                                               CustomStorage::CastingMaterials));
-    auto idModelMaterials = findIdHelper(record.modelMaterials(),
-                                         m_storageLists.customStorage(
-                                             CustomStorage::ModelMaterials));
-    auto idMachines = findIdHelper(record.machines(),
-                                   m_storageLists.customStorage(CustomStorage::Machines));
-    auto idNotes = findIdHelper(record.notes(), m_storageLists.customStorage(CustomStorage::Notes));
+    QList<QSet<qint32>> idCustomLists(record.customCount());
+    for (int i = 0; i < idCustomLists.count(); ++i) {
+        QSet<qint32> list = findIdHelper(record.custom(i), m_storageLists.customStorage(i));
+        idCustomLists[i] = list;
+    }
 
-    RecordLink recordLink(idDate.value(),
-                          idDrawing.value(),
-                          idAmount.value(),
-                          idExecutors,
-                          idAuthors,
-                          idCastingMaterials,
-                          idModelMaterials,
-                          idMachines,
-                          idNotes);
+    RecordLink recordLink(idDate.value(), idDrawing.value(), idAmount.value(), idCustomLists);
 
     m_storageRecordsLinks.remove(recordLink);
     m_recordsIsValid = false;
@@ -254,89 +223,38 @@ const QList<mdt::work::Record> &mdt::work::StorageManager::getRecords() const {
     const auto recordsLinks = m_storageRecordsLinks.get();
     for (const auto &it : recordsLinks) {
         QString date;
-        if (auto v = m_storageLists.dates().findStrValue(it.getIdDate()); v.has_value()) {
+        if (auto v = m_storageLists.dates().getStrValue(it.getIdDate()); v.has_value()) {
             date = v.value();
         } else {
             continue;
         }
 
         Drawing drawing(Drawing::Null);
-        if (auto v = m_storageLists.drawings().findValue(it.getIdDrawing()); v.has_value()) {
-            drawing = v.value();
+        if (auto v = m_storageLists.drawings().getValue(it.getIdDrawing()); v.has_value()) {
+            drawing = v.value().value<Drawing>();
         } else {
             continue;
         }
 
         qint32 amount {};
-        if (auto v = m_storageLists.amounts().findValue(it.getIdAmount()); v.has_value()) {
-            amount = v.value();
+        if (auto v = m_storageLists.amounts().getValue(it.getIdAmount()); v.has_value()) {
+            amount = v.value().toInt();
         } else {
             continue;
         }
 
-        QStringList executors;
-        QSet executorsIds = it.getIds(IdsList::Executors);
-        for (auto id = executorsIds.begin(); id != executorsIds.end(); ++id) {
-            if (auto v = m_storageLists.customStorage(CustomStorage::Executors).findValue(*id);
-                v.has_value()) {
-                executors << v.value();
+        QList<QStringList> customListValues(6); //(record.customCount());
+        for (int i = 0; i < customListValues.count(); ++i) {
+            QStringList listValues;
+            QSet listIds = it.getIdsCustom(i);
+            for (auto id = listIds.begin(); id != listIds.end(); ++id) {
+                if (auto v = m_storageLists.customStorage(i).getValue(*id); v.has_value()) {
+                    listValues << v.value().toString();
+                }
             }
         }
 
-        QStringList authors;
-        QSet authorsIds = it.getIds(IdsList::Authors);
-        for (auto id = authorsIds.begin(); id != authorsIds.end(); ++id) {
-            if (auto v = m_storageLists.customStorage(CustomStorage::Authors).findValue(*id);
-                v.has_value()) {
-                authors << v.value();
-            }
-        }
-
-        QStringList castingMaterials;
-        QSet castingMaterialsIds = it.getIds(IdsList::CastingMaterials);
-        for (auto id = castingMaterialsIds.begin(); id != castingMaterialsIds.end(); ++id) {
-            if (auto v = m_storageLists.customStorage(CustomStorage::CastingMaterials).findValue(*id);
-                v.has_value()) {
-                castingMaterials << v.value();
-            }
-        }
-
-        QStringList modelMaterials;
-        QSet modelMaterialsIds = it.getIds(IdsList::ModelMaterials);
-        for (auto id = modelMaterialsIds.begin(); id != modelMaterialsIds.end(); ++id) {
-            if (auto v = m_storageLists.customStorage(CustomStorage::ModelMaterials).findValue(*id);
-                v.has_value()) {
-                modelMaterials << v.value();
-            }
-        }
-
-        QStringList machines;
-        QSet machinesIds = it.getIds(IdsList::Machines);
-        for (auto id = machinesIds.begin(); id != machinesIds.end(); ++id) {
-            if (auto v = m_storageLists.customStorage(CustomStorage::Machines).findValue(*id);
-                v.has_value()) {
-                machines << v.value();
-            }
-        }
-
-        QStringList notes;
-        QSet notesIds = it.getIds(IdsList::Notes);
-        for (auto id = notesIds.begin(); id != notesIds.end(); ++id) {
-            if (auto v = m_storageLists.customStorage(CustomStorage::Notes).findValue(*id);
-                v.has_value()) {
-                notes << v.value();
-            }
-        }
-
-        Record r(date,
-                 drawing,
-                 amount,
-                 executors,
-                 authors,
-                 castingMaterials,
-                 modelMaterials,
-                 machines,
-                 notes);
+        Record r(date, drawing, amount, customListValues);
 
         m_records.append(r);
     }
@@ -388,9 +306,9 @@ mdt::work::StorageManager::StorageManager() = default;
 void mdt::work::StorageManager::deleteBadLinks() {
     const auto links = m_storageRecordsLinks.get();
     for (auto &link : links) {
-        if (!m_storageLists.dates().findValue(link.getIdDate()).has_value() ||
-            !m_storageLists.drawings().findValue(link.getIdDrawing()).has_value() ||
-            !m_storageLists.amounts().findValue(link.getIdAmount()).has_value()) {
+        if (!m_storageLists.dates().getValue(link.getIdDate()).has_value() ||
+            !m_storageLists.drawings().getValue(link.getIdDrawing()).has_value() ||
+            !m_storageLists.amounts().getValue(link.getIdAmount()).has_value()) {
             m_storageRecordsLinks.remove(link);
             m_recordsIsValid = false;
         }
@@ -405,7 +323,7 @@ void mdt::work::StorageManager::deleteBadLinksList(qsizetype customIndex) {
 
         QSet<qint32> idsNew;
         for (auto id : idsOld) {
-            if (auto value = m_storageLists.customStorage(customIndex).findValue(id);
+            if (auto value = m_storageLists.customStorage(customIndex).getValue(id);
                 value.has_value()) {
                 idsNew.insert(id);
             }

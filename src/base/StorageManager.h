@@ -86,7 +86,6 @@ namespace mdt {
             mutable QReadWriteLock m_lock;
             mutable QReadWriteLock m_cacheLock;
 
-            template<typename T>
             QSet<qint32> addHelper(const QStringList& values, CustomList& storage) {
                 QSet<qint32> result;
                 for (auto it = values.begin(); it != values.end(); ++it) {
@@ -97,7 +96,6 @@ namespace mdt {
                 return result;
             }
 
-            template<typename T>
             QSet<qint32> findIdHelper(const QStringList& values, const CustomList& storage) const {
                 QSet<qint32> result;
                 for (auto it = values.begin(); it != values.end(); ++it) {

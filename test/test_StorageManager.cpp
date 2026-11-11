@@ -1003,6 +1003,12 @@ private slots:
 
                 // 1) getRecords стабилен
                 QCOMPARE(finalRecords.size(), deserRecords.size());
+
+                // for (int i = 0; i < 10; ++i) {
+                //     qDebug() << finalRecords[i].date();
+                //     qDebug() << deserRecords[i].date();
+                // }
+
                 for (int i = 0; i < finalRecords.size(); ++i) {
                     QCOMPARE(makeKey(finalRecords[i]), makeKey(deserRecords[i]));
                 }

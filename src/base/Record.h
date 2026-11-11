@@ -11,7 +11,10 @@ namespace mdt {
         public:
             Record() = default;
 
-            explicit Record(const QString& date, const Drawing& drawing, qint32 amount);
+            explicit Record(const QString& date,
+                            const Drawing& drawing,
+                            qint32 amount,
+                            qsizetype customCount = 0);
 
             explicit Record(const QString& date,
                             const Drawing& drawing,
@@ -31,6 +34,8 @@ namespace mdt {
             const Drawing& drawing() const;
             qint32 amount() const;
             const QStringList& custom(qsizetype customIndex) const;
+
+            qsizetype customCount() const;
 
             static const Record Null;
 
