@@ -1,17 +1,17 @@
 ﻿#ifndef CUSTOMLIST_H
 #define CUSTOMLIST_H
 
+#include "Exceptions.h"
+
 #include <QDebug>
 #include <QHash>
 #include <QObject>
 #include <QReadWriteLock>
 #include <QStack>
-
-#include "Exceptions.h"
+#include <QVariant>
 
 namespace mdt {
     namespace work {
-        template<typename T>
         class CustomList {
         public:
             CustomList() = default;
@@ -28,11 +28,11 @@ namespace mdt {
 
             void swap(CustomList& other);
 
-            virtual std::optional<qint32> insert(const T& data);
-            virtual bool remove(const T& data);
-            virtual std::optional<qint32> getId(const T& data) const;
-            virtual std::optional<T> getValue(qint32 id) const;
-            virtual QList<T> getAllValues() const;
+            virtual std::optional<qint32> insert(const QVariant& data);
+            virtual bool remove(const QVariant& data);
+            virtual std::optional<qint32> getId(const QVariant& data) const;
+            virtual std::optional<QVariant> getValue(qint32 id) const;
+            virtual QVariantList getAllValues() const;
 
             void clear();
             void reset();
@@ -45,8 +45,8 @@ namespace mdt {
             void deserialize(QDataStream& in);
 
         private:
-            QHash<qint32, T> m_list;
-            QHash<qint32, T> m_listTmp;
+            QHash<qint32, QVariant> m_list;
+            QHash<qint32, QVariant> m_listTmp;
             qint32 m_id { };
             qint32 m_idTmp { };
             QStack<qint32> m_emptyId;
@@ -56,14 +56,13 @@ namespace mdt {
             void throwStreamError(QDataStream::Status status) const;
 
             void deserializeVersion(QDataStream& in) const;
-            QHash<qint32, T> deserializeList(QDataStream& in) const;
+            QHash<qint32, QVariant> deserializeList(QDataStream& in) const;
             qint32 deserializeId(QDataStream& in) const;
             QStack<qint32> deserializeEmptyId(QDataStream& in) const;
             bool deserializeCommit(QDataStream& in) const;
         };
 
-        template<typename T>
-        inline CustomList<T>::CustomList(const CustomList& other) {
+        inline CustomList::CustomList(const CustomList& other) {
             m_list = other.m_list;
             m_listTmp = other.m_listTmp;
             m_id = other.m_id;
@@ -73,8 +72,7 @@ namespace mdt {
             m_commit = other.m_commit;
         }
 
-        template<typename T>
-        inline CustomList<T>::CustomList(CustomList&& other) noexcept {
+        inline CustomList::CustomList(CustomList&& other) noexcept {
             m_list = std::move(other.m_list);
             m_listTmp = std::move(other.m_listTmp);
             m_id = other.m_id;
@@ -88,8 +86,7 @@ namespace mdt {
             other.m_commit = true;
         }
 
-        template<typename T>
-        inline CustomList<T>& CustomList<T>::operator =(const CustomList& other) {
+        inline CustomList& CustomList::operator=(const CustomList& other) {
             if (this == &other) {
                 return *this;
             }
@@ -104,8 +101,7 @@ namespace mdt {
             return *this;
         }
 
-        template<typename T>
-        inline CustomList<T>& CustomList<T>::operator =(CustomList&& other) noexcept {
+        inline CustomList& CustomList::operator=(CustomList&& other) noexcept {
             if (this == &other) {
                 return *this;
             }
@@ -125,8 +121,7 @@ namespace mdt {
             return *this;
         }
 
-        template<typename T>
-        inline bool CustomList<T>::operator ==(const CustomList& other) const {
+        inline bool CustomList::operator==(const CustomList& other) const {
             if (this == &other) {
                 return true;
             }
@@ -136,13 +131,11 @@ namespace mdt {
                    m_emptyIdTmp == other.m_emptyIdTmp && m_commit == other.m_commit;
         }
 
-        template<typename T>
-        inline bool CustomList<T>::operator !=(const CustomList& other) const {
+        inline bool CustomList::operator!=(const CustomList& other) const {
             return !(*this == other);
         }
 
-        template<typename T>
-        inline void CustomList<T>::swap(CustomList& other) {
+        inline void CustomList::swap(CustomList& other) {
             if (this == &other) {
                 return;
             }
@@ -156,9 +149,8 @@ namespace mdt {
             std::swap(m_commit, other.m_commit);
         }
 
-        template<typename T>
-        inline std::optional<qint32> CustomList<T>::insert(const T& data) {
-            for (auto [k, v] : m_listTmp.asKeyValueRange()) {
+        inline std::optional<qint32> CustomList::insert(const QVariant& data) {
+            for (const auto& [k, v] : m_listTmp.asKeyValueRange()) {
                 if (v == data) {
                     return k;
                 }
@@ -177,8 +169,7 @@ namespace mdt {
             return id;
         }
 
-        template<typename T>
-        inline bool CustomList<T>::remove(const T& data) {
+        inline bool CustomList::remove(const QVariant& data) {
             for (auto it = m_listTmp.begin(); it != m_listTmp.end(); ++it) {
                 if (it.value() == data) {
                     m_emptyIdTmp.push(it.key());
@@ -191,63 +182,54 @@ namespace mdt {
             return false;
         }
 
-        template<typename T>
-        inline std::optional<qint32> CustomList<T>::getId(const T& data) const {
+        inline std::optional<qint32> CustomList::getId(const QVariant& data) const {
             if (auto id = m_listTmp.key(data, -1); id != -1) {
                 return id;
             }
             return std::nullopt;
         }
 
-        template<typename T>
-        inline std::optional<T> CustomList<T>::getValue(qint32 id) const {
+        inline std::optional<QVariant> CustomList::getValue(qint32 id) const {
             if (auto it = m_listTmp.find(id); it != m_listTmp.end()) {
                 return *it;
             }
             return std::nullopt;
         }
 
-        template<typename T>
-        inline QList<T> CustomList<T>::getAllValues() const {
+        inline QVariantList CustomList::getAllValues() const {
             return m_listTmp.values();
         }
 
-        template<typename T>
-        inline void CustomList<T>::clear() {
+        inline void CustomList::clear() {
             m_listTmp.clear();
             m_emptyIdTmp.clear();
             m_idTmp = 0;
             m_commit = false;
         }
 
-        template<typename T>
-        inline void CustomList<T>::reset() {
+        inline void CustomList::reset() {
             m_listTmp = m_list;
             m_idTmp = m_id;
             m_emptyIdTmp = m_emptyId;
             m_commit = true;
         }
 
-        template<typename T>
-        inline void CustomList<T>::commit() {
+        inline void CustomList::commit() {
             m_list = m_listTmp;
             m_id = m_idTmp;
             m_emptyId = m_emptyIdTmp;
             m_commit = true;
         }
 
-        template<typename T>
-        inline qsizetype CustomList<T>::size() const {
+        inline qsizetype CustomList::size() const {
             return m_listTmp.size();
         }
 
-        template<typename T>
-        inline qsizetype CustomList<T>::sizeCommitted() const {
+        inline qsizetype CustomList::sizeCommitted() const {
             return m_list.size();
         }
 
-        template<typename T>
-        inline void CustomList<T>::serialize(QDataStream& out) const {
+        inline void CustomList::serialize(QDataStream& out) const {
             out << out.version();
 
             out << static_cast<qint32>(m_list.size());
@@ -277,13 +259,12 @@ namespace mdt {
             }
         }
 
-        template<typename T>
-        inline void CustomList<T>::deserialize(QDataStream& in) {
+        inline void CustomList::deserialize(QDataStream& in) {
             deserializeVersion(in);
-            QHash<qint32, T> list = deserializeList(in);
+            QHash<qint32, QVariant> list = deserializeList(in);
             qint32 id = deserializeId(in);
             QStack<qint32> emptyId = deserializeEmptyId(in);
-            QHash<qint32, T> listTmp = deserializeList(in);
+            QHash<qint32, QVariant> listTmp = deserializeList(in);
             qint32 idTmp = deserializeId(in);
             QStack<qint32> emptyIdTmp = deserializeEmptyId(in);
             bool commit = deserializeCommit(in);
@@ -297,14 +278,12 @@ namespace mdt {
             m_commit = commit;
         }
 
-        template<typename T>
-        inline void CustomList<T>::throwStreamError(QDataStream::Status status) const {
+        inline void CustomList::throwStreamError(QDataStream::Status status) const {
             throw RuntimeError(
                 QObject::tr("QDataStream error. Error code: '%1'.").arg(static_cast<int>(status)));
         }
 
-        template<typename T>
-        inline void CustomList<T>::deserializeVersion(QDataStream& in) const {
+        inline void CustomList::deserializeVersion(QDataStream& in) const {
             int version { };
             in >> version;
             if (in.status() != QDataStream::Ok) {
@@ -318,8 +297,7 @@ namespace mdt {
             }
         }
 
-        template<typename T>
-        inline QHash<qint32, T> CustomList<T>::deserializeList(QDataStream& in) const {
+        inline QHash<qint32, QVariant> CustomList::deserializeList(QDataStream& in) const {
             qint32 size;
             in >> size;
             if (in.status() != QDataStream::Ok) {
@@ -330,10 +308,10 @@ namespace mdt {
                 throwStreamError(in.status());
             }
 
-            QHash<qint32, T> list;
+            QHash<qint32, QVariant> list;
             for (qint32 i = 0; i < size; ++i) {
                 qint32 key;
-                T value;
+                QVariant value;
 
                 in >> key >> value;
                 if (in.status() != QDataStream::Ok) {
@@ -344,8 +322,7 @@ namespace mdt {
             return list;
         }
 
-        template<typename T>
-        inline qint32 CustomList<T>::deserializeId(QDataStream& in) const {
+        inline qint32 CustomList::deserializeId(QDataStream& in) const {
             qint32 id { };
             in >> id;
             if (in.status() != QDataStream::Ok) {
@@ -358,8 +335,7 @@ namespace mdt {
             return id;
         }
 
-        template<typename T>
-        inline QStack<qint32> CustomList<T>::deserializeEmptyId(QDataStream& in) const {
+        inline QStack<qint32> CustomList::deserializeEmptyId(QDataStream& in) const {
             qint32 size;
             in >> size;
             if (in.status() != QDataStream::Ok) {
@@ -382,8 +358,7 @@ namespace mdt {
             return ids;
         }
 
-        template<typename T>
-        inline bool CustomList<T>::deserializeCommit(QDataStream& in) const {
+        inline bool CustomList::deserializeCommit(QDataStream& in) const {
             bool commit { };
             in >> commit;
             if (in.status() != QDataStream::Ok) {

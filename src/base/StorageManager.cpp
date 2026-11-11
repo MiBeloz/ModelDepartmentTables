@@ -19,64 +19,32 @@ mdt::work::StorageManager *mdt::work::StorageManager::instance() {
 
 mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::date(const QString &date) {
     const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.dates().add(date);
+    m_instance->m_storageLists.dates().insert(date);
     return *this;
 }
 
 mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::date(const qint32 exelFormat) {
     const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.dates().add(exelFormat);
+    m_instance->m_storageLists.dates().insert(exelFormat);
     return *this;
 }
 
 mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::drawing(const Drawing &drawing) {
     const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.drawings().add(drawing);
+    m_instance->m_storageLists.drawings().insert(drawing);
     return *this;
 }
 
 mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::amount(const qint32 amount) {
     const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.amounts().add(amount);
+    m_instance->m_storageLists.amounts().insert(amount);
     return *this;
 }
 
-mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::executor(
-    const QString &executor) {
+mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::custom(qsizetype customIndex,
+                                                                           const QVariant &data) {
     const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.customStorage(CustomStorage::Executors).add(executor);
-    return *this;
-}
-
-mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::author(const QString &author) {
-    const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.customStorage(CustomStorage::Authors).add(author);
-    return *this;
-}
-
-mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::castingMaterial(
-    const QString &castingMaterial) {
-    const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.customStorage(CustomStorage::CastingMaterials).add(castingMaterial);
-    return *this;
-}
-
-mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::modelMaterial(
-    const QString &modelMaterial) {
-    const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.customStorage(CustomStorage::ModelMaterials).add(modelMaterial);
-    return *this;
-}
-
-mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::machine(const QString &machine) {
-    const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.customStorage(CustomStorage::Machines).add(machine);
-    return *this;
-}
-
-mdt::work::StorageManager::Adder &mdt::work::StorageManager::Adder::note(const QString &note) {
-    const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.customStorage(CustomStorage::Notes).add(note);
+    m_instance->m_storageLists.customStorage(customIndex).insert(data);
     return *this;
 }
 
@@ -110,61 +78,22 @@ mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::amount(c
     return *this;
 }
 
-mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::executor(
-    const QString &executor) {
+mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::custom(qsizetype customIndex,
+                                                                               const QVariant &data) {
     const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.customStorage(CustomStorage::Executors).remove(executor);
-    m_instance->deleteBadLinksList(IdsList::Executors, CustomStorage::Executors);
+    m_instance->m_storageLists.customStorage(customIndex).remove(data);
+    m_instance->deleteBadLinksList(customIndex);
     return *this;
 }
 
-mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::author(
-    const QString &author) {
-    const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.customStorage(CustomStorage::Authors).remove(author);
-    m_instance->deleteBadLinksList(IdsList::Authors, CustomStorage::Authors);
-    return *this;
-}
-
-mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::castingMaterial(
-    const QString &castingMaterial) {
-    const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.customStorage(CustomStorage::CastingMaterials).remove(castingMaterial);
-    m_instance->deleteBadLinksList(IdsList::CastingMaterials, CustomStorage::CastingMaterials);
-    return *this;
-}
-
-mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::modelMaterial(
-    const QString &modelMaterial) {
-    const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.customStorage(CustomStorage::ModelMaterials).remove(modelMaterial);
-    m_instance->deleteBadLinksList(IdsList::ModelMaterials, CustomStorage::ModelMaterials);
-    return *this;
-}
-
-mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::machine(
-    const QString &machine) {
-    const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.customStorage(CustomStorage::Machines).remove(machine);
-    m_instance->deleteBadLinksList(IdsList::Machines, CustomStorage::Machines);
-    return *this;
-}
-
-mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::note(const QString &note) {
-    const QWriteLocker locker(&m_instance->m_lock);
-    m_instance->m_storageLists.customStorage(CustomStorage::Notes).remove(note);
-    m_instance->deleteBadLinksList(IdsList::Notes, CustomStorage::Notes);
-    return *this;
-}
-
-QList<int> mdt::work::StorageManager::Getter::dates() const {
+QVariantList mdt::work::StorageManager::Getter::dates() const {
     const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.dates().findAllValues();
+    return m_instance->m_storageLists.dates().getAllValues();
 }
 
-QList<QString> mdt::work::StorageManager::Getter::datesStr() const {
+QStringList mdt::work::StorageManager::Getter::datesStr() const {
     const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.dates().findAllStrValues();
+    return m_instance->m_storageLists.dates().getAllStrValues();
 }
 
 mdt::work::DatesList::ErrorType mdt::work::StorageManager::Getter::datesError() const {
@@ -172,89 +101,39 @@ mdt::work::DatesList::ErrorType mdt::work::StorageManager::Getter::datesError() 
     return m_instance->m_storageLists.dates().lastError();
 }
 
-QList<mdt::Drawing> mdt::work::StorageManager::Getter::drawings() const {
+QVariantList mdt::work::StorageManager::Getter::drawings() const {
     const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.drawings().findAllValues();
+    return m_instance->m_storageLists.drawings().getAllValues();
 }
 
-QList<int> mdt::work::StorageManager::Getter::amounts() const {
+QVariantList mdt::work::StorageManager::Getter::amounts() const {
     const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.amounts().findAllValues();
+    return m_instance->m_storageLists.amounts().getAllValues();
 }
 
-QList<QString> mdt::work::StorageManager::Getter::executors() const {
+QVariantList mdt::work::StorageManager::Getter::custom(qsizetype customIndex) const {
     const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.customStorage(CustomStorage::Executors).findAllValues();
-}
-
-QList<QString> mdt::work::StorageManager::Getter::authors() const {
-    const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.customStorage(CustomStorage::Authors).findAllValues();
-}
-
-QList<QString> mdt::work::StorageManager::Getter::castingMaterials() const {
-    const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.customStorage(CustomStorage::CastingMaterials).findAllValues();
-}
-
-QList<QString> mdt::work::StorageManager::Getter::modelMaterials() const {
-    const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.customStorage(CustomStorage::ModelMaterials).findAllValues();
-}
-
-QList<QString> mdt::work::StorageManager::Getter::machines() const {
-    const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.customStorage(CustomStorage::Machines).findAllValues();
-}
-
-QList<QString> mdt::work::StorageManager::Getter::notes() const {
-    const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.customStorage(CustomStorage::Notes).findAllValues();
+    return m_instance->m_storageLists.customStorage(customIndex).getAllValues();
 }
 
 qsizetype mdt::work::StorageManager::Counter::dates() const {
     const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.dates().count();
+    return m_instance->m_storageLists.dates().size();
 }
 
 qsizetype mdt::work::StorageManager::Counter::drawings() const {
     const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.drawings().count();
+    return m_instance->m_storageLists.drawings().size();
 }
 
 qsizetype mdt::work::StorageManager::Counter::amounts() const {
     const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.amounts().count();
+    return m_instance->m_storageLists.amounts().size();
 }
 
-qsizetype mdt::work::StorageManager::Counter::executors() const {
+qsizetype mdt::work::StorageManager::Counter::custom(qsizetype customIndex) const {
     const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.customStorage(CustomStorage::Executors).count();
-}
-
-qsizetype mdt::work::StorageManager::Counter::authors() const {
-    const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.customStorage(CustomStorage::Authors).count();
-}
-
-qsizetype mdt::work::StorageManager::Counter::castingMaterials() const {
-    const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.customStorage(CustomStorage::CastingMaterials).count();
-}
-
-qsizetype mdt::work::StorageManager::Counter::modelMaterials() const {
-    const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.customStorage(CustomStorage::ModelMaterials).count();
-}
-
-qsizetype mdt::work::StorageManager::Counter::machines() const {
-    const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.customStorage(CustomStorage::Machines).count();
-}
-
-qsizetype mdt::work::StorageManager::Counter::notes() const {
-    const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.customStorage(CustomStorage::Notes).count();
+    return m_instance->m_storageLists.customStorage(customIndex).size();
 }
 
 mdt::work::StorageManager::Adder mdt::work::StorageManager::add() {
@@ -280,9 +159,9 @@ bool mdt::work::StorageManager::addRecord(const Record &record) {
 
     const QWriteLocker locker(&m_lock);
 
-    auto idDate = m_storageLists.dates().add(record.date());
-    auto idDrawing = m_storageLists.drawings().add(record.drawing());
-    auto idAmount = m_storageLists.amounts().add(record.amount());
+    auto idDate = m_storageLists.dates().insert(record.date());
+    auto idDrawing = m_storageLists.drawings().insert(record.drawing());
+    auto idAmount = m_storageLists.amounts().insert(record.amount());
     if (!idDate.has_value() || !idDrawing.has_value() || !idAmount.has_value()) {
         return false;
     }
@@ -518,15 +397,15 @@ void mdt::work::StorageManager::deleteBadLinks() {
     }
 }
 
-void mdt::work::StorageManager::deleteBadLinksList(IdsList idsList, CustomStorage storage) {
+void mdt::work::StorageManager::deleteBadLinksList(qsizetype customIndex) {
     const auto links = m_storageRecordsLinks.get();
     bool linksChanged = false;
     for (auto link : links) {
-        const auto idsOld = link.getIds(idsList);
+        const auto idsOld = link.getIdsCustom(customIndex);
 
         QSet<qint32> idsNew;
         for (auto id : idsOld) {
-            if (auto value = m_storageLists.customStorage(storage).findValue(id);
+            if (auto value = m_storageLists.customStorage(customIndex).findValue(id);
                 value.has_value()) {
                 idsNew.insert(id);
             }
@@ -538,7 +417,7 @@ void mdt::work::StorageManager::deleteBadLinksList(IdsList idsList, CustomStorag
         }
 
         m_storageRecordsLinks.remove(link);
-        link.replaceIds(idsList, idsNew);
+        link.replaceIdsCustom(customIndex, idsNew);
         m_storageRecordsLinks.add(link);
 
         linksChanged = true;

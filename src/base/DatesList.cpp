@@ -18,9 +18,9 @@ namespace mdt {
             return std::nullopt;
         }
 
-        std::optional<qint32> DatesList::insert(const qint32 &exelFormat) {
+        std::optional<qint32> DatesList::insert(const QVariant &exelFormat) {
             setError(ErrorType::NoError);
-            if (!checkDate(exelFormat)) {
+            if (!checkDate(exelFormat.toInt())) {
                 setError(ErrorType::FormatError);
                 return std::nullopt;
             }
@@ -40,7 +40,7 @@ namespace mdt {
             return false;
         }
 
-        bool DatesList::remove(const qint32 &exelFormat) {
+        bool DatesList::remove(const QVariant &exelFormat) {
             setError(ErrorType::NoError);
             if (CustomList::remove(exelFormat)) {
                 return true;
@@ -62,7 +62,7 @@ namespace mdt {
             return std::nullopt;
         }
 
-        std::optional<qint32> DatesList::getId(const qint32 &exelFormat) const {
+        std::optional<qint32> DatesList::getId(const QVariant &exelFormat) const {
             setError(ErrorType::NoError);
             if (auto id = CustomList::getId(exelFormat); id.has_value()) {
                 return id;
@@ -74,7 +74,7 @@ namespace mdt {
         std::optional<QString> DatesList::getStrValue(qint32 id) const {
             setError(ErrorType::NoError);
             if (auto date = CustomList::getValue(id); date.has_value()) {
-                if (auto strDate = dateToStr(date.value(), m_format); strDate.has_value()) {
+                if (auto strDate = dateToStr(date.value().toInt(), m_format); strDate.has_value()) {
                     return strDate;
                 }
                 setError(ErrorType::FormatError);
@@ -84,7 +84,7 @@ namespace mdt {
             return std::nullopt;
         }
 
-        std::optional<qint32> DatesList::getValue(qint32 id) const {
+        std::optional<QVariant> DatesList::getValue(qint32 id) const {
             setError(ErrorType::NoError);
             if (auto date = CustomList::getValue(id); date.has_value()) {
                 return date;
@@ -93,11 +93,15 @@ namespace mdt {
             return std::nullopt;
         }
 
-        QList<QString> DatesList::getAllStrValues() const {
-            QList<QString> strValues;
+        QVariantList DatesList::getAllValues() const {
+            return CustomList::getAllValues();
+        }
+
+        QStringList DatesList::getAllStrValues() const {
+            QStringList strValues;
             auto values = getAllValues();
             for (auto &value : values) {
-                strValues.append(DatesList::dateToStr(value).value());
+                strValues.append(DatesList::dateToStr(value.toInt()).value());
             }
             return strValues;
         }

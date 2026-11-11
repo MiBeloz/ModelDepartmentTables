@@ -16,12 +16,7 @@ namespace mdt {
             explicit Record(const QString& date,
                             const Drawing& drawing,
                             qint32 amount,
-                            const QStringList& executors,
-                            const QStringList& authors,
-                            const QStringList& castingMaterials,
-                            const QStringList& modelMaterials,
-                            const QStringList& machines,
-                            const QStringList& notes);
+                            const QList<QStringList>& custom = {});
 
             bool operator ==(const Record& other) const;
             bool operator !=(const Record& other) const;
@@ -35,12 +30,7 @@ namespace mdt {
             const QString& date() const;
             const Drawing& drawing() const;
             qint32 amount() const;
-            const QStringList& executors() const;
-            const QStringList& authors() const;
-            const QStringList& castingMaterials() const;
-            const QStringList& modelMaterials() const;
-            const QStringList& machines() const;
-            const QStringList& notes() const;
+            const QStringList& custom(qsizetype customIndex) const;
 
             static const Record Null;
 
@@ -48,15 +38,10 @@ namespace mdt {
             QString m_date;
             Drawing m_drawing = Drawing::Null;
             qint32 m_amount = 0;
-            QStringList m_executors;
-            QStringList m_authors;
-            QStringList m_castingMaterials;
-            QStringList m_modelMaterials;
-            QStringList m_machines;
-            QStringList m_notes;
+            QList<QStringList> m_custom;
         };
 
-        inline const Record Record::Null { };
+        inline const Record Record::Null {};
     } // namespace work
 } // namespace mdt
 

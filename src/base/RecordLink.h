@@ -7,15 +7,6 @@
 
 namespace mdt {
     namespace work {
-        enum class IdsList : quint8 {
-            Executors,
-            Authors,
-            CastingMaterials,
-            ModelMaterials,
-            Machines,
-            Notes
-        };
-
         class RecordLink {
         public:
             RecordLink() = default;
@@ -23,12 +14,7 @@ namespace mdt {
             explicit RecordLink(qint32 idDate,
                                 qint32 idDrawing,
                                 qint32 idAmount,
-                                const QSet<qint32>& idExecutors,
-                                const QSet<qint32>& idAuthors,
-                                const QSet<qint32>& idCastingMaterials,
-                                const QSet<qint32>& idModelMaterials,
-                                const QSet<qint32>& idMachines,
-                                const QSet<qint32>& idNotes);
+                                QList<QSet<qint32>> idsCustom = {});
 
             RecordLink(const RecordLink& other);
             RecordLink(RecordLink&& other) noexcept;
@@ -43,13 +29,13 @@ namespace mdt {
             void setIdDate(qint32 idDate);
             void setIdDrawing(qint32 idDrawing);
             void setIdAmount(qint32 idAmount);
-            void addIds(IdsList idsList, const QSet<qint32>& ids);
-            void removeIds(IdsList idsList, const QSet<qint32>& ids);
+            void addIdsCustom(qsizetype customIndex, const QSet<qint32>& ids);
+            void removeIdsCustom(qsizetype customIndex, const QSet<qint32>& ids);
             qint32 getIdDate() const;
             qint32 getIdDrawing() const;
             qint32 getIdAmount() const;
-            const QSet<qint32>& getIds(IdsList idsList) const;
-            void replaceIds(IdsList idsList, const QSet<qint32>& newIds);
+            const QSet<qint32>& getIdsCustom(qsizetype customIndex) const;
+            void replaceIdsCustom(qsizetype customIndex, const QSet<qint32>& newIds);
 
             void serialize(QDataStream& out) const;
             void deserialize(QDataStream& in);
@@ -62,18 +48,16 @@ namespace mdt {
             qint32 m_idDate = 0;
             qint32 m_idDrawing = 0;
             qint32 m_idAmount = 0;
-            QSet<qint32> m_idsExecutors;
-            QSet<qint32> m_idsAuthors;
-            QSet<qint32> m_idsCastingMaterials;
-            QSet<qint32> m_idsModelMaterials;
-            QSet<qint32> m_idsMachines;
-            QSet<qint32> m_idsNotes;
+            QList<QSet<qint32>> m_idsCustom;
 
             void throwStreamError(QDataStream::Status status) const;
 
             void deserializeVersion(QDataStream& in) const;
+            void deserializeRecordLinkVersion(QDataStream& in) const;
             qint32 deserializeId(QDataStream& in) const;
-            QSet<qint32> deserializeIds(QDataStream& in) const;
+            QList<QSet<qint32>> deserializeIds(QDataStream& in) const;
+
+            static const int m_recordLinkVersion = 1;
         };
 
         inline const RecordLink RecordLink::Null { };

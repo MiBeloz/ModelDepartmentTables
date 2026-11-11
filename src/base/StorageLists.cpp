@@ -2,43 +2,44 @@
 
 namespace mdt {
     namespace work {
-        StorageLists::StorageLists() {
-            for (int i = 0; i < 6; ++i) {
-                m_customStorage.append(ServiceCustomList<QString>());
-            }
+        void StorageLists::addList() {
+            m_customStorage.append(CustomList());
         }
 
-        ServiceDatesList &StorageLists::dates() {
+        qsizetype StorageLists::customListCount() const {
+            return m_customStorage.count();
+        }
+
+        DatesList &StorageLists::dates() {
             return m_dateStorage;
         }
 
-        const ServiceDatesList &StorageLists::dates() const {
+        const DatesList &StorageLists::dates() const {
             return m_dateStorage;
         }
 
-        ServiceCustomList<Drawing> &StorageLists::drawings() {
+        CustomList &StorageLists::drawings() {
             return m_drawingStorage;
         }
 
-        const ServiceCustomList<Drawing> &StorageLists::drawings() const {
+        const CustomList &StorageLists::drawings() const {
             return m_drawingStorage;
         }
 
-        ServiceCustomList<qint32> &StorageLists::amounts() {
+        CustomList &StorageLists::amounts() {
             return m_amountStorage;
         }
 
-        const ServiceCustomList<qint32> &StorageLists::amounts() const {
+        const CustomList &StorageLists::amounts() const {
             return m_amountStorage;
         }
 
-        ServiceCustomList<QString> &StorageLists::customStorage(CustomStorage customStorage) {
-            return m_customStorage[static_cast<qsizetype>(customStorage)];
+        CustomList &StorageLists::customStorage(qsizetype customListIndex) {
+            return m_customStorage[static_cast<qsizetype>(customListIndex)];
         }
 
-        const ServiceCustomList<QString> &StorageLists::customStorage(
-            CustomStorage customStorage) const {
-            return m_customStorage[static_cast<qsizetype>(customStorage)];
+        const CustomList &StorageLists::customStorage(qsizetype customListIndex) const {
+            return m_customStorage[static_cast<qsizetype>(customListIndex)];
         }
 
         void StorageLists::reset() {

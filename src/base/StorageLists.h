@@ -1,37 +1,31 @@
 ﻿#ifndef STORAGELISTS_H
 #define STORAGELISTS_H
 
-#include "Drawing.h"
-#include "ServiceCustomList.h"
-#include "ServiceDatesList.h"
+#include "CustomList.h"
+#include "DatesList.h"
 #include "Storage.h"
 
 namespace mdt {
     namespace work {
-        enum class CustomStorage : quint8 {
-            Executors,
-            Authors,
-            CastingMaterials,
-            ModelMaterials,
-            Machines,
-            Notes
-        };
-
         class StorageLists final : public Storage {
         public:
-            StorageLists();
+            StorageLists() = default;
 
-            ServiceDatesList& dates();
-            const ServiceDatesList& dates() const;
+            void addList();
 
-            ServiceCustomList<Drawing>& drawings();
-            const ServiceCustomList<Drawing>& drawings() const;
+            qsizetype customListCount() const;
 
-            ServiceCustomList<qint32>& amounts();
-            const ServiceCustomList<qint32>& amounts() const;
+            DatesList& dates();
+            const DatesList& dates() const;
 
-            ServiceCustomList<QString>& customStorage(CustomStorage customStorage);
-            const ServiceCustomList<QString>& customStorage(CustomStorage customStorage) const;
+            CustomList& drawings();
+            const CustomList& drawings() const;
+
+            CustomList& amounts();
+            const CustomList& amounts() const;
+
+            CustomList& customStorage(qsizetype customListIndex);
+            const CustomList& customStorage(qsizetype customListIndex) const;
 
             void reset();
             void commit();
@@ -41,10 +35,10 @@ namespace mdt {
             void deserialize(QDataStream& in) override;
 
         private:
-            ServiceDatesList m_dateStorage;
-            ServiceCustomList<Drawing> m_drawingStorage;
-            ServiceCustomList<qint32> m_amountStorage;
-            QList<ServiceCustomList<QString>> m_customStorage;
+            DatesList m_dateStorage;
+            CustomList m_drawingStorage;
+            CustomList m_amountStorage;
+            QList<CustomList> m_customStorage;
         };
     } // namespace work
 } // namespace mdt
