@@ -22,7 +22,6 @@ namespace mdt {
     } // namespace AppSettings
     namespace SaverSettings {
         const QString SAVER_STORAGE_FILENAME(u"storage.mdt"_s);
-        const QString SAVER_STORAGE_FILENAME_TMP(u"storage.tmp"_s);
     } // namespace SaverSettings
 } // namespace mdt
 

@@ -1,10 +1,11 @@
-﻿#include <QByteArray>
+﻿#include "CustomList.h"
+#include "Drawing.h"
+#include "Exceptions.h"
+
+#include <QByteArray>
 #include <QDataStream>
 #include <QObject>
 #include <QTest>
-
-#include "CustomList.h"
-#include "Drawing.h"
 
 using namespace Qt::Literals::StringLiterals;
 

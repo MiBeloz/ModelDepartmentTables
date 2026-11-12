@@ -18,13 +18,14 @@ namespace mdt {
             return std::nullopt;
         }
 
-        std::optional<qint32> DatesList::insert(const QVariant &exelFormat) {
+        std::optional<qint32> DatesList::insert(const QVariant &intExelFormat) {
+            Q_ASSERT(intExelFormat.userType() == QMetaType::Int);
             setError(ErrorType::NoError);
-            if (!checkDate(exelFormat.toInt())) {
+            if (!checkDate(intExelFormat.toInt())) {
                 setError(ErrorType::FormatError);
                 return std::nullopt;
             }
-            return CustomList::insert(exelFormat);
+            return CustomList::insert(intExelFormat);
         }
 
         bool DatesList::remove(const QString &date) {
@@ -40,9 +41,9 @@ namespace mdt {
             return false;
         }
 
-        bool DatesList::remove(const QVariant &exelFormat) {
+        bool DatesList::remove(const QVariant &intExelFormat) {
             setError(ErrorType::NoError);
-            if (CustomList::remove(exelFormat)) {
+            if (CustomList::remove(intExelFormat)) {
                 return true;
             }
             setError(ErrorType::FormatError);
@@ -62,9 +63,9 @@ namespace mdt {
             return std::nullopt;
         }
 
-        std::optional<qint32> DatesList::getId(const QVariant &exelFormat) const {
+        std::optional<qint32> DatesList::getId(const QVariant &intExelFormat) const {
             setError(ErrorType::NoError);
-            if (auto id = CustomList::getId(exelFormat); id.has_value()) {
+            if (auto id = CustomList::getId(intExelFormat); id.has_value()) {
                 return id;
             }
             setError(ErrorType::DateError);

@@ -1,7 +1,8 @@
-﻿#include <QObject>
-#include <QTest>
+﻿#include "DatesList.h"
+#include "Exceptions.h"
 
-#include "DatesList.h"
+#include <QObject>
+#include <QTest>
 
 using mdt::RuntimeError;
 using mdt::work::DatesList;

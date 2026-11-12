@@ -1,6 +1,7 @@
 ﻿#include "MainWindow.h"
 
 #include "Constants.h"
+#include "Exceptions.h"
 #include "ItemsModel.h"
 #include "SaverFile.h"
 #include "ui_MainWindow.h"
