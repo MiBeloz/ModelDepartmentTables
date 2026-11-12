@@ -66,12 +66,14 @@ RecordLink TestStorageRecordsLinks::makeLink(int v) {
     return RecordLink(v,
                       v + 1,
                       v + 2,
-                      { v },
-                      { v, v + 1 },
-                      { v + 1, v },
-                      { v, v, v },
-                      { v + 1 },
-                      { v + 1, v + 1 });
+                      {
+                          { v },
+                          { v, v + 1 },
+                          { v + 1, v },
+                          { v, v, v },
+                          { v + 1 },
+                          { v + 1, v + 1 }
+    });
 }
 
 // ---------- Constructors / Assignment ----------

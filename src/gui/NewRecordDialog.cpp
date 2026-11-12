@@ -60,8 +60,9 @@ void NewRecordDialog::init() {
             [this](const QString &text) {
                 auto drawings = m_storageWork->get().drawings();
                 for (const auto &drawing : std::as_const(drawings)) {
-                    if (drawing.getNumber() == text) {
-                        m_ui->lineEditDrawingTitleValue->setText(drawing.getTitle());
+                    if (drawing.value<mdt::Drawing>().getNumber() == text) {
+                        m_ui->lineEditDrawingTitleValue->setText(
+                            drawing.value<mdt::Drawing>().getTitle());
                         m_ui->lineEditDrawingTitleValue->setEnabled(false);
                         return;
                     }
@@ -99,28 +100,64 @@ void NewRecordDialog::init() {
     auto drawings = m_storageWork->get().drawings();
     QStringList numbers;
     for (const auto &drawing : std::as_const(drawings)) {
-        numbers.append(drawing.getNumber());
+        numbers.append(drawing.value<mdt::Drawing>().getNumber());
     }
 
     m_ui->comboBoxDrawingNumberValue->setStringList(numbers);
     m_ui->comboBoxDrawingNumberValue->setPlaceholderText(u"Select or start typing the drawing..."_s);
 
-    m_ui->comboBoxAddExecutor->setStringList(m_storageWork->get().executors());
+    QVariantList custom_0_var = m_storageWork->get().custom(0);
+    QStringList custom_0_str;
+    custom_0_str.reserve(custom_0_var.size());
+    for (const QVariant &v : custom_0_var) {
+        custom_0_str << v.toString();
+    }
+    m_ui->comboBoxAddExecutor->setStringList(custom_0_str);
     m_ui->comboBoxAddExecutor->setPlaceholderText(u"Select executor..."_s);
 
-    m_ui->comboBoxAddAuthor->setStringList(m_storageWork->get().authors());
+    QVariantList custom_1_var = m_storageWork->get().custom(1);
+    QStringList custom_1_str;
+    custom_0_str.reserve(custom_0_var.size());
+    for (const QVariant &v : custom_0_var) {
+        custom_0_str << v.toString();
+    }
+    m_ui->comboBoxAddAuthor->setStringList(custom_1_str);
     m_ui->comboBoxAddAuthor->setPlaceholderText(u"Select author..."_s);
 
-    m_ui->comboBoxAddCastingMaterial->setStringList(m_storageWork->get().castingMaterials());
+    QVariantList custom_2_var = m_storageWork->get().custom(2);
+    QStringList custom_2_str;
+    custom_0_str.reserve(custom_0_var.size());
+    for (const QVariant &v : custom_0_var) {
+        custom_0_str << v.toString();
+    }
+    m_ui->comboBoxAddCastingMaterial->setStringList(custom_2_str);
     m_ui->comboBoxAddCastingMaterial->setPlaceholderText(u"Select casting material..."_s);
 
-    m_ui->comboBoxAddModelMaterial->setStringList(m_storageWork->get().modelMaterials());
+    QVariantList custom_3_var = m_storageWork->get().custom(3);
+    QStringList custom_3_str;
+    custom_0_str.reserve(custom_0_var.size());
+    for (const QVariant &v : custom_0_var) {
+        custom_0_str << v.toString();
+    }
+    m_ui->comboBoxAddModelMaterial->setStringList(custom_3_str);
     m_ui->comboBoxAddModelMaterial->setPlaceholderText(u"Select model material..."_s);
 
-    m_ui->comboBoxAddMachine->setStringList(m_storageWork->get().machines());
+    QVariantList custom_4_var = m_storageWork->get().custom(4);
+    QStringList custom_4_str;
+    custom_0_str.reserve(custom_0_var.size());
+    for (const QVariant &v : custom_0_var) {
+        custom_0_str << v.toString();
+    }
+    m_ui->comboBoxAddMachine->setStringList(custom_4_str);
     m_ui->comboBoxAddMachine->setPlaceholderText(u"Select machine..."_s);
 
-    m_ui->comboBoxAddNote->setStringList(m_storageWork->get().notes());
+    QVariantList custom_5_var = m_storageWork->get().custom(5);
+    QStringList custom_5_str;
+    custom_0_str.reserve(custom_0_var.size());
+    for (const QVariant &v : custom_0_var) {
+        custom_0_str << v.toString();
+    }
+    m_ui->comboBoxAddNote->setStringList(custom_5_str);
     m_ui->comboBoxAddNote->setPlaceholderText(u"Select note..."_s);
 }
 

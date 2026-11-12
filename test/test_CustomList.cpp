@@ -114,12 +114,12 @@ private slots:
     void workWithDrawing();
 
 private:
-    QByteArray toBytes(CustomList<int>& list);
-    CustomList<int> fromBytes(const QByteArray& bytes);
+    QByteArray toBytes(CustomList& list);
+    CustomList fromBytes(const QByteArray& bytes);
 
     template<typename T>
-    CustomList<T> makeCommitted(const QList<T>& values) {
-        CustomList<T> list;
+    CustomList makeCommitted(const QList<T>& values) {
+        CustomList list;
         for (const auto& v : values) {
             list.insert(v);
         }
@@ -136,7 +136,7 @@ void TestCustomList::cleanup() { }
 // ---------- Constructors / Assignment ----------
 
 void TestCustomList::defaultConstructor() {
-    CustomList<int> list;
+    CustomList list;
     QCOMPARE(list.size(), 0);
     QCOMPARE(list.sizeCommitted(), 0);
     QVERIFY(list.getAllValues().isEmpty());
@@ -145,7 +145,7 @@ void TestCustomList::defaultConstructor() {
 void TestCustomList::copyConstructor() {
     auto a = makeCommitted<int>({ 10, 20, 30 });
 
-    CustomList<int> b(a);
+    CustomList b(a);
     QCOMPARE(b.size(), a.size());
     QCOMPARE(b, a);
 
@@ -158,7 +158,7 @@ void TestCustomList::copyConstructor() {
 void TestCustomList::moveConstructor() {
     auto a = makeCommitted<int>({ 1, 2 });
 
-    CustomList<int> b(std::move(a));
+    CustomList b(std::move(a));
     QCOMPARE(b.size(), 2);
     QVERIFY(b.getId(1).has_value());
     QVERIFY(b.getId(2).has_value());
@@ -167,7 +167,7 @@ void TestCustomList::moveConstructor() {
 void TestCustomList::copyAssignment() {
     auto a = makeCommitted<int>({ 5, 6 });
 
-    CustomList<int> b;
+    CustomList b;
     b.insert(100);
     b.commit();
 
@@ -180,7 +180,7 @@ void TestCustomList::copyAssignment() {
 void TestCustomList::moveAssignment() {
     auto a = makeCommitted<int>({ 7, 8 });
 
-    CustomList<int> b;
+    CustomList b;
     b.insert(999);
     b.commit();
 
@@ -193,7 +193,7 @@ void TestCustomList::moveAssignment() {
 // ---------- Comparison operators ----------
 
 void TestCustomList::equalityOperator() {
-    CustomList<int> a, b;
+    CustomList a, b;
     QVERIFY(a == b);
 
     a.insert(1);
@@ -214,7 +214,7 @@ void TestCustomList::equalityOperator() {
 }
 
 void TestCustomList::inequalityOperator() {
-    CustomList<int> a, b;
+    CustomList a, b;
     a.insert(42);
     a.commit();
     QVERIFY(a != b);
@@ -234,11 +234,11 @@ void TestCustomList::inequalityOperator() {
 
 void TestCustomList::swap_swapsAllFields() {
     auto a = makeCommitted<int>({ 10, 20, 30 });
-    CustomList<int> b;
+    CustomList b;
 
     a.swap(b);
 
-    QCOMPARE(a.getAllValues(), QList<int>());
+    QCOMPARE(a.getAllValues(), QVariantList());
     QCOMPARE(b.getValue(1), 10);
     QCOMPARE(b.getValue(2), 20);
     QCOMPARE(b.getValue(3), 30);
@@ -255,7 +255,7 @@ void TestCustomList::swap_selfSwap() {
 // ---------- insert ----------
 
 void TestCustomList::insertReturnsIncrementingIds() {
-    CustomList<int> list;
+    CustomList list;
     auto id1 = list.insert(100);
     auto id2 = list.insert(200);
     auto id3 = list.insert(300);
@@ -287,7 +287,7 @@ void TestCustomList::insertReusesFreedIdsAfterCommit() {
 }
 
 void TestCustomList::insertManyItemsAfterCommit() {
-    CustomList<int> list;
+    CustomList list;
     const int N = 500;
     for (int i = 0; i < N; ++i) {
         QVERIFY(list.insert(i).has_value());
@@ -304,7 +304,7 @@ void TestCustomList::insertManyItemsAfterCommit() {
 }
 
 void TestCustomList::insertExistingReturnsSameId() {
-    CustomList<int> list;
+    CustomList list;
 
     auto id1 = list.insert(42);
     QVERIFY(id1.has_value());
@@ -319,7 +319,7 @@ void TestCustomList::insertExistingReturnsSameId() {
 }
 
 void TestCustomList::insertExistingDoesNotDuplicateItem() {
-    CustomList<int> list;
+    CustomList list;
     list.insert(7);
     list.insert(7);
     list.insert(7);
@@ -345,7 +345,7 @@ void TestCustomList::insertExistingAfterCommitReturnsSameId() {
 }
 
 void TestCustomList::insertDuplicateInDraftReturnsSameId() {
-    CustomList<int> list;
+    CustomList list;
 
     auto first = list.insert(99);
     QVERIFY(first.has_value());
@@ -367,7 +367,7 @@ void TestCustomList::insertDuplicateInDraftReturnsSameId() {
 }
 
 void TestCustomList::insertDuplicateManyTimesKeepsSingleEntry() {
-    CustomList<int> list;
+    CustomList list;
     std::optional<qint32> firstId;
 
     for (int i = 0; i < 100; ++i) {
@@ -470,7 +470,7 @@ void TestCustomList::getValueNonExistingAfterCommit() {
 }
 
 void TestCustomList::getAllValuesEmptyAfterCommit() {
-    CustomList<int> list;
+    CustomList list;
     QVERIFY(list.getAllValues().isEmpty());
 }
 
@@ -479,14 +479,16 @@ void TestCustomList::getAllValuesMultipleAfterCommit() {
 
     auto values = list.getAllValues();
     QCOMPARE(values.size(), 3);
-    std::sort(values.begin(), values.end());
-    QCOMPARE(values, QList<int>({ 1, 2, 3 }));
+    std::sort(values.begin(), values.end(), [](const QVariant& l, const QVariant& r) {
+        return l.toInt() < r.toInt();
+    });
+    QCOMPARE(values, QVariantList({ 1, 2, 3 }));
 }
 
 // ---------- Modes ----------
 
 void TestCustomList::insertSwitchesToDraftMode() {
-    CustomList<int> list;
+    CustomList list;
     QCOMPARE(list.size(), 0);
     QCOMPARE(list.sizeCommitted(), 0);
 
@@ -523,8 +525,10 @@ void TestCustomList::readersSeeDraftData() {
     QVERIFY(list.getId(20).has_value());
 
     auto values = list.getAllValues();
-    std::sort(values.begin(), values.end());
-    QCOMPARE(values, QList<int>({ 10, 20 }));
+    std::sort(values.begin(), values.end(), [](const QVariant& l, const QVariant& r) {
+        return l.toInt() < r.toInt();
+    });
+    QCOMPARE(values, QVariantList({ 10, 20 }));
 
     QCOMPARE(list.size(), 2);
     QCOMPARE(list.sizeCommitted(), 1);
@@ -540,8 +544,10 @@ void TestCustomList::readersSeeCommittedAfterCommit() {
     QVERIFY(list.getId(20).has_value());
 
     auto values = list.getAllValues();
-    std::sort(values.begin(), values.end());
-    QCOMPARE(values, QList<int>({ 10, 20 }));
+    std::sort(values.begin(), values.end(), [](const QVariant& l, const QVariant& r) {
+        return l.toInt() < r.toInt();
+    });
+    QCOMPARE(values, QVariantList({ 10, 20 }));
 
     QCOMPARE(list.size(), 2);
     QCOMPARE(list.sizeCommitted(), 2);
@@ -550,7 +556,7 @@ void TestCustomList::readersSeeCommittedAfterCommit() {
 // ---------- size / sizeCommitted ----------
 
 void TestCustomList::sizeReflectsDraft() {
-    CustomList<int> list;
+    CustomList list;
     list.insert(1);
     list.insert(2);
     list.insert(3);
@@ -564,7 +570,7 @@ void TestCustomList::sizeReflectsDraft() {
 }
 
 void TestCustomList::sizeCommittedReflectsMain() {
-    CustomList<int> list;
+    CustomList list;
     list.insert(1);
     list.insert(2);
 
@@ -577,7 +583,7 @@ void TestCustomList::sizeCommittedReflectsMain() {
 }
 
 void TestCustomList::sizeEqualsSizeCommittedAfterCommit() {
-    CustomList<int> list;
+    CustomList list;
     QCOMPARE(list.size(), list.sizeCommitted());
 
     auto committed = makeCommitted<int>({ 1, 2, 3 });
@@ -673,7 +679,7 @@ void TestCustomList::resetThenInsertStartsNewDraft() {
 // ---------- commit ----------
 
 void TestCustomList::commitAppliesDraftInsert() {
-    CustomList<int> list;
+    CustomList list;
     list.insert(1);
     list.insert(2);
 
@@ -728,7 +734,7 @@ void TestCustomList::commitOnCleanStateIsNoop() {
 }
 
 void TestCustomList::commitTwiceIsSafe() {
-    CustomList<int> list;
+    CustomList list;
     list.insert(42);
     list.commit();
     const qsizetype s1 = list.size();
@@ -739,7 +745,7 @@ void TestCustomList::commitTwiceIsSafe() {
 }
 
 void TestCustomList::commitThenInsertStartsNewDraft() {
-    CustomList<int> list;
+    CustomList list;
     list.insert(1);
     list.commit();
 
@@ -770,7 +776,7 @@ void TestCustomList::insertResetCommitKeepsMainIntact() {
 }
 
 void TestCustomList::multipleDraftCycles() {
-    CustomList<int> list;
+    CustomList list;
     list.insert(1);
     list.commit();
 
@@ -810,7 +816,7 @@ void TestCustomList::draftAccumulatesMultipleOperations() {
 
 // ---------- serialize / deserialize ----------
 
-QByteArray TestCustomList::toBytes(CustomList<int>& list) {
+QByteArray TestCustomList::toBytes(CustomList& list) {
     QByteArray data;
     QDataStream out(&data, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_6_11);
@@ -818,8 +824,8 @@ QByteArray TestCustomList::toBytes(CustomList<int>& list) {
     return data;
 }
 
-CustomList<int> TestCustomList::fromBytes(const QByteArray& bytes) {
-    CustomList<int> list;
+CustomList TestCustomList::fromBytes(const QByteArray& bytes) {
+    CustomList list;
     QDataStream in(bytes);
     in.setVersion(QDataStream::Qt_6_11);
     list.deserialize(in);
@@ -840,7 +846,7 @@ void TestCustomList::serializeDeserializeRoundTrip() {
 }
 
 void TestCustomList::serializeDeserializeEmpty() {
-    CustomList<int> empty;
+    CustomList empty;
     auto bytes = toBytes(empty);
     auto restored = fromBytes(bytes);
 
@@ -850,7 +856,7 @@ void TestCustomList::serializeDeserializeEmpty() {
 }
 
 void TestCustomList::serializeDeserializePreservesFreeIds() {
-    CustomList<int> original;
+    CustomList original;
     original.insert(1);
     original.insert(2);
     original.insert(3);
@@ -900,7 +906,7 @@ void TestCustomList::serializeDeserializePreservesDraft() {
 }
 
 void TestCustomList::serializeDeserializeRoundTrip2() {
-    CustomList<int> original = makeCommitted<int>({ 10, 20, 30 });
+    CustomList original = makeCommitted<int>({ 10, 20, 30 });
 
     QByteArray data;
     {
@@ -909,7 +915,7 @@ void TestCustomList::serializeDeserializeRoundTrip2() {
         original.serialize(out);
     }
 
-    CustomList<int> restored;
+    CustomList restored;
     {
         QDataStream in(&data, QIODevice::ReadOnly);
         in.setVersion(QDataStream::Version::Qt_6_11);
@@ -926,7 +932,7 @@ void TestCustomList::deserializeWrongVersionThrows() {
         out.setVersion(QDataStream::Version::Qt_4_0);
     }
 
-    CustomList<int> cl;
+    CustomList cl;
     QDataStream in(&data, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Version::Qt_6_11);
 
@@ -942,7 +948,7 @@ void TestCustomList::deserializeNegativeSetSizeThrows() {
         out << static_cast<qint32>(-5);
     }
 
-    CustomList<int> cl;
+    CustomList cl;
     QDataStream in(&data, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Version::Qt_6_11);
 
@@ -958,7 +964,7 @@ void TestCustomList::deserializeTruncatedStreamThrows() {
         out << static_cast<qint32>(1);
     }
 
-    CustomList<int> cl;
+    CustomList cl;
     QDataStream in(&data, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Version::Qt_6_11);
 
@@ -968,7 +974,7 @@ void TestCustomList::deserializeTruncatedStreamThrows() {
 // ---------- Different types ----------
 
 void TestCustomList::workWithInt() {
-    CustomList<int> list;
+    CustomList list;
     QVERIFY(list.insert(-5).has_value());
     QVERIFY(list.insert(0).has_value());
     QVERIFY(list.insert(5).has_value());
@@ -981,7 +987,7 @@ void TestCustomList::workWithInt() {
 }
 
 void TestCustomList::workWithQString() {
-    CustomList<QString> list;
+    CustomList list;
     auto id1 = list.insert(u"hello"_s);
     auto id2 = list.insert(u"world"_s);
     list.commit();
@@ -998,18 +1004,18 @@ void TestCustomList::workWithQString() {
 }
 
 void TestCustomList::workWithDrawing() {
-    CustomList<Drawing> list;
-    auto id1 = list.insert(Drawing(u"ИМН-001"_s, u"Корпус"_s));
-    auto id2 = list.insert(Drawing(u"105-02"_s, u"Крышка"_s));
+    CustomList list;
+    auto id1 = list.insert(QVariant::fromValue(Drawing(u"ИМН-001"_s, u"Корпус"_s)));
+    auto id2 = list.insert(QVariant::fromValue(Drawing(u"105-02"_s, u"Крышка"_s)));
     list.commit();
 
     QVERIFY(id1 && id2);
 
     auto v = list.getValue(*id1);
     QVERIFY(v.has_value());
-    QCOMPARE(*v, Drawing(u"ИМН-001"_s, u"Корпус"_s));
+    QCOMPARE(v.value().value<mdt::Drawing>(), Drawing(u"ИМН-001"_s, u"Корпус"_s));
 
-    QVERIFY(list.remove(Drawing(u"105-02"_s, u"Крышка"_s)));
+    QVERIFY(list.remove(QVariant::fromValue(Drawing(u"105-02"_s, u"Крышка"_s))));
     list.commit();
     QCOMPARE(list.size(), 1);
 }

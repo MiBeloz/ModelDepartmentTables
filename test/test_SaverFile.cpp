@@ -92,12 +92,12 @@ private:
         return Record(makeDate(threadId, index),
                       makeDrawing(threadId, index),
                       index + 1,
-                      QStringList { QString(u"Exec_%1_%2").arg(threadId).arg(index) },
-                      QStringList { QString(u"Auth_%1_%2").arg(threadId).arg(index) },
-                      QStringList { QString(u"Cast_%1_%2").arg(threadId).arg(index) },
-                      QStringList { QString(u"Model_%1_%2").arg(threadId).arg(index) },
-                      QStringList { QString(u"Mach_%1_%2").arg(threadId).arg(index) },
-                      QStringList { QString(u"Note_%1_%2").arg(threadId).arg(index) });
+                      { QStringList { QString(u"Exec_%1_%2").arg(threadId).arg(index) },
+                        QStringList { QString(u"Auth_%1_%2").arg(threadId).arg(index) },
+                        QStringList { QString(u"Cast_%1_%2").arg(threadId).arg(index) },
+                        QStringList { QString(u"Model_%1_%2").arg(threadId).arg(index) },
+                        QStringList { QString(u"Mach_%1_%2").arg(threadId).arg(index) },
+                        QStringList { QString(u"Note_%1_%2").arg(threadId).arg(index) } });
     }
 
     QString makeDate(int threadId, int index) const {
@@ -304,6 +304,7 @@ void TestSaverFile::writeReadRecords() {
 
     StorageManager::initInstance();
     StorageManager *sm = StorageManager::instance();
+    sm->setCustomListsCount(6);
 
     timerCommon.start();
     timer.start();
@@ -338,6 +339,7 @@ void TestSaverFile::writeReadRecords() {
     StorageManager::freeInstance();
     StorageManager::initInstance();
     StorageManager *sm2 = StorageManager::instance();
+    sm2->setCustomListsCount(6);
 
     SaverFile saver2(sm2, m_filePath);
     QVERIFY(saver2.read());
@@ -376,14 +378,12 @@ void TestSaverFile::writeReadRecords() {
             qDebug() << "ERROR COMPARE AT INDEX" << i << ':';
             qDebug() << '\t' << records[i].date() << records[i].drawing().getNumber()
                      << records[i].drawing().getTitle() << records[i].amount()
-                     << records[i].executors() << records[i].authors()
-                     << records[i].castingMaterials() << records[i].modelMaterials()
-                     << records[i].machines() << records[i].notes();
+                     << records[i].custom(0) << records[i].custom(1) << records[i].custom(2)
+                     << records[i].custom(3) << records[i].custom(4) << records[i].custom(5);
             qDebug() << '\t' << records2[i].date() << records2[i].drawing().getNumber()
                      << records2[i].drawing().getTitle() << records2[i].amount()
-                     << records2[i].executors() << records2[i].authors()
-                     << records2[i].castingMaterials() << records2[i].modelMaterials()
-                     << records2[i].machines() << records2[i].notes();
+                     << records2[i].custom(0) << records2[i].custom(1) << records2[i].custom(2)
+                     << records2[i].custom(3) << records2[i].custom(4) << records2[i].custom(5);
         }
     }
 

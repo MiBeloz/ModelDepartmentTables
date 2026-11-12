@@ -14,7 +14,7 @@ namespace mdt {
             explicit RecordLink(qint32 idDate,
                                 qint32 idDrawing,
                                 qint32 idAmount,
-                                QList<QSet<qint32>> idsCustom = {});
+                                QList<QSet<qint32>> idsCustom);
 
             RecordLink(const RecordLink& other);
             RecordLink(RecordLink&& other) noexcept;
@@ -36,6 +36,7 @@ namespace mdt {
             qint32 getIdAmount() const;
             const QSet<qint32>& getIdsCustom(qsizetype customIndex) const;
             void replaceIdsCustom(qsizetype customIndex, const QSet<qint32>& newIds);
+            qsizetype idsCustomCount() const;
 
             void serialize(QDataStream& out) const;
             void deserialize(QDataStream& in);

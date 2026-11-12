@@ -2,8 +2,8 @@
 
 namespace mdt {
     namespace work {
-        void StorageLists::addList() {
-            m_customStorage.append(CustomList());
+        void StorageLists::setListsCount(qint32 count) {
+            m_customStorage.resize(count);
         }
 
         qsizetype StorageLists::customListCount() const {

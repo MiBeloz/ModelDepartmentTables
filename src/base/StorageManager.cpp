@@ -13,6 +13,10 @@ void mdt::work::StorageManager::freeInstance() {
     m_instance = nullptr;
 }
 
+void mdt::work::StorageManager::setCustomListsCount(qint32 count) {
+    m_storageLists.setListsCount(count);
+}
+
 mdt::work::StorageManager *mdt::work::StorageManager::instance() {
     return m_instance;
 }
@@ -153,6 +157,8 @@ mdt::work::StorageManager::Counter mdt::work::StorageManager::count() const {
 }
 
 bool mdt::work::StorageManager::addRecord(const Record &record) {
+    Q_ASSERT(record.customCount() == m_storageLists.customListCount());
+
     if (!record.isValid()) {
         return false;
     }
@@ -166,7 +172,7 @@ bool mdt::work::StorageManager::addRecord(const Record &record) {
         return false;
     }
 
-    QList<QSet<qint32>> idCustomLists(record.customCount());
+    QList<QSet<qint32>> idCustomLists(m_storageLists.customListCount());
     for (int i = 0; i < idCustomLists.count(); ++i) {
         QSet<qint32> list = addHelper(record.custom(i), m_storageLists.customStorage(i));
         idCustomLists[i] = list;
@@ -243,7 +249,7 @@ const QList<mdt::work::Record> &mdt::work::StorageManager::getRecords() const {
             continue;
         }
 
-        QList<QStringList> customListValues(6); //(record.customCount());
+        QList<QStringList> customListValues(m_storageLists.customListCount());
         for (int i = 0; i < customListValues.count(); ++i) {
             QStringList listValues;
             QSet listIds = it.getIdsCustom(i);
@@ -252,6 +258,7 @@ const QList<mdt::work::Record> &mdt::work::StorageManager::getRecords() const {
                     listValues << v.value().toString();
                 }
             }
+            customListValues[i] = listValues;
         }
 
         Record r(date, drawing, amount, customListValues);

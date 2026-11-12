@@ -14,7 +14,7 @@ namespace mdt {
             explicit Record(const QString& date,
                             const Drawing& drawing,
                             qint32 amount,
-                            qsizetype customCount = 0);
+                            qsizetype customCount);
 
             explicit Record(const QString& date,
                             const Drawing& drawing,

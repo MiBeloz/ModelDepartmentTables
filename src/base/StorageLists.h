@@ -11,7 +11,7 @@ namespace mdt {
         public:
             StorageLists() = default;
 
-            void addList();
+            void setListsCount(qint32 count);
 
             qsizetype customListCount() const;
 

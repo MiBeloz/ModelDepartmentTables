@@ -61,6 +61,8 @@ namespace mdt {
             Getter get() const;
             Counter count() const;
 
+            void setCustomListsCount(qint32 count);
+
             bool addRecord(const Record& record);
             bool removeRecord(const Record& record);
 

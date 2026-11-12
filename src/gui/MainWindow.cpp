@@ -210,12 +210,12 @@ void MainWindow::init() {
         model->setData(QModelIndex(model->index(0, 1)), record.drawing().getNumber());
         model->setData(QModelIndex(model->index(0, 2)), record.drawing().getTitle());
         model->setData(QModelIndex(model->index(0, 3)), record.amount());
-        model->setData(QModelIndex(model->index(0, 4)), record.executors().join(u", "));
-        model->setData(QModelIndex(model->index(0, 5)), record.authors().join(u", "));
-        model->setData(QModelIndex(model->index(0, 6)), record.castingMaterials().join(u", "));
-        model->setData(QModelIndex(model->index(0, 7)), record.modelMaterials().join(u", "));
-        model->setData(QModelIndex(model->index(0, 8)), record.machines().join(u", "));
-        model->setData(QModelIndex(model->index(0, 9)), record.notes().join(u", "));
+        model->setData(QModelIndex(model->index(0, 4)), record.custom(0).join(u", "));
+        model->setData(QModelIndex(model->index(0, 5)), record.custom(1).join(u", "));
+        model->setData(QModelIndex(model->index(0, 6)), record.custom(2).join(u", "));
+        model->setData(QModelIndex(model->index(0, 7)), record.custom(3).join(u", "));
+        model->setData(QModelIndex(model->index(0, 8)), record.custom(4).join(u", "));
+        model->setData(QModelIndex(model->index(0, 9)), record.custom(5).join(u", "));
 
         m_ui->TV_items->resizeColumnsToContents();
     }

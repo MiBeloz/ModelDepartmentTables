@@ -124,6 +124,10 @@ namespace mdt {
             m_idsCustom[customIndex] = newIds;
         }
 
+        qsizetype RecordLink::idsCustomCount() const {
+            return m_idsCustom.count();
+        }
+
         void RecordLink::serialize(QDataStream &out) const {
             out << out.version();
             out << m_recordLinkVersion;
@@ -147,6 +151,7 @@ namespace mdt {
 
         void RecordLink::deserialize(QDataStream &in) {
             deserializeVersion(in);
+            deserializeRecordLinkVersion(in);
 
             qint32 tmpDate = deserializeId(in);
             qint32 tmpDrawing = deserializeId(in);
