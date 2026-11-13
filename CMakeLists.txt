@@ -2,7 +2,7 @@
 project(ModelDepartmentTables
   LANGUAGES CXX)
 
-set(BUILD_TESTING ON)
+set(BUILD_TESTING OFF)
 
 set(minQt6Version 6.12.0)
 

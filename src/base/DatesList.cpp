@@ -4,6 +4,27 @@
 
 namespace mdt {
     namespace work {
+        bool DatesList::operator==(const DatesList &other) const {
+            if (this == &other) {
+                return true;
+            }
+
+            return m_list == other.m_list && m_error == other.m_error;
+        }
+
+        bool DatesList::operator!=(const DatesList &other) const {
+            return !(*this == other);
+        }
+
+        void DatesList::swap(DatesList &other) {
+            if (this == &other) {
+                return;
+            }
+
+            m_list.swap(other.m_list);
+            std::swap(m_error, other.m_error);
+        }
+
         std::optional<qint32> DatesList::insert(const QString &date) {
             setError(ErrorType::NoError);
             if (!checkDate(date, m_format)) {
@@ -11,27 +32,26 @@ namespace mdt {
                 return std::nullopt;
             }
 
-            if (auto intDate = strToDate(date, m_format); intDate.has_value()) {
-                return CustomList::insert(intDate.value());
+            if (std::optional<qint32> intDate = strToDate(date, m_format); intDate.has_value()) {
+                return m_list.insert(intDate.value());
             }
             setError(ErrorType::FormatError);
             return std::nullopt;
         }
 
-        std::optional<qint32> DatesList::insert(const QVariant &intExelFormat) {
-            Q_ASSERT(intExelFormat.userType() == QMetaType::Int);
+        std::optional<qint32> DatesList::insert(const qint32 &exelFormat) {
             setError(ErrorType::NoError);
-            if (!checkDate(intExelFormat.toInt())) {
+            if (!checkDate(exelFormat)) {
                 setError(ErrorType::FormatError);
                 return std::nullopt;
             }
-            return CustomList::insert(intExelFormat);
+            return m_list.insert(exelFormat);
         }
 
         bool DatesList::remove(const QString &date) {
             setError(ErrorType::NoError);
-            if (auto exelDate = strToDate(date, m_format); exelDate.has_value()) {
-                if (CustomList::remove(exelDate.value())) {
+            if (std::optional<qint32> exelDate = strToDate(date, m_format); exelDate.has_value()) {
+                if (m_list.remove(exelDate.value())) {
                     return true;
                 }
                 setError(ErrorType::DateError);
@@ -41,19 +61,19 @@ namespace mdt {
             return false;
         }
 
-        bool DatesList::remove(const QVariant &intExelFormat) {
+        bool DatesList::remove(const qint32 &exelFormat) {
             setError(ErrorType::NoError);
-            if (CustomList::remove(intExelFormat)) {
+            if (m_list.remove(exelFormat)) {
                 return true;
             }
-            setError(ErrorType::FormatError);
+            setError(ErrorType::DateError);
             return false;
         }
 
         std::optional<qint32> DatesList::getId(const QString &date) const {
             setError(ErrorType::NoError);
-            if (auto exelDate = strToDate(date, m_format); exelDate.has_value()) {
-                if (auto id = CustomList::getId(exelDate.value()); id.has_value()) {
+            if (std::optional<qint32> exelDate = strToDate(date, m_format); exelDate.has_value()) {
+                if (std::optional<qint32> id = m_list.getId(exelDate.value()); id.has_value()) {
                     return id;
                 }
                 setError(ErrorType::DateError);
@@ -63,9 +83,9 @@ namespace mdt {
             return std::nullopt;
         }
 
-        std::optional<qint32> DatesList::getId(const QVariant &intExelFormat) const {
+        std::optional<qint32> DatesList::getId(const qint32 &exelFormat) const {
             setError(ErrorType::NoError);
-            if (auto id = CustomList::getId(intExelFormat); id.has_value()) {
+            if (std::optional<qint32> id = m_list.getId(exelFormat); id.has_value()) {
                 return id;
             }
             setError(ErrorType::DateError);
@@ -74,8 +94,9 @@ namespace mdt {
 
         std::optional<QString> DatesList::getStrValue(qint32 id) const {
             setError(ErrorType::NoError);
-            if (auto date = CustomList::getValue(id); date.has_value()) {
-                if (auto strDate = dateToStr(date.value().toInt(), m_format); strDate.has_value()) {
+            if (std::optional<qint32> date = m_list.getValue(id)->toInt(); date.has_value()) {
+                if (std::optional<QString> strDate = dateToStr(date.value(), m_format);
+                    strDate.has_value()) {
                     return strDate;
                 }
                 setError(ErrorType::FormatError);
@@ -85,26 +106,62 @@ namespace mdt {
             return std::nullopt;
         }
 
-        std::optional<QVariant> DatesList::getValue(qint32 id) const {
+        std::optional<qint32> DatesList::getValue(qint32 id) const {
             setError(ErrorType::NoError);
-            if (auto date = CustomList::getValue(id); date.has_value()) {
+            if (std::optional<qint32> date = m_list.getValue(id)->toInt(); date.has_value()) {
                 return date;
             }
             setError(ErrorType::IdError);
             return std::nullopt;
         }
 
-        QVariantList DatesList::getAllValues() const {
-            return CustomList::getAllValues();
+        QList<qint32> DatesList::getAllValues() const {
+            QList<qint32> list;
+            for (QVariant &v : m_list.getAllValues()) {
+                list.append(v.toInt());
+            }
+            return list;
         }
 
         QStringList DatesList::getAllStrValues() const {
             QStringList strValues;
-            auto values = getAllValues();
-            for (auto &value : values) {
-                strValues.append(DatesList::dateToStr(value.toInt()).value());
+            QList<qint32> values = getAllValues();
+            for (qint32 &value : values) {
+                strValues.append(DatesList::dateToStr(value, m_format).value());
             }
             return strValues;
+        }
+
+        void DatesList::clear() {
+            m_list.clear();
+        }
+
+        void DatesList::reset() {
+            m_list.reset();
+        }
+
+        void DatesList::commit() {
+            m_list.commit();
+        }
+
+        qsizetype DatesList::size() const {
+            return m_list.size();
+        }
+
+        qsizetype DatesList::sizeCommitted() const {
+            return m_list.sizeCommitted();
+        }
+
+        void DatesList::serialize(QDataStream &out) const {
+            m_list.serialize(out);
+        }
+
+        void DatesList::deserialize(QDataStream &in) {
+            m_list.deserialize(in);
+        }
+
+        DatesList::ErrorType DatesList::lastError() const {
+            return m_error;
         }
 
         void DatesList::setDateFormat(const QString &format) {
@@ -153,10 +210,6 @@ namespace mdt {
                 return true;
             }
             return false;
-        }
-
-        DatesList::ErrorType DatesList::lastError() const {
-            return m_error;
         }
     } // namespace work
 } // namespace mdt

@@ -36,7 +36,7 @@ namespace mdt {
 
             class Getter {
             public:
-                QVariantList dates() const;
+                QList<qint32> dates() const;
                 QStringList datesStr() const;
                 DatesList::ErrorType datesError() const;
                 QVariantList drawings() const;

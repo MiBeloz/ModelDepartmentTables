@@ -10,6 +10,7 @@ namespace mdt {
         class StorageLists final : public Storage {
         public:
             StorageLists() = default;
+            ~StorageLists() override = default;
 
             void setListsCount(qint32 count);
 

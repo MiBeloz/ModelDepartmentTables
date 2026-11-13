@@ -90,7 +90,7 @@ mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::custom(q
     return *this;
 }
 
-QVariantList mdt::work::StorageManager::Getter::dates() const {
+QList<qint32> mdt::work::StorageManager::Getter::dates() const {
     const QReadLocker locker(&m_instance->m_lock);
     return m_instance->m_storageLists.dates().getAllValues();
 }

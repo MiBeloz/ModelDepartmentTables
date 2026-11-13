@@ -7,7 +7,7 @@ namespace mdt {
     class Storage {
     public:
         Storage() = default;
-        virtual ~Storage() noexcept = default;
+        virtual ~Storage() = default;
 
         virtual void serialize(QDataStream& out) const = 0;
         virtual void deserialize(QDataStream& in) = 0;

@@ -10,6 +10,7 @@ namespace mdt {
         class Record {
         public:
             Record() = default;
+            ~Record() = default;
 
             explicit Record(const QString& date,
                             const Drawing& drawing,

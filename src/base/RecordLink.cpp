@@ -13,53 +13,6 @@ namespace mdt {
             , m_idAmount(idAmount)
             , m_idsCustom(idsCustom) {}
 
-        RecordLink::RecordLink(const RecordLink &other) {
-            m_idDate = other.m_idDate;
-            m_idDrawing = other.m_idDrawing;
-            m_idAmount = other.m_idAmount;
-            m_idsCustom = other.m_idsCustom;
-        }
-
-        RecordLink::RecordLink(RecordLink &&other) noexcept {
-            m_idDate = other.m_idDate;
-            m_idDrawing = other.m_idDrawing;
-            m_idAmount = other.m_idAmount;
-            m_idsCustom = std::move(other.m_idsCustom);
-
-            other.m_idDate = 0;
-            other.m_idDrawing = 0;
-            other.m_idAmount = 0;
-        }
-
-        RecordLink &RecordLink::operator =(const RecordLink &other) {
-            if (this == &other) {
-                return *this;
-            }
-
-            m_idDate = other.m_idDate;
-            m_idDrawing = other.m_idDrawing;
-            m_idAmount = other.m_idAmount;
-            m_idsCustom = other.m_idsCustom;
-            return *this;
-        }
-
-        RecordLink &RecordLink::operator =(RecordLink &&other) noexcept {
-            if (this == &other) {
-                return *this;
-            }
-
-            m_idDate = other.m_idDate;
-            m_idDrawing = other.m_idDrawing;
-            m_idAmount = other.m_idAmount;
-            m_idsCustom = std::move(other.m_idsCustom);
-
-            other.m_idDate = 0;
-            other.m_idDrawing = 0;
-            other.m_idAmount = 0;
-
-            return *this;
-        }
-
         bool RecordLink::operator ==(const RecordLink &other) const {
             if (this == &other) {
                 return true;

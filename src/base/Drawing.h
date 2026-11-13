@@ -8,6 +8,7 @@ namespace mdt {
     class Drawing final {
     public:
         Drawing() = default;
+        ~Drawing() = default;
 
         explicit Drawing(const QString& number, const QString& title);
 

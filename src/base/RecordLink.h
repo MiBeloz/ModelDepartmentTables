@@ -10,16 +10,17 @@ namespace mdt {
         class RecordLink {
         public:
             RecordLink() = default;
+            ~RecordLink() = default;
 
             explicit RecordLink(qint32 idDate,
                                 qint32 idDrawing,
                                 qint32 idAmount,
                                 QList<QSet<qint32>> idsCustom);
 
-            RecordLink(const RecordLink& other);
-            RecordLink(RecordLink&& other) noexcept;
-            RecordLink& operator =(const RecordLink& other);
-            RecordLink& operator =(RecordLink&& other) noexcept;
+            RecordLink(const RecordLink& other) = default;
+            RecordLink(RecordLink&& other) noexcept = default;
+            RecordLink& operator=(const RecordLink& other) = default;
+            RecordLink& operator=(RecordLink&& other) noexcept = default;
 
             bool operator ==(const RecordLink& other) const;
             bool operator !=(const RecordLink& other) const;

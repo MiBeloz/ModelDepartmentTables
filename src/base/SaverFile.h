@@ -12,13 +12,10 @@ namespace mdt {
     class SaverFile final : public Saver {
     public:
         SaverFile(Storage *storage, const QString &fileName);
-
         ~SaverFile() override;
 
         [[nodiscard]] bool prepare() override;
-
         [[nodiscard]] bool read() override;
-
         [[nodiscard]] bool write() override;
 
     private:

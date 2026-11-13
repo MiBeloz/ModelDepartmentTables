@@ -10,10 +10,10 @@
 
 namespace mdt {
     namespace work {
-        class CustomList {
+        class CustomList final {
         public:
             CustomList() = default;
-            virtual ~CustomList() = default;
+            ~CustomList() = default;
 
             CustomList(const CustomList&) = default;
             CustomList(CustomList&&) noexcept = default;
@@ -25,11 +25,11 @@ namespace mdt {
 
             void swap(CustomList& other);
 
-            virtual std::optional<qint32> insert(const QVariant& data);
-            virtual bool remove(const QVariant& data);
-            virtual std::optional<qint32> getId(const QVariant& data) const;
-            virtual std::optional<QVariant> getValue(qint32 id) const;
-            virtual QVariantList getAllValues() const;
+            std::optional<qint32> insert(const QVariant& data);
+            bool remove(const QVariant& data);
+            std::optional<qint32> getId(const QVariant& data) const;
+            std::optional<QVariant> getValue(qint32 id) const;
+            QVariantList getAllValues() const;
 
             void clear();
             void reset();
