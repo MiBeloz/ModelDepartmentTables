@@ -1,10 +1,7 @@
 ﻿#ifndef CUSTOMLIST_H
 #define CUSTOMLIST_H
 
-#include <QDebug>
 #include <QHash>
-#include <QObject>
-#include <QReadWriteLock>
 #include <QStack>
 #include <QVariant>
 

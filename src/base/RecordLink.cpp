@@ -2,6 +2,8 @@
 
 #include "Exceptions.h"
 
+#include <QObject>
+
 namespace mdt {
     namespace work {
         RecordLink::RecordLink(qint32 idDate,

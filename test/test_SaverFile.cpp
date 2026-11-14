@@ -100,10 +100,10 @@ private:
                         QStringList { QString(u"Note_%1_%2").arg(threadId).arg(index) } });
     }
 
-    QString makeDate(int threadId, int index) const {
+    qint32 makeDate(int threadId, int index) const {
         QDate base(2000, 1, 1);
         QDate d = base.addDays(threadId * 1000 + index);
-        return d.toString(u"dd.MM.yyyy");
+        return mdt::work::DatesList::strToDate(d.toString(u"dd.MM.yyyy")).value();
     }
 
     Drawing makeDrawing(int threadId, int index) const {

@@ -4,20 +4,17 @@
 
 namespace mdt {
     namespace work {
-        Record::Record(const QString &date,
-                       const Drawing &drawing,
-                       qint32 amount,
-                       qsizetype customCount)
-            : m_date(date)
+        Record::Record(qint32 exelDate, const Drawing &drawing, qint32 amount, qsizetype customCount)
+            : m_date(exelDate)
             , m_drawing(drawing)
             , m_amount(amount)
             , m_custom(customCount) {}
 
-        Record::Record(const QString &date,
+        Record::Record(qint32 exelDate,
                        const Drawing &drawing,
                        qint32 amount,
                        const QList<QStringList> &custom)
-            : m_date(date)
+            : m_date(exelDate)
             , m_drawing(drawing)
             , m_amount(amount)
             , m_custom(custom) {}
@@ -32,11 +29,8 @@ namespace mdt {
         }
 
         bool Record::operator <(const Record &other) const {
-            const QDate l = QDate::fromString(m_date, DatesList::getDateFormat());
-            const QDate r = QDate::fromString(other.m_date, DatesList::getDateFormat());
-
-            if (l != r) {
-                return l < r;
+            if (m_date != other.m_date) {
+                return m_date < other.m_date;
             }
             if (m_drawing != other.m_drawing) {
                 return m_drawing < other.m_drawing;
@@ -66,7 +60,7 @@ namespace mdt {
             return true;
         }
 
-        const QString &Record::date() const {
+        qint32 Record::date() const {
             return m_date;
         }
 

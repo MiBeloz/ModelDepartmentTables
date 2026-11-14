@@ -100,11 +100,6 @@ QStringList mdt::work::StorageManager::Getter::datesStr() const {
     return m_instance->m_storageLists.dates().getAllStrValues();
 }
 
-mdt::work::DatesList::ErrorType mdt::work::StorageManager::Getter::datesError() const {
-    const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.dates().lastError();
-}
-
 QVariantList mdt::work::StorageManager::Getter::drawings() const {
     const QReadLocker locker(&m_instance->m_lock);
     return m_instance->m_storageLists.drawings().getAllValues();
@@ -228,8 +223,8 @@ const QList<mdt::work::Record> &mdt::work::StorageManager::getRecords() const {
     m_records.clear();
     const auto recordsLinks = m_storageRecordsLinks.get();
     for (const auto &it : recordsLinks) {
-        QString date;
-        if (auto v = m_storageLists.dates().getStrValue(it.getIdDate()); v.has_value()) {
+        qint32 date;
+        if (auto v = m_storageLists.dates().getValue(it.getIdDate()); v.has_value()) {
             date = v.value();
         } else {
             continue;

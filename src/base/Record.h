@@ -1,8 +1,6 @@
 ﻿#ifndef RECORD_H
 #define RECORD_H
 
-#include <QDate>
-
 #include "Drawing.h"
 
 namespace mdt {
@@ -12,12 +10,12 @@ namespace mdt {
             Record() = default;
             ~Record() = default;
 
-            explicit Record(const QString& date,
+            explicit Record(qint32 exelDate,
                             const Drawing& drawing,
                             qint32 amount,
                             qsizetype customCount);
 
-            explicit Record(const QString& date,
+            explicit Record(qint32 exelDate,
                             const Drawing& drawing,
                             qint32 amount,
                             const QList<QStringList>& custom = {});
@@ -31,7 +29,7 @@ namespace mdt {
 
             bool isValid() const;
 
-            const QString& date() const;
+            qint32 date() const;
             const Drawing& drawing() const;
             qint32 amount() const;
             const QStringList& custom(qsizetype customIndex) const;
@@ -41,7 +39,7 @@ namespace mdt {
             static const Record Null;
 
         private:
-            QString m_date;
+            qint32 m_date;
             Drawing m_drawing = Drawing::Null;
             qint32 m_amount = 0;
             QList<QStringList> m_custom;

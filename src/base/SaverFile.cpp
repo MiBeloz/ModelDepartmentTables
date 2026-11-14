@@ -1,5 +1,8 @@
 ﻿#include "SaverFile.h"
 
+#include <QDataStream>
+#include <QFile>
+
 #ifdef Q_OS_WIN
 #include <QDir>
 

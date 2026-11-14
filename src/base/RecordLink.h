@@ -1,8 +1,7 @@
 ﻿#ifndef RECORDLINK_H
 #define RECORDLINK_H
 
-#include <QObject>
-#include <QReadWriteLock>
+#include <QDataStream>
 #include <QSet>
 
 namespace mdt {

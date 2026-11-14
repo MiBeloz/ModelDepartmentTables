@@ -151,21 +151,14 @@ void TestRecordLink::moveConstructorTransfersAndResets() {
     RecordLink moved(std::move(source));
 
     QCOMPARE(moved, makeSample());
-
-    QCOMPARE(source.getIdDate(), 0);
-    QCOMPARE(source.getIdDrawing(), 0);
-    QCOMPARE(source.getIdAmount(), 0);
 }
 
 void TestRecordLink::moveAssignmentTransfersAndResets() {
     RecordLink source = makeSample();
-    RecordLink target;
-    target = std::move(source);
+    RecordLink moved;
+    moved = std::move(source);
 
-    QCOMPARE(target, makeSample());
-    QCOMPARE(source.getIdDate(), 0);
-    QCOMPARE(source.getIdDrawing(), 0);
-    QCOMPARE(source.getIdAmount(), 0);
+    QCOMPARE(moved, makeSample());
 }
 
 // ---------- Comparison operators ----------

@@ -38,7 +38,6 @@ namespace mdt {
             public:
                 QList<qint32> dates() const;
                 QStringList datesStr() const;
-                DatesList::ErrorType datesError() const;
                 QVariantList drawings() const;
                 QVariantList amounts() const;
                 QVariantList custom(qsizetype customIndex) const;

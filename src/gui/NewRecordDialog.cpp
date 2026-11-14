@@ -92,7 +92,7 @@ void NewRecordDialog::init() {
     setListDefaultSettings(m_ui->listWidgetNotes);
 
     m_ui->dateEditDateValue->setDate(QDate::currentDate());
-    m_ui->dateEditDateValue->setDisplayFormat(mdt::work::DatesList::getDateFormat());
+    //m_ui->dateEditDateValue->setDisplayFormat(mdt::work::DatesList::getDateFormat());
     m_ui->dateEditDateValue->setCalendarPopup(true);
 
     m_storageWork = mdt::work::StorageManager::instance();

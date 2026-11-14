@@ -1,8 +1,6 @@
 ﻿#ifndef SAVERFILE_H
 #define SAVERFILE_H
 
-#include <QDataStream>
-#include <QFile>
 #include <QReadWriteLock>
 #include <QString>
 
