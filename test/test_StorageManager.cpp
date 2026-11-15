@@ -1290,7 +1290,7 @@ void TestStorageManager::testAddInvalidRecord() {
     sm->setCustomListsCount(6);
 
     // Пустая / невалидная дата
-    const Record badDate = makeValidRecord(0, 1);
+    const Record badDate(-1, mdt::Drawing(u"drw"_s, u"title"_s), 1, 6);
     QVERIFY(!sm->addRecord(badDate));
 
     // Невалидный drawing (Drawing::Null)

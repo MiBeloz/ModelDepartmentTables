@@ -269,7 +269,7 @@ void TestDatesList::strToDateValid() {
     auto excel = DatesList::strToExelDate(kDateStr1());
     QVERIFY(excel.has_value());
 
-    QDate expected = QDate::fromString(kDateStr1());
+    QDate expected = QDate::fromString(kDateStr1(), u"dd.MM.yyyy");
     QDate base = QDate::fromJulianDay(mdt::work::EXCEL_EPOCH_JULIAN_DAY);
     QCOMPARE(excel.value(), qint32(expected.toJulianDay() - base.toJulianDay()));
 }
