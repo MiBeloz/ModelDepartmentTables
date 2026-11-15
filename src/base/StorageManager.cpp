@@ -92,12 +92,12 @@ mdt::work::StorageManager::Remover &mdt::work::StorageManager::Remover::custom(q
 
 QList<qint32> mdt::work::StorageManager::Getter::dates() const {
     const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.dates().getAllValues();
+    return m_instance->m_storageLists.dates().getAllExelDates();
 }
 
 QStringList mdt::work::StorageManager::Getter::datesStr() const {
     const QReadLocker locker(&m_instance->m_lock);
-    return m_instance->m_storageLists.dates().getAllStrValues();
+    return m_instance->m_storageLists.dates().getAllStrDates();
 }
 
 QVariantList mdt::work::StorageManager::Getter::drawings() const {
@@ -224,7 +224,7 @@ const QList<mdt::work::Record> &mdt::work::StorageManager::getRecords() const {
     const auto recordsLinks = m_storageRecordsLinks.get();
     for (const auto &it : recordsLinks) {
         qint32 date;
-        if (auto v = m_storageLists.dates().getValue(it.getIdDate()); v.has_value()) {
+        if (auto v = m_storageLists.dates().getExelDate(it.getIdDate()); v.has_value()) {
             date = v.value();
         } else {
             continue;
@@ -308,7 +308,7 @@ mdt::work::StorageManager::StorageManager() = default;
 void mdt::work::StorageManager::deleteBadLinks() {
     const auto links = m_storageRecordsLinks.get();
     for (auto &link : links) {
-        if (!m_storageLists.dates().getValue(link.getIdDate()).has_value() ||
+        if (!m_storageLists.dates().getExelDate(link.getIdDate()).has_value() ||
             !m_storageLists.drawings().getValue(link.getIdDrawing()).has_value() ||
             !m_storageLists.amounts().getValue(link.getIdAmount()).has_value()) {
             m_storageRecordsLinks.remove(link);

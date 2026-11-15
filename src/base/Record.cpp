@@ -54,7 +54,7 @@ namespace mdt {
         }
 
         bool Record::isValid() const {
-            if (!DatesList::checkDate(m_date) || !m_drawing.isValid() || m_amount < 1) {
+            if (!DatesList::checkExelDate(m_date) || !m_drawing.isValid() || m_amount < 1) {
                 return false;
             }
             return true;

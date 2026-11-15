@@ -103,7 +103,7 @@ private:
     qint32 makeDate(int threadId, int index) const {
         QDate base(2000, 1, 1);
         QDate d = base.addDays(threadId * 1000 + index);
-        return mdt::work::DatesList::strToDate(d.toString(u"dd.MM.yyyy")).value();
+        return mdt::work::DatesList::strToExelDate(d.toString(u"dd.MM.yyyy")).value();
     }
 
     Drawing makeDrawing(int threadId, int index) const {

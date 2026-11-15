@@ -2,6 +2,8 @@
 
 #include "Exceptions.h"
 
+#include <utility>
+
 namespace mdt {
     namespace work {
         bool CustomList::operator==(const CustomList& other) const {
@@ -33,7 +35,7 @@ namespace mdt {
         }
 
         std::optional<qint32> CustomList::insert(const QVariant& data) {
-            for (const auto& [k, v] : m_listTmp.asKeyValueRange()) {
+            for (const auto& [k, v] : std::as_const(m_listTmp).asKeyValueRange()) {
                 if (v == data) {
                     return k;
                 }
@@ -41,6 +43,9 @@ namespace mdt {
 
             qint32 id = -1;
             if (m_emptyIdTmp.isEmpty()) {
+                if (m_idTmp == MAX_SIZE) {
+                    return std::nullopt;
+                }
                 ++m_idTmp;
                 id = m_idTmp;
             } else {
@@ -113,25 +118,25 @@ namespace mdt {
         }
 
         void CustomList::serialize(QDataStream& out) const {
-            out << out.version();
+            out << CUSTOMLIST_SCHEMA_VERSION;
 
             out << static_cast<qint32>(m_list.size());
-            for (auto [id, value] : std::as_const(m_list).asKeyValueRange()) {
+            for (const auto [id, value] : std::as_const(m_list).asKeyValueRange()) {
                 out << id << value;
             }
             out << m_id;
             out << static_cast<qint32>(m_emptyId.size());
-            for (auto& id : std::as_const(m_emptyId)) {
+            for (const auto& id : std::as_const(m_emptyId)) {
                 out << id;
             }
 
             out << static_cast<qint32>(m_listTmp.size());
-            for (auto [id, value] : std::as_const(m_listTmp).asKeyValueRange()) {
+            for (const auto [id, value] : std::as_const(m_listTmp).asKeyValueRange()) {
                 out << id << value;
             }
             out << m_idTmp;
             out << static_cast<qint32>(m_emptyIdTmp.size());
-            for (auto& id : std::as_const(m_emptyIdTmp)) {
+            for (const auto& id : std::as_const(m_emptyIdTmp)) {
                 out << id;
             }
 
@@ -152,13 +157,16 @@ namespace mdt {
             QStack<qint32> emptyIdTmp = deserializeEmptyId(in);
             bool commit = deserializeCommit(in);
 
-            m_list = list;
-            m_id = id;
-            m_emptyId = emptyId;
-            m_listTmp = listTmp;
-            m_idTmp = idTmp;
-            m_emptyIdTmp = emptyIdTmp;
-            m_commit = commit;
+            CustomList tmp;
+            tmp.m_list = list;
+            tmp.m_id = id;
+            tmp.m_emptyId = emptyId;
+            tmp.m_listTmp = listTmp;
+            tmp.m_idTmp = idTmp;
+            tmp.m_emptyIdTmp = emptyIdTmp;
+            tmp.m_commit = commit;
+
+            this->swap(tmp);
         }
 
         void CustomList::throwStreamError(QDataStream::Status status) const {
@@ -166,27 +174,28 @@ namespace mdt {
                 QObject::tr("QDataStream error. Error code: '%1'.").arg(static_cast<int>(status)));
         }
 
-        void CustomList::deserializeVersion(QDataStream& in) const {
+        void CustomList::deserializeVersion(QDataStream& in) {
             int version {};
             in >> version;
             if (in.status() != QDataStream::Ok) {
                 throwStreamError(in.status());
             }
-            if (version != in.version()) {
+            if (version != CUSTOMLIST_SCHEMA_VERSION) {
                 in.setStatus(QDataStream::Status::ReadCorruptData);
                 throw RuntimeError(
-                    QObject::tr("Version error. Required version: '%1', Current version: '%2'")
-                        .arg(QString::number(in.version()), QString::number(version)));
+                    QObject::tr(
+                        "CustomList version error. Required version: '%1', Current version: '%2'")
+                        .arg(QString::number(CUSTOMLIST_SCHEMA_VERSION), QString::number(version)));
             }
         }
 
-        QHash<qint32, QVariant> CustomList::deserializeList(QDataStream& in) const {
+        QHash<qint32, QVariant> CustomList::deserializeList(QDataStream& in) {
             qint32 size;
             in >> size;
             if (in.status() != QDataStream::Ok) {
                 throwStreamError(in.status());
             }
-            if (size < 0) {
+            if (size < 0 || size > MAX_SIZE) {
                 in.setStatus(QDataStream::Status::ReadCorruptData);
                 throwStreamError(in.status());
             }
@@ -205,26 +214,26 @@ namespace mdt {
             return list;
         }
 
-        qint32 CustomList::deserializeId(QDataStream& in) const {
+        qint32 CustomList::deserializeId(QDataStream& in) {
             qint32 id {};
             in >> id;
             if (in.status() != QDataStream::Ok) {
                 throwStreamError(in.status());
             }
-            if (id < 0) {
+            if (id < 0 || id > MAX_SIZE) {
                 in.setStatus(QDataStream::Status::ReadCorruptData);
                 throwStreamError(in.status());
             }
             return id;
         }
 
-        QStack<qint32> CustomList::deserializeEmptyId(QDataStream& in) const {
+        QStack<qint32> CustomList::deserializeEmptyId(QDataStream& in) {
             qint32 size;
             in >> size;
             if (in.status() != QDataStream::Ok) {
                 throwStreamError(in.status());
             }
-            if (size < 0) {
+            if (size < 0 || size > MAX_SIZE) {
                 in.setStatus(QDataStream::Status::ReadCorruptData);
                 throwStreamError(in.status());
             }
@@ -241,7 +250,7 @@ namespace mdt {
             return ids;
         }
 
-        bool CustomList::deserializeCommit(QDataStream& in) const {
+        bool CustomList::deserializeCommit(QDataStream& in) {
             bool commit {};
             in >> commit;
             if (in.status() != QDataStream::Ok) {

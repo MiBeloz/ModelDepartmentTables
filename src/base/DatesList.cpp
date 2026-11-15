@@ -25,91 +25,89 @@ namespace mdt {
             m_list.swap(other.m_list);
         }
 
-        std::optional<qint32> DatesList::insert(const QString &date, const QString &format) {
-            if (!checkDate(date, format)) {
-                return std::nullopt;
-            }
-
-            if (std::optional<qint32> intDate = strToDate(date, format); intDate.has_value()) {
-                return m_list.insert(intDate.value());
+        std::optional<qint32> DatesList::insert(const QString &strDate, const QString &format) {
+            if (std::optional<qint32> exelDate = strToExelDate(strDate, format);
+                exelDate.has_value()) {
+                return m_list.insert(exelDate.value());
             }
             return std::nullopt;
         }
 
-        std::optional<qint32> DatesList::insert(qint32 exelFormat) {
-            if (!checkDate(exelFormat)) {
+        std::optional<qint32> DatesList::insert(qint32 exelDate) {
+            if (!checkExelDate(exelDate)) {
                 return std::nullopt;
             }
-            return m_list.insert(exelFormat);
+            return m_list.insert(exelDate);
         }
 
-        bool DatesList::remove(const QString &date, const QString &format) {
-            if (std::optional<qint32> exelDate = strToDate(date, format); exelDate.has_value()) {
-                if (m_list.remove(exelDate.value())) {
-                    return true;
-                }
-                return false;
+        bool DatesList::remove(const QString &strDate, const QString &format) {
+            if (std::optional<qint32> exelDate = strToExelDate(strDate, format);
+                exelDate.has_value()) {
+                return m_list.remove(exelDate.value());
             }
             return false;
         }
 
-        bool DatesList::remove(qint32 exelFormat) {
-            if (!checkDate(exelFormat)) {
+        bool DatesList::remove(qint32 exelDate) {
+            if (!checkExelDate(exelDate)) {
                 return false;
             }
-            return m_list.remove(exelFormat);
+            return m_list.remove(exelDate);
         }
 
-        std::optional<qint32> DatesList::getId(const QString &date, const QString &format) const {
-            if (std::optional<qint32> exelDate = strToDate(date, format); exelDate.has_value()) {
-                if (std::optional<qint32> id = m_list.getId(exelDate.value()); id.has_value()) {
-                    return id;
+        std::optional<qint32> DatesList::getId(const QString &strDate, const QString &format) const {
+            if (std::optional<qint32> exelDate = strToExelDate(strDate, format);
+                exelDate.has_value()) {
+                return m_list.getId(exelDate.value());
+            }
+            return std::nullopt;
+        }
+
+        std::optional<qint32> DatesList::getId(qint32 exelDate) const {
+            if (!checkExelDate(exelDate)) {
+                return std::nullopt;
+            }
+            return m_list.getId(exelDate);
+        }
+
+        std::optional<QString> DatesList::getStrDate(qint32 id, const QString &format) const {
+            std::optional<qint32> exelDate = getExelDate(id);
+            if (exelDate.has_value()) {
+                return exelDateToStr(exelDate.value(), format);
+            }
+            return std::nullopt;
+        }
+
+        std::optional<qint32> DatesList::getExelDate(qint32 id) const {
+            if (std::optional<QVariant> exelDate = m_list.getValue(id); exelDate.has_value()) {
+                if (exelDate->userType() != QMetaType::Int) {
+                    return std::nullopt;
                 }
-                return std::nullopt;
+                return exelDate.value().toInt();
             }
             return std::nullopt;
         }
 
-        std::optional<qint32> DatesList::getId(qint32 exelFormat) const {
-            if (!checkDate(exelFormat)) {
-                return std::nullopt;
-            }
-            return m_list.getId(exelFormat);
-        }
-
-        std::optional<QString> DatesList::getStrValue(qint32 id, const QString &format) const {
-            if (std::optional<QVariant> date = m_list.getValue(id); date.has_value()) {
-                if (std::optional<QString> strDate = dateToStr(date.value().toInt(), format);
-                    strDate.has_value()) {
-                    return strDate;
+        QStringList DatesList::getAllStrDates(const QString &format) const {
+            QStringList strDates;
+            QList<qint32> exelDates = getAllExelDates();
+            for (qint32 exelDate : std::as_const(exelDates)) {
+                if (auto str = exelDateToStr(exelDate, format); str.has_value()) {
+                    strDates.append(str.value());
                 }
-                return std::nullopt;
             }
-            return std::nullopt;
+            return strDates;
         }
 
-        std::optional<qint32> DatesList::getValue(qint32 id) const {
-            if (std::optional<QVariant> date = m_list.getValue(id); date.has_value()) {
-                return date.value().toInt();
+        QList<qint32> DatesList::getAllExelDates() const {
+            QList<qint32> exelDates;
+            QVariantList allValues = m_list.getAllValues();
+            for (const QVariant &v : std::as_const(allValues)) {
+                if (v.userType() == QMetaType::Int) {
+                    exelDates.append(v.toInt());
+                }
             }
-            return std::nullopt;
-        }
-
-        QStringList DatesList::getAllStrValues(const QString &format) const {
-            QStringList strValues;
-            QList<qint32> values = getAllValues();
-            for (qint32 &value : values) {
-                strValues.append(DatesList::dateToStr(value, format).value());
-            }
-            return strValues;
-        }
-
-        QList<qint32> DatesList::getAllValues() const {
-            QList<qint32> list;
-            for (QVariant &v : m_list.getAllValues()) {
-                list.append(v.toInt());
-            }
-            return list;
+            return exelDates;
         }
 
         void DatesList::clear() {
@@ -137,55 +135,51 @@ namespace mdt {
         }
 
         void DatesList::deserialize(QDataStream &in) {
-            m_list.deserialize(in);
-            for (const QVariant &v : m_list.getAllValues()) {
-                if (v.userType() != QMetaType::Int || !checkDate(v.toInt())) {
+            CustomList tmp;
+            tmp.deserialize(in);
+            QVariantList allValues = tmp.getAllValues();
+            for (const QVariant &v : std::as_const(allValues)) {
+                if (v.userType() != QMetaType::Int || !checkExelDate(v.toInt())) {
                     throw RuntimeError(QObject::tr("DatesList: invalid date in stream"));
                 }
             }
+            m_list.swap(tmp);
         }
 
-        std::optional<QString> DatesList::dateToStr(qint32 date, const QString &format) {
-            QDate startDate = QDate::fromJulianDay(START_EXCEL_DATE);
-            startDate = startDate.addDays(date);
-            if (startDate.isValid()) {
-                return startDate.toString(format);
-            }
-            return std::nullopt;
-        }
-
-        std::optional<qint32> DatesList::strToDate(const QString &date, const QString &format) {
-            if (!checkDate(date, format)) {
+        /// Преобразует Excel-дату в строку.
+        /// Возвращает nullopt, если Excel-дата вне [0, 2 958 465].
+        std::optional<QString> DatesList::exelDateToStr(qint32 exelDate, const QString &format) {
+            if (!checkExelDate(exelDate)) {
                 return std::nullopt;
             }
-            QDate startDate = QDate::fromJulianDay(START_EXCEL_DATE);
-            QDate inputDate = QDate::fromString(date, format);
-            if (inputDate.isValid()) {
-                return inputDate.toJulianDay() - startDate.toJulianDay();
+            QDate date = QDate::fromJulianDay(EXCEL_EPOCH_JULIAN_DAY + exelDate);
+            if (date.isValid()) {
+                return date.toString(format);
             }
             return std::nullopt;
         }
 
-        bool DatesList::checkDate(qint32 date) {
-            QDate startDate = QDate::fromJulianDay(START_EXCEL_DATE);
-            QDate endDate = QDate::fromJulianDay(END_EXCEL_DATE);
-            QDate inputDate = startDate.addDays(date);
-
-            if (inputDate.isValid() && inputDate >= startDate && inputDate <= endDate) {
-                return true;
+        /// Преобразует строку в Excel-дату (число дней от 30.12.1899).
+        /// Возвращает nullopt, если строка не парсится или дата вне [30.12.1899, 31.12.9999].
+        std::optional<qint32> DatesList::strToExelDate(const QString &strDate,
+                                                       const QString &format) {
+            QDate inputDate = QDate::fromString(strDate, format);
+            if (inputDate.isValid()) {
+                qint32 days = inputDate.toJulianDay() - EXCEL_EPOCH_JULIAN_DAY;
+                if (days < 0 || days > EXCEL_MAX_DAYS) {
+                    return std::nullopt;
+                }
+                return days;
             }
-            return false;
+            return std::nullopt;
         }
 
-        bool DatesList::checkDate(const QString &date, const QString &format) {
-            QDate startDate = QDate::fromJulianDay(START_EXCEL_DATE);
-            QDate endDate = QDate::fromJulianDay(END_EXCEL_DATE);
-            QDate inputDate = QDate::fromString(date, format);
+        bool DatesList::checkExelDate(qint32 exelDate) {
+            return exelDate >= 0 && exelDate <= EXCEL_MAX_DAYS;
+        }
 
-            if (inputDate.isValid() && inputDate >= startDate && inputDate <= endDate) {
-                return true;
-            }
-            return false;
+        bool DatesList::checkExelDate(const QString &strDate, const QString &format) {
+            return strToExelDate(strDate, format).has_value();
         }
     } // namespace work
 } // namespace mdt

@@ -1136,7 +1136,7 @@ private slots:
 
 private:
     static Drawing makeValidDrawing(int n = 1);
-    static Record makeValidRecord(qint32 date = DatesList::strToDate(u"15.01.2024"_s).value(),
+    static Record makeValidRecord(qint32 date = DatesList::strToExelDate(u"15.01.2024"_s).value(),
                                   qint32 amount = 1,
                                   const QStringList& executors = {},
                                   const QStringList& authors = {},
@@ -1149,7 +1149,7 @@ private:
     qint32 makeDate(int threadId, int index) const {
         QDate base(2000, 1, 1);
         QDate d = base.addDays(threadId * 1000 + index);
-        return DatesList::strToDate(d.toString(u"dd.MM.yyyy")).value();
+        return DatesList::strToExelDate(d.toString(u"dd.MM.yyyy")).value();
     }
 
     Drawing makeDrawing(int threadId, int index) const {
@@ -1181,7 +1181,7 @@ private:
     void verifyRecordIntegrity(const Record& r) const {
         // ---------- 1. Базовые проверки ---
         QVERIFY2(r.date(), "date пустой");
-        QVERIFY2(DatesList::checkDate(r.date()), "date не проходит checkDate");
+        QVERIFY2(DatesList::checkExelDate(r.date()), "date не проходит checkDate");
         QVERIFY2(r.drawing().isValid(), "drawing невалиден");
         QVERIFY2(!r.drawing().getNumber().isEmpty(), "drawing.number пуст");
         QVERIFY2(!r.drawing().getTitle().isEmpty(), "drawing.title пуст");
@@ -1272,7 +1272,7 @@ void TestStorageManager::testAddRecord() {
     StorageManager* sm = StorageManager::instance();
     sm->setCustomListsCount(6);
 
-    const Record r = makeValidRecord(DatesList::strToDate(u"15.01.2024"_s).value(),
+    const Record r = makeValidRecord(DatesList::strToExelDate(u"15.01.2024"_s).value(),
                                      5,
                                      { u"Ivanov"_s },
                                      { u"Petrov"_s });
@@ -1294,11 +1294,11 @@ void TestStorageManager::testAddInvalidRecord() {
     QVERIFY(!sm->addRecord(badDate));
 
     // Невалидный drawing (Drawing::Null)
-    const Record badDrawing(DatesList::strToDate(u"15.01.2024"_s).value(), Drawing::Null, 1, 6);
+    const Record badDrawing(DatesList::strToExelDate(u"15.01.2024"_s).value(), Drawing::Null, 1, 6);
     QVERIFY(!sm->addRecord(badDrawing));
 
     // amount < 1
-    const Record badAmount = makeValidRecord(DatesList::strToDate(u"15.01.2024"_s).value(), 0);
+    const Record badAmount = makeValidRecord(DatesList::strToExelDate(u"15.01.2024"_s).value(), 0);
     QVERIFY(!sm->addRecord(badAmount));
 
     QCOMPARE(sm->countRecords(), qsizetype(0));
@@ -1321,7 +1321,7 @@ void TestStorageManager::testRemoveRecord() {
     StorageManager* sm = StorageManager::instance();
     sm->setCustomListsCount(6);
 
-    const Record r = makeValidRecord(DatesList::strToDate(u"20.02.2024"_s).value(),
+    const Record r = makeValidRecord(DatesList::strToExelDate(u"20.02.2024"_s).value(),
                                      3,
                                      { u"Sidorov"_s });
 
@@ -1337,7 +1337,7 @@ void TestStorageManager::testRemoveNonexistentRecord() {
     StorageManager* sm = StorageManager::instance();
     sm->setCustomListsCount(6);
 
-    const Record r = makeValidRecord(DatesList::strToDate(u"20.02.2024"_s).value(), 3);
+    const Record r = makeValidRecord(DatesList::strToExelDate(u"20.02.2024"_s).value(), 3);
 
     QVERIFY(!sm->removeRecord(r));
     QCOMPARE(sm->countRecords(), qsizetype(0));
@@ -1433,7 +1433,7 @@ void TestStorageManager::testDeleteBadLinksOnRemoverDate() {
     StorageManager* sm = StorageManager::instance();
     sm->setCustomListsCount(6);
 
-    const Record r = makeValidRecord(DatesList::strToDate(u"01.06.2024"_s).value(),
+    const Record r = makeValidRecord(DatesList::strToExelDate(u"01.06.2024"_s).value(),
                                      4,
                                      { u"ExecD"_s });
     QVERIFY(sm->addRecord(r));
@@ -1448,7 +1448,7 @@ void TestStorageManager::testDeleteBadLinksOnRemoverExecutor() {
     StorageManager* sm = StorageManager::instance();
     sm->setCustomListsCount(6);
 
-    const Record r = makeValidRecord(DatesList::strToDate(u"01.07.2024"_s).value(),
+    const Record r = makeValidRecord(DatesList::strToExelDate(u"01.07.2024"_s).value(),
                                      2,
                                      { u"ExecE1"_s, u"ExecE2"_s });
     QVERIFY(sm->addRecord(r));
@@ -1465,7 +1465,7 @@ void TestStorageManager::testDeleteBadLinksKeepsRecordIfOnlySomeValuesRemoved() 
     StorageManager* sm = StorageManager::instance();
     sm->setCustomListsCount(6);
 
-    const Record r = makeValidRecord(DatesList::strToDate(u"15.07.2024"_s).value(),
+    const Record r = makeValidRecord(DatesList::strToExelDate(u"15.07.2024"_s).value(),
                                      1,
                                      { u"ExecX"_s },
                                      { u"AuthorX"_s },
@@ -1498,7 +1498,7 @@ void TestStorageManager::testRecordsCacheInvalidation() {
 
     QVERIFY(sm->getRecords().isEmpty());
 
-    const Record r = makeValidRecord(DatesList::strToDate(u"01.08.2024"_s).value(), 1);
+    const Record r = makeValidRecord(DatesList::strToExelDate(u"01.08.2024"_s).value(), 1);
     QVERIFY(sm->addRecord(r));
 
     QCOMPARE(sm->getRecords().size(), 1);
@@ -1516,12 +1516,12 @@ void TestStorageManager::testSerializeDeserialize() {
     StorageManager* src = StorageManager::instance();
     src->setCustomListsCount(6);
 
-    QVERIFY(src->addRecord(makeValidRecord(DatesList::strToDate(u"01.09.2024"_s).value(),
+    QVERIFY(src->addRecord(makeValidRecord(DatesList::strToExelDate(u"01.09.2024"_s).value(),
                                            11,
                                            { u"ExecF"_s },
                                            { u"AuthorF"_s })));
     QVERIFY(src->addRecord(
-        makeValidRecord(DatesList::strToDate(u"02.09.2024"_s).value(), 22, { u"ExecG"_s })));
+        makeValidRecord(DatesList::strToExelDate(u"02.09.2024"_s).value(), 22, { u"ExecG"_s })));
 
     QByteArray data;
     {
@@ -1556,7 +1556,7 @@ void TestStorageManager::testReset() {
     StorageManager* sm = StorageManager::instance();
     sm->setCustomListsCount(6);
 
-    QVERIFY(sm->addRecord(makeValidRecord(DatesList::strToDate(u"01.10.2024"_s).value(), 1)));
+    QVERIFY(sm->addRecord(makeValidRecord(DatesList::strToExelDate(u"01.10.2024"_s).value(), 1)));
     QCOMPARE(sm->countRecords(), qsizetype(1));
 
     sm->reset();
@@ -1571,7 +1571,7 @@ void TestStorageManager::testClear() {
     StorageManager* sm = StorageManager::instance();
     sm->setCustomListsCount(6);
 
-    QVERIFY(sm->addRecord(makeValidRecord(DatesList::strToDate(u"01.11.2024"_s).value(), 1)));
+    QVERIFY(sm->addRecord(makeValidRecord(DatesList::strToExelDate(u"01.11.2024"_s).value(), 1)));
     QCOMPARE(sm->countRecords(), qsizetype(1));
 
     sm->clear();
