@@ -146,8 +146,6 @@ namespace mdt {
             m_list.swap(tmp);
         }
 
-        /// Преобразует Excel-дату в строку.
-        /// Возвращает nullopt, если Excel-дата вне [0, 2 958 465].
         std::optional<QString> DatesList::exelDateToStr(qint32 exelDate, const QString &format) {
             if (!checkExelDate(exelDate)) {
                 return std::nullopt;
@@ -159,14 +157,12 @@ namespace mdt {
             return std::nullopt;
         }
 
-        /// Преобразует строку в Excel-дату (число дней от 30.12.1899).
-        /// Возвращает nullopt, если строка не парсится или дата вне [30.12.1899, 31.12.9999].
         std::optional<qint32> DatesList::strToExelDate(const QString &strDate,
                                                        const QString &format) {
             QDate inputDate = QDate::fromString(strDate, format);
             if (inputDate.isValid()) {
                 qint32 days = inputDate.toJulianDay() - EXCEL_EPOCH_JULIAN_DAY;
-                if (days < 0 || days > EXCEL_MAX_DAYS) {
+                if (days < EXCEL_MIN_DAY || days > EXCEL_MAX_DAY) {
                     return std::nullopt;
                 }
                 return days;
@@ -175,7 +171,7 @@ namespace mdt {
         }
 
         bool DatesList::checkExelDate(qint32 exelDate) {
-            return exelDate >= 0 && exelDate <= EXCEL_MAX_DAYS;
+            return exelDate >= EXCEL_MIN_DAY && exelDate <= EXCEL_MAX_DAY;
         }
 
         bool DatesList::checkExelDate(const QString &strDate, const QString &format) {

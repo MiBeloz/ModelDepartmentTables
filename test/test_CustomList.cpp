@@ -118,8 +118,7 @@ private:
     QByteArray toBytes(CustomList& list);
     CustomList fromBytes(const QByteArray& bytes);
 
-    template<typename T>
-    CustomList makeCommitted(const QList<T>& values) {
+    CustomList makeCommitted(const QVariantList& values) {
         CustomList list;
         for (const auto& v : values) {
             list.insert(v);
@@ -144,7 +143,7 @@ void TestCustomList::defaultConstructor() {
 }
 
 void TestCustomList::copyConstructor() {
-    auto a = makeCommitted<int>({ 10, 20, 30 });
+    auto a = makeCommitted({ 10, 20, 30 });
 
     CustomList b(a);
     QCOMPARE(b.size(), a.size());
@@ -157,7 +156,7 @@ void TestCustomList::copyConstructor() {
 }
 
 void TestCustomList::moveConstructor() {
-    auto a = makeCommitted<int>({ 1, 2 });
+    auto a = makeCommitted({ 1, 2 });
 
     CustomList b(std::move(a));
     QCOMPARE(b.size(), 2);
@@ -166,7 +165,7 @@ void TestCustomList::moveConstructor() {
 }
 
 void TestCustomList::copyAssignment() {
-    auto a = makeCommitted<int>({ 5, 6 });
+    auto a = makeCommitted({ 5, 6 });
 
     CustomList b;
     b.insert(100);
@@ -179,7 +178,7 @@ void TestCustomList::copyAssignment() {
 }
 
 void TestCustomList::moveAssignment() {
-    auto a = makeCommitted<int>({ 7, 8 });
+    auto a = makeCommitted({ 7, 8 });
 
     CustomList b;
     b.insert(999);
@@ -234,7 +233,7 @@ void TestCustomList::inequalityOperator() {
 // ---------- swap ----------
 
 void TestCustomList::swap_swapsAllFields() {
-    auto a = makeCommitted<int>({ 10, 20, 30 });
+    auto a = makeCommitted({ 10, 20, 30 });
     CustomList b;
 
     a.swap(b);
@@ -246,7 +245,7 @@ void TestCustomList::swap_swapsAllFields() {
 }
 
 void TestCustomList::swap_selfSwap() {
-    auto list = makeCommitted<int>({ 10, 20, 30 });
+    auto list = makeCommitted({ 10, 20, 30 });
     list.swap(list);
     QCOMPARE(list.getValue(1), 10);
     QCOMPARE(list.getValue(2), 20);
@@ -275,7 +274,7 @@ void TestCustomList::insertReturnsIncrementingIds() {
 }
 
 void TestCustomList::insertReusesFreedIdsAfterCommit() {
-    auto list = makeCommitted<int>({ 10, 20, 30 });
+    auto list = makeCommitted({ 10, 20, 30 });
     auto id20 = *list.getId(20);
 
     list.remove(20);
@@ -333,7 +332,7 @@ void TestCustomList::insertExistingDoesNotDuplicateItem() {
 }
 
 void TestCustomList::insertExistingAfterCommitReturnsSameId() {
-    auto list = makeCommitted<int>({ 10, 20, 30 });
+    auto list = makeCommitted({ 10, 20, 30 });
     const auto id20 = *list.getId(20);
 
     auto again = list.insert(20);
@@ -391,7 +390,7 @@ void TestCustomList::insertDuplicateManyTimesKeepsSingleEntry() {
 }
 
 void TestCustomList::insertDuplicateOfRemovedItemCreatesNewId() {
-    auto list = makeCommitted<int>({ 5, 10, 15 });
+    auto list = makeCommitted({ 5, 10, 15 });
     const auto oldId = *list.getId(10);
 
     list.remove(10);
@@ -409,7 +408,7 @@ void TestCustomList::insertDuplicateOfRemovedItemCreatesNewId() {
 // ---------- remove ----------
 
 void TestCustomList::removeExistingItemAfterCommit() {
-    auto list = makeCommitted<int>({ 11, 22 });
+    auto list = makeCommitted({ 11, 22 });
 
     QVERIFY(list.remove(11));
     list.commit();
@@ -420,7 +419,7 @@ void TestCustomList::removeExistingItemAfterCommit() {
 }
 
 void TestCustomList::removeNonExistingItemAfterCommit() {
-    auto list = makeCommitted<int>({ 1 });
+    auto list = makeCommitted({ 1 });
 
     QVERIFY(!list.remove(999));
     list.commit();
@@ -428,7 +427,7 @@ void TestCustomList::removeNonExistingItemAfterCommit() {
 }
 
 void TestCustomList::removeThenReinsertReusesIdAfterCommit() {
-    auto list = makeCommitted<int>({ 5 });
+    auto list = makeCommitted({ 5 });
     auto id = *list.getId(5);
 
     QVERIFY(list.remove(5));
@@ -443,7 +442,7 @@ void TestCustomList::removeThenReinsertReusesIdAfterCommit() {
 // ---------- getId / getValue / getAllValues ----------
 
 void TestCustomList::getIdExistingAfterCommit() {
-    auto list = makeCommitted<int>({ 77 });
+    auto list = makeCommitted({ 77 });
 
     auto found = list.getId(77);
     QVERIFY(found.has_value());
@@ -451,12 +450,12 @@ void TestCustomList::getIdExistingAfterCommit() {
 }
 
 void TestCustomList::getIdNonExistingAfterCommit() {
-    auto list = makeCommitted<int>({ 1 });
+    auto list = makeCommitted({ 1 });
     QVERIFY(!list.getId(999).has_value());
 }
 
 void TestCustomList::getValueExistingAfterCommit() {
-    auto list = makeCommitted<int>({ 1234 });
+    auto list = makeCommitted({ 1234 });
     auto id = *list.getId(1234);
 
     auto value = list.getValue(id);
@@ -465,7 +464,7 @@ void TestCustomList::getValueExistingAfterCommit() {
 }
 
 void TestCustomList::getValueNonExistingAfterCommit() {
-    auto list = makeCommitted<int>({ 1 });
+    auto list = makeCommitted({ 1 });
     QVERIFY(!list.getValue(999).has_value());
     QVERIFY(!list.getValue(-1).has_value());
 }
@@ -476,7 +475,7 @@ void TestCustomList::getAllValuesEmptyAfterCommit() {
 }
 
 void TestCustomList::getAllValuesMultipleAfterCommit() {
-    auto list = makeCommitted<int>({ 1, 2, 3 });
+    auto list = makeCommitted({ 1, 2, 3 });
 
     auto values = list.getAllValues();
     QCOMPARE(values.size(), 3);
@@ -499,7 +498,7 @@ void TestCustomList::insertSwitchesToDraftMode() {
 }
 
 void TestCustomList::removeSwitchesToDraftMode() {
-    auto list = makeCommitted<int>({ 1, 2, 3 });
+    auto list = makeCommitted({ 1, 2, 3 });
 
     QCOMPARE(list.size(), 3);
     QCOMPARE(list.sizeCommitted(), 3);
@@ -510,7 +509,7 @@ void TestCustomList::removeSwitchesToDraftMode() {
 }
 
 void TestCustomList::clearSwitchesToDraftMode() {
-    auto list = makeCommitted<int>({ 1, 2, 3 });
+    auto list = makeCommitted({ 1, 2, 3 });
 
     list.clear();
     QCOMPARE(list.size(), 0);
@@ -518,7 +517,7 @@ void TestCustomList::clearSwitchesToDraftMode() {
 }
 
 void TestCustomList::readersSeeDraftData() {
-    auto list = makeCommitted<int>({ 10 });
+    auto list = makeCommitted({ 10 });
 
     list.insert(20);
 
@@ -536,7 +535,7 @@ void TestCustomList::readersSeeDraftData() {
 }
 
 void TestCustomList::readersSeeCommittedAfterCommit() {
-    auto list = makeCommitted<int>({ 10 });
+    auto list = makeCommitted({ 10 });
 
     list.insert(20);
     list.commit();
@@ -587,7 +586,7 @@ void TestCustomList::sizeEqualsSizeCommittedAfterCommit() {
     CustomList list;
     QCOMPARE(list.size(), list.sizeCommitted());
 
-    auto committed = makeCommitted<int>({ 1, 2, 3 });
+    auto committed = makeCommitted({ 1, 2, 3 });
     QCOMPARE(committed.size(), 3);
     QCOMPARE(committed.sizeCommitted(), 3);
     QCOMPARE(committed.size(), committed.sizeCommitted());
@@ -596,7 +595,7 @@ void TestCustomList::sizeEqualsSizeCommittedAfterCommit() {
 // ---------- clear ----------
 
 void TestCustomList::clearInDraftModeAffectsOnlyDraft() {
-    auto list = makeCommitted<int>({ 1, 2, 3 });
+    auto list = makeCommitted({ 1, 2, 3 });
 
     list.clear();
 
@@ -606,7 +605,7 @@ void TestCustomList::clearInDraftModeAffectsOnlyDraft() {
 }
 
 void TestCustomList::clearAfterCommitEmptiesMain() {
-    auto list = makeCommitted<int>({ 1, 2, 3 });
+    auto list = makeCommitted({ 1, 2, 3 });
 
     list.clear();
     list.commit();
@@ -620,7 +619,7 @@ void TestCustomList::clearAfterCommitEmptiesMain() {
 // ---------- reset ----------
 
 void TestCustomList::resetRollsBackDraft() {
-    auto list = makeCommitted<int>({ 1, 2 });
+    auto list = makeCommitted({ 1, 2 });
 
     list.insert(3);
     list.insert(4);
@@ -633,7 +632,7 @@ void TestCustomList::resetRollsBackDraft() {
 }
 
 void TestCustomList::resetReturnsToMainMode() {
-    auto list = makeCommitted<int>({ 1 });
+    auto list = makeCommitted({ 1 });
 
     list.insert(2);
     QCOMPARE(list.size(), 2);
@@ -647,7 +646,7 @@ void TestCustomList::resetReturnsToMainMode() {
 }
 
 void TestCustomList::resetOnCleanStateIsNoop() {
-    auto list = makeCommitted<int>({ 1, 2 });
+    auto list = makeCommitted({ 1, 2 });
 
     list.insert(2);
     QCOMPARE(list.size(), 2);
@@ -661,7 +660,7 @@ void TestCustomList::resetOnCleanStateIsNoop() {
 }
 
 void TestCustomList::resetThenInsertStartsNewDraft() {
-    auto list = makeCommitted<int>({ 1 });
+    auto list = makeCommitted({ 1 });
 
     list.insert(2);
     list.reset();
@@ -696,7 +695,7 @@ void TestCustomList::commitAppliesDraftInsert() {
 }
 
 void TestCustomList::commitAppliesDraftRemove() {
-    auto list = makeCommitted<int>({ 10, 20, 30 });
+    auto list = makeCommitted({ 10, 20, 30 });
 
     list.remove(20);
     QCOMPARE(list.size(), 2);
@@ -712,7 +711,7 @@ void TestCustomList::commitAppliesDraftRemove() {
 }
 
 void TestCustomList::commitAppliesDraftClear() {
-    auto list = makeCommitted<int>({ 1, 2, 3 });
+    auto list = makeCommitted({ 1, 2, 3 });
 
     list.clear();
     list.commit();
@@ -723,7 +722,7 @@ void TestCustomList::commitAppliesDraftClear() {
 }
 
 void TestCustomList::commitOnCleanStateIsNoop() {
-    auto list = makeCommitted<int>({ 1, 2 });
+    auto list = makeCommitted({ 1, 2 });
 
     auto before = list.getAllValues();
     const qsizetype s = list.size();
@@ -762,7 +761,7 @@ void TestCustomList::commitThenInsertStartsNewDraft() {
 // ---------- Combined scenarios ----------
 
 void TestCustomList::insertResetCommitKeepsMainIntact() {
-    auto list = makeCommitted<int>({ 1, 2 });
+    auto list = makeCommitted({ 1, 2 });
 
     list.insert(3);
     list.insert(4);
@@ -796,7 +795,7 @@ void TestCustomList::multipleDraftCycles() {
 }
 
 void TestCustomList::draftAccumulatesMultipleOperations() {
-    auto list = makeCommitted<int>({ 1, 2, 3 });
+    auto list = makeCommitted({ 1, 2, 3 });
 
     list.insert(4);
     list.remove(2);
@@ -834,7 +833,7 @@ CustomList TestCustomList::fromBytes(const QByteArray& bytes) {
 }
 
 void TestCustomList::serializeDeserializeRoundTrip() {
-    auto original = makeCommitted<int>({ 10, 20, 30 });
+    auto original = makeCommitted({ 10, 20, 30 });
     original.remove(20);
     original.commit();
 
@@ -876,7 +875,7 @@ void TestCustomList::serializeDeserializePreservesFreeIds() {
 }
 
 void TestCustomList::serializePreservesDraft() {
-    auto original = makeCommitted<int>({ 1, 2 });
+    auto original = makeCommitted({ 1, 2 });
 
     original.insert(3);
     original.insert(4);
@@ -893,7 +892,7 @@ void TestCustomList::serializePreservesDraft() {
 }
 
 void TestCustomList::serializeDeserializePreservesDraft() {
-    auto original = makeCommitted<int>({ 1, 2 });
+    auto original = makeCommitted({ 1, 2 });
     original.insert(3);
     original.insert(4);
     original.remove(1);
@@ -907,7 +906,7 @@ void TestCustomList::serializeDeserializePreservesDraft() {
 }
 
 void TestCustomList::serializeDeserializeRoundTrip2() {
-    CustomList original = makeCommitted<int>({ 10, 20, 30 });
+    CustomList original = makeCommitted({ 10, 20, 30 });
 
     QByteArray data;
     {
